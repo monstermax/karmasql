@@ -20,11 +20,12 @@ class SqlActionPart
 		$this->parser = $action->getParser();
 	}
 
-
+	/*
 	public function toPhp()
 	{
 		return $this->name;
 	}
+	*/
 
 
 	public static function startPart(SqlAction $action, $name)
@@ -50,7 +51,17 @@ class SqlActionPart
 		} else if ($name == 'limit') {
 			$part = new SqlActionPartLimit($action, $name);
 
+		} else if ($name == 'insert') {
+			$part = new SqlActionPartInsert($action, $name);
+
+		} else if ($name == 'into') {
+			$part = new SqlActionPartInto($action, $name);
+
+		} else if ($name == 'values') {
+			$part = new SqlActionPartValues($action, $name);
+
 		} else {
+			throw new \Exception('non implemented case');
 			$part = new SqlActionPart($action, $name);
 		}
 

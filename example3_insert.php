@@ -35,9 +35,6 @@ $database = [
 
 
 
-$sql = "select * from users order by age, name desc";
-
-
 echo '
 <html>
 <head>
@@ -52,7 +49,13 @@ echo '
         ';
 
 
-if ($sql) {
+// FIRST QUERY (INSERT)
+if (true) {
+
+    echo '<h2>INSERT</h2>';
+
+    $sql = "insert into users (id, name, age) values (7, 'luc', 29), (8, 'sophie', 49)";
+
     $parser = new SqlQueryParser($sql, $database);
 
     // parse query
@@ -70,7 +73,26 @@ if ($sql) {
 
     // display an HTML table
     $parser->showResults();
+    pre(['parse_duration' => $parser->parse_duration, 'execute_duration' => $parser->execute_duration]);
 }
+
+
+// SECOND QUERY (SELECT)
+if (true) {
+    echo '<br /><hr /><br />';
+    echo '<h2>SELECT</h2>';
+
+    $sql = "select * from users order by id";
+    $parser = new SqlQueryParser($sql, $database);
+    $rows = $parser->execute();
+
+    $parser->getParsedSql($display_query);
+    
+    $parser->showResults();
+    pre(['parse_duration' => $parser->parse_duration, 'execute_duration' => $parser->execute_duration]);
+}
+
+
 
 echo '
     </div>

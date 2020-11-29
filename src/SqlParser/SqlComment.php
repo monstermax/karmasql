@@ -17,7 +17,7 @@ class SqlComment extends SqlParseItem
 	}
 
 
-	public static function isCommentStart(SqlParser $parser, $char, $next_char='')
+	public static function isCommentStart(SqlQueryParser $parser, $char, $next_char='')
 	{
 		if ($parser->getCurrentComment()) {
 			// on est deja dans un commentaire
@@ -48,7 +48,7 @@ class SqlComment extends SqlParseItem
 	}
 
 
-	public static function startComment(SqlParser $parser, $pos, $comment_type='slash')
+	public static function startComment(SqlQueryParser $parser, $pos, $comment_type='slash')
 	{
 		$parser->logDebug(__METHOD__ . " @ $pos");
 

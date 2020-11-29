@@ -11,7 +11,7 @@ class SqlParseItem implements \JsonSerializable
 	//public $parent = null;  // @SqlActionPart | SqlParenthese
 	public $type = null;
 
-	public $parser; // @SqlParser
+	public $parser; // @SqlQueryParser
 	public $action; // @SqlAction
 	
 	public $pos_start;
@@ -84,7 +84,7 @@ class SqlParseItem implements \JsonSerializable
 	}
 
 
-	public function start(SqlParser $parser, $pos)
+	public function start(SqlQueryParser $parser, $pos)
 	{
 
 		// idenfication du parent

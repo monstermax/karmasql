@@ -82,8 +82,29 @@ class SqlTable
 	public function setData(array $data)
 	{
 		$this->data = $data;
-
+		
 		return $this;
 	}
+
+
+	public function loadDataFromDatabase($database)
+	{
+		$table_name = $this->getName();
+		$data_table = isset($database[$table_name]) ? $database[$table_name] : null;
+
+		$this->data = $data_table;
+	}
+
+
+	public function saveDataToDatabase(SqlQueryParser $parser, $database)
+	{
+		$table_name = $this->getName();
+		
+		$database[$table_name] = $this->data;
+
+		$parser->setDatabase($database);
+
+	}
+
 }
 

@@ -5,186 +5,14 @@ namespace SqlParser;
 
 class SqlExecutor
 {
-	protected $results_groups;
-	protected $current_result_row_key;
+	public $results_groups;
+	public $current_result_row_key;
 	protected $current_field;
 
 
 	function execute(SqlAction $action)
 	{
-		$select_fields = $action->getFieldsSelect();
-		$group_fields = $action->getFieldsGroupBy();
-		$order_fields = $action->getFieldsOrderBy();
-
-		$table_from = $action->getTableFrom();
-
-		$conditions_where = $action->getConditionsWhere();
-		$joins = $action->getJoins();
-		$tables = $action->getTables();
-
-		$limit_offset = $action->getLimit();
-		$limit = $limit_offset['limit'];
-		$offset = $limit_offset['offset'];
-
-		$offset = 0;
-		$nb_skipped = 0;
-
-		if ($table_from) {
-			$rows = $table_from->getData();
-
-		} else {
-			// no from table found
-			$rows = [];
-			foreach ($select_fields as $select_alias => $select_field) {
-				$row[$select_alias] = $select_alias;
-			}
-			$rows[] = $row;
-		}
-
-		$this->results_groups = [];
-		$this->current_result_row_key = null;
-		
-
-		$results = []; // TODO: créer SqlResult ? et/ou SqlRecordset ?
-		$results_orders = [];
-
-		$current_row_idx = 0;
-		foreach ($rows as $row) {
-
-			// 1) check limit
-			if ($limit && count($results) >= $limit) {
-				break;
-			}
-
-			// 2) FROM
-			$row_data = [];
-			if ($table_from) {
-				$table_from_name = $table_from->getName();
-				$table_from_alias = $table_from->getAlias();
-				$row_data[$table_from_alias] = $row;
-			}
-
-			
-			// 3) resolve joins => TODO
-			$debug = 1;
-			if ($joins) {
-				foreach ($joins as $join_alias => $join_conditions) {
-					$join_table_data = $tables[$join_alias]->getData();
-					
-					// pour chaque ligne de la table joined...
-					foreach ($join_table_data as $join_row_idx => $join_row) {
-						$ok = 1;
-						foreach ($join_conditions as $condition) {
-							$tmp_row_data = array_merge($row_data, [$join_alias => $join_row]);
-							$condition_result = $condition->validateCondition($this, $tmp_row_data); // NOTE: $condition est un SqlField ou un SqlExpr
-							if (! $condition_result) {
-								$ok = false;
-								break;
-							}
-						}
-		
-						if ($ok) {
-							$row_data[$join_alias] = $join_row;
-							break; // TODO: gerer le renvoi de plusieurs lignes de jointure
-						}
-					}
-
-				}
-			}
-
-
-			// 4) check WHERE conditions
-			$where_result = $this->validateConditions($row_data, $conditions_where); // TODO: utiliser $row_data a la place de $row
-			if (!$where_result) {
-				unset($where_result);
-				continue;
-			}
-			unset($where_result);
-
-
-
-			// 5) limit offet
-			if ($nb_skipped < $offset) {
-				$nb_skipped++;
-				continue;
-			}
-
-			
-			// 6a) group by
-			if (! $group_fields) {
-				$key = count($results);
-			} else {
-				$group_results = $this->calculateFields($row_data, $group_fields);
-				$key = implode("|", array_values($group_results));
-			}
-			$this->current_result_row_key = $key;
-			
-			
-			// 7) add result
-			$result = $this->calculateFields($row_data, $select_fields);
-			$results[$key] = $result;
-
-
-			// 8a) order by
-			if ($order_fields) {
-				$results_orders[$key] = $this->calculateFields($row_data, $order_fields);
-			}
-
-
-			$current_row_idx++;
-		}
-		unset($row);
-		unset($current_row_idx);
-
-
-		// 8b) order by
-		if ($order_fields) {
-			$debug_sort = $results_orders; // debug
-
-			uksort($results, function ($a, $b) use ($results_orders) {
-				$result_order_a = $results_orders[$a];
-				$result_order_b = $results_orders[$b];
-
-				foreach ($result_order_a as $key => $field_a) {
-					$key_parts = explode(" ", $key);
-					$desc = count($key_parts) > 1 && $key_parts[count($key_parts)-1] == 'desc';
-					$field_b = $result_order_b[$key];
-
-					if ($field_b == $field_a) {
-
-					} else if ($desc) {
-						return ($field_a < $field_b) ? 1 : -1;
-
-					} else {
-						return ($field_a < $field_b) ? -1 : 1;
-					}
-				}
-				unset($key, $field_a, $field_b);
-
-				return 0;
-			});
-
-		}
-
-		
-		// 6b) group by
-		if ($this->results_groups) {
-			foreach ($results as $key => $result) {
-				foreach ($this->results_groups as $field_alias => $field_result) {
-					$results[$key][$field_alias] = $field_result[$key]['result'];
-				}
-				unset($field_alias, $field_result);
-			}
-			unset($key, $result);
-		}
-
-
-		$this->current_result_row_key = null;
-
-		// reset rows keys
-		$results = array_values($results);
-
-		return $results;
+		return $action->executeAction($this);
 	}
 
 
@@ -207,21 +35,31 @@ class SqlExecutor
     }
     
 
-	public function calculateFields($row_data, $select_fields)
+	public function calculateFields($row_data, $select_fields, $fields_aliases=null)
 	{
 		$values = [];
 		// TODO => calculer les fields pour la $row donnée
+
+		$idx = 0;
 
 		foreach ($select_fields as $field) {
 			$this->current_field = $field;
 
 			//$field_alias = $field->getAlias();
+			//$row_data = $row_data[$idx];
+
 			$field_values = $field->getCalculatedValues($this, $row_data); // NOTE: $field est un SqlField ou un SqlExpr -- il peut contenir 1 champ ou plusieurs si "*"
 
 			foreach ($field_values as $field_alias => $value) {
+				if ($fields_aliases) {
+					// cas pour le insert into
+					$field_alias = $fields_aliases[$idx]->word;
+				}
 				$values[$field_alias] = $value;
 			}
-	}
+
+			$idx++;
+		}
 
 		return $values;
     }

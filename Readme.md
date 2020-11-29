@@ -123,8 +123,12 @@ order by sexe
 - other actions (update, delete, insert, set, desc)
 - insert into ... select ...
 - create table ... as select ...
-- value in (x, y, z)
 - join with using
+- case when
+- multiples queries separated by ;
+- autoincrement
+- indexes
+- default values
 
 
 

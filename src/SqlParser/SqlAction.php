@@ -14,16 +14,46 @@ class SqlAction
 	protected $parts = null;
 
 
-	public function __construct(SqlParser $parser, $name)
+	public function __construct(SqlQueryParser $parser, $name)
 	{
 		$this->name = $name;
 		$this->parser = $parser;
 	}
 
 
+	public function executeAction(SqlExecutor $executor)
+	{
+		// EXTEND ME
+	}
+
+
+	public static function startAction(SqlQueryParser $parser, $name)
+	{
+		if ($name == 'select') {
+			$part = new SqlActionSelect($parser, $name);
+
+		} else if ($name == 'insert') {
+			$part = new SqlActionInsert($parser, $name);
+
+		} else if ($name == 'update') {
+			$part = new SqlActionUpdate($parser, $name);
+
+		} else if ($name == 'insert') {
+			$part = new SqlActionDelete($parser, $name);
+
+		} else if ($name == 'set') {
+			$part = new SqlActionSet($parser, $name);
+
+		} else {
+			$part = new SqlAction($parser, $name);
+		}
+
+		return $part;
+	}
+
 
 	public function getFieldsSelect()
-	{		
+	{
 		$parts = $this->getPart('select');
 
 		$fields = null;
@@ -164,26 +194,6 @@ class SqlAction
 			$table_alias = $table->getAlias();
 			$conditions = $part->getConditions();
 
-			/*
-			$rows = $table->getData();
-
-			foreach ($rows as $row) {
-				$ok = 1;
-
-				foreach ($conditions as $condition) {
-					$condition_result = $condition->validateCondition($this, $row); // NOTE: $condition est un SqlField ou un SqlExpr
-					if (! $condition_result) {
-						$ok = false;
-						break;
-					}
-				}
-
-				if ($ok) {
-					$join_rows[] = $row;
-				}
-			}
-			*/
-
 			$joins[$table_alias] = $conditions;
 			
 		}
@@ -216,40 +226,7 @@ class SqlAction
 
 	public function parseParts()
 	{
-		$froms = iterator_to_array($this->getPart('from'));
-		$from_params = $froms ? $froms[0]->parsePart() : null;
-		//pre($from_params, 0, '$from_params = ');
-
-		$wheres = iterator_to_array($this->getPart('where'));
-		$where_params = $wheres ? $wheres[0]->parsePart() : null;
-		//pre($where_params, 0, '$where_params = ');
-
-		$joins = iterator_to_array($this->getPart('join'));
-		if ($joins) {
-			foreach ($joins as $join) {
-				$join_params = $join->parsePart();
-				//pre($join_params, 0, '$join_params = ');
-			}
-		}
-
-		$selects = iterator_to_array($this->getPart('select'));
-		$select_params = $selects ? $selects[0]->parsePart() : null;
-		//pre($select_params, 0, '$select_params = ');
-
-		$groups = iterator_to_array($this->getPart('group by'));
-		$group_params = $groups ? $groups[0]->parsePart() : null;
-		//pre($group_params, 0, '$group_params = ');
-
-		$orders = iterator_to_array($this->getPart('order by'));
-		$order_params = $orders ? $orders[0]->parsePart() : null;
-		//pre($order_params, 0, '$order_params = ');
-
-		$limits = iterator_to_array($this->getPart('limit'));
-		$limit_params = $limits ? $limits[0]->parsePart() : null;
-		//pre($limit_params, 0, '$limit_params = ');
-
-
-		// Note: parser les subqueries
+		// EXTEND ME
 	}
 
 
@@ -260,110 +237,14 @@ class SqlAction
 		return $executor->execute($this);
     }
 
+	
+
 	/*
-	function execute()
-	{
-		$select_fields = $this->getFieldsSelect();
-
-		$table_from = $this->getTableFrom();
-		$conditions_where = $this->getConditionsWhere();
-
-		$limit = null; // TODO: parser le limit de la query
-		$offset = 0;
-		$nb_skipped = 0;
-
-		if ($table_from) {
-			$rows = $table_from->getData();
-
-		} else {
-			// no from table found
-			$rows = [];
-			foreach ($select_fields as $select_alias => $select_field) {
-				$row[$select_alias] = $select_alias;
-			}
-			$rows[] = $row;
-		}
-
-		$results = []; // TODO: créer SqlResult ? et/ou SqlRecordset ?
-
-		$current_row_idx = 0;
-		foreach ($rows as $row) {
-
-			// 1) check limit
-			if ($limit && count($results) >= $limit) {
-				break;
-			}
-
-			// 2) check WHERE conditions
-			$where_result = $this->validateConditions($row, $conditions_where);
-			if (!$where_result) {
-				unset($where_result);
-				continue;
-			}
-			unset($where_result);
-
-			// 3) resolve joins => TODO
-
-
-			// 4) limit offet
-			if ($nb_skipped < $offset) {
-				$nb_skipped++;
-				continue;
-			}
-
-			// 5) add result
-			$result = $this->calculateFields($row, $select_fields);
-			$results[] = $result;
-
-			$current_row_idx++;
-		}
-		unset($row);
-		unset($current_row_idx);
-
-		return $results;
-	}
-
-	public function validateConditions($row, $conditions_where)
-	{
-		// TODO => valider (ou non) les conditions du where pour la $row donnée
-
-		if ($conditions_where) {
-			foreach ($conditions_where as $condition) {
-				$condition_result = $condition->validateCondition($row); // NOTE: $condition est un SqlField ou un SqlExpr
-
-				if (!$condition_result) {
-					return false;
-				}
-			}
-		}
-
-		return true;
-	}
-
-	public function calculateFields($row, $select_fields)
-	{
-		$values = [];
-		// TODO => calculer les fields pour la $row donnée
-
-		foreach ($select_fields as $field) {
-			//$field_alias = $field->getAlias();
-			$field_values = $field->getCalculatedValues($row); // NOTE: $field est un SqlField ou un SqlExpr -- il peut contenir 1 champ ou plusieurs si "*"
-
-			foreach ($field_values as $field_alias => $value) {
-				$values[$field_alias] = $value;
-			}
-		}
-
-		return $values;
-	}
-
-	*/
-
-
 	public function toPhp()
 	{
 		return $this->name;
 	}
+	*/
 
 
 	public function getParts()

@@ -19,7 +19,7 @@ class SqlComparator extends SqlParseItem
 	}
 
 
-	public static function startComparator(SqlParser $parser, $pos)
+	public static function startComparator(SqlQueryParser $parser, $pos)
 	{
 		$parser->logDebug(__METHOD__ . " @ $pos");
 

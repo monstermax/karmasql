@@ -8,7 +8,7 @@ class SqlComma extends SqlParseItem
 	public $type = 'comma';
 
 
-	public static function startEndComma(SqlParser $parser, $pos)
+	public static function startEndComma(SqlQueryParser $parser, $pos)
 	{
 		$parser->logDebug(__METHOD__ . " @ $pos");
 

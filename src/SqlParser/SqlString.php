@@ -11,7 +11,7 @@ class SqlString extends SqlParseItem
 
 
 
-	public static function isStringStart(SqlParser $parser, $char)
+	public static function isStringStart(SqlQueryParser $parser, $char)
 	{
 		if ($parser->getCurrentString()) {
 			// on est deja dans une string
@@ -63,7 +63,7 @@ class SqlString extends SqlParseItem
 	}
 	
 
-	public static function startString(SqlParser $parser, $pos, $string_type='simple_quote')
+	public static function startString(SqlQueryParser $parser, $pos, $string_type='simple_quote')
 	{
 		$parser->logDebug(__METHOD__ . " @ $pos");
 
@@ -113,5 +113,17 @@ class SqlString extends SqlParseItem
 
 		$this->parser->setCurrentString(null);
 	}
+
+
+
+	public function getCalculatedValues(SqlExecutor $executor, $row_data)
+	{
+		$alias = $this->pos_start . '-string';
+
+		return [
+			$alias => $this->inner_text,
+		];
+	}
+
 
 }

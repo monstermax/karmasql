@@ -121,7 +121,7 @@ class SqlActionPartJoin extends SqlActionPart
 				
 				$parser = $this->getAction()->getParser();
 				
-				$database = $parser->getDatabse();
+				$database = $parser->getDatabase();
 				$data_table = isset($database[$table_name]) ? $database[$table_name] : null;
 
 				if (is_null($data_table)) {

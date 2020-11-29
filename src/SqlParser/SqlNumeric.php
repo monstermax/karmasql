@@ -9,7 +9,7 @@ class SqlNumeric extends SqlParseItem
 	public $number = '';
 
 
-	public static function startNumeric(SqlParser $parser, $pos)
+	public static function startNumeric(SqlQueryParser $parser, $pos)
 	{
 		$parser->logDebug(__METHOD__ . " @ $pos");
 
@@ -69,6 +69,16 @@ class SqlNumeric extends SqlParseItem
 		}
 
 		return $sql;
+	}
+
+
+	public function getCalculatedValues(SqlExecutor $executor, $row_data)
+	{
+		$alias = $this->number;
+
+		return [
+			$alias => $this->number,
+		];
 	}
 
 

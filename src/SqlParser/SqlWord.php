@@ -10,7 +10,7 @@ class SqlWord extends SqlParseItem
 	public $fields = null;
 
 
-	public static function startWord(SqlParser $parser, $pos) {
+	public static function startWord(SqlQueryParser $parser, $pos) {
 		$parser->logDebug(__METHOD__ . " @ $pos");
 
 		$current_word = new self;
@@ -46,10 +46,9 @@ class SqlWord extends SqlParseItem
 			// determination de l'action de la requete (select, update, insert, ...)
 			$this->word_type = 'action';
 
-			$action = new SqlAction($this->parser, $this->word);
+			$action = SqlAction::startAction($this->parser, $this->word);
 			$this->parser->setCurrentAction($action);
 
-			//$action_part = new SqlActionPart($action, $this->word);
 			$action_part = SqlActionPart::startPart($action, $this->word);
 			$action->setCurrentPart($action_part);
 

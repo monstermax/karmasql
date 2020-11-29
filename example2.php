@@ -4,7 +4,7 @@
 
 require __DIR__ . '/vendor/autoload.php';
 
-use \SqlParser\SqlParser;
+use \SqlParser\SqlQueryParser;
 
 
 function pre($var, $exit=false) {
@@ -94,13 +94,13 @@ if ($sql) {
 
     //#### quick usage
 
-    //$rows = (new SqlParser($sql, $database))->execute();
+    //$rows = (new SqlQueryParser($sql, $database))->execute();
     //pre($rows, 1);
 
 
     //#### detailed usage
 
-    $parser = new SqlParser($sql, $database);
+    $parser = new SqlQueryParser($sql, $database);
     
     // display query (with colors)
     $display_query = true;
@@ -114,6 +114,9 @@ if ($sql) {
 
     // display an HTML table
     $parser->showResults();
+
+    pre(['parse_duration' => $parser->parse_duration, 'execute_duration' => $parser->execute_duration]);
+
 }
 
 echo '
@@ -123,3 +126,7 @@ echo '
 
 //echo '<hr /><pre>table users: ' . print_r($database['users'], true) . '</pre>';
 //echo '<hr /><pre>table sexes: ' . print_r($database['sexes'], true) . '</pre>';
+
+if (isset($parser)) {
+    //echo '<hr /><pre>DATABASE: ' . print_r($database, true) . '</pre>';
+}

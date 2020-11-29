@@ -31,12 +31,6 @@ class SqlField /* extends SqlExpr */
 		return [
 			$this->alias => $row_data[$table_alias][$this->alias],
 		];
-
-		/*
-		return [
-			$this->alias => $row[$this->name],
-		];
-		*/
 	}
 
 

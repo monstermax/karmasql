@@ -3,15 +3,18 @@
 namespace SqlParser;
 
 
-class SqlParser
+class SqlQueryParser
 {
 	protected $sql;
-	protected $database = [];
+	protected $database = null;
 	//protected $pos = null;
 	//protected $word = null;
 
 	protected $items = [];
 	protected $results = null;
+
+	public $parse_duration = null;
+	public $execute_duration = null;
 
 	protected $principal_action = null;
 	protected $current_action = null;
@@ -65,8 +68,16 @@ class SqlParser
 			'set' => 1,
 			// TODO: gerer les join
 		],
-		'insert' => 1,
-		'delete' => 1,
+		'insert' => [
+			'into' => 1,
+			'values' => 1,
+		],
+		'delete' => [
+			'from' => 1,
+			'where' => 1,
+			'order by' => 1,
+			'limit' => 1,
+		],
 		'replace' => 1,
 		'set' => 1,
 		'show' => 1,
@@ -165,16 +176,18 @@ class SqlParser
 
 
 
-	public function __construct($sql, $database=[])
+	public function __construct($sql, & $database=[])
 	{
 		$this->sql = $sql;
-		$this->database = $database;
+		$this->database = & $database;
 	}
 
 
 
 	public function parse()
 	{
+		$ts_start = microtime(true);
+
 		$sql_len = strlen($this->sql);
 
 		//pre($this->sql);
@@ -530,6 +543,9 @@ class SqlParser
 		//$sql = $this->rebuildSql(false, true);
 		//pre($sql);
 
+		$ts_end = microtime(true);
+		$this->parse_duration = $ts_end - $ts_start;
+
 	}
 
 
@@ -558,7 +574,12 @@ class SqlParser
 			return null;
 		}
 		
+		$ts_start = microtime(true);
+
 		$this->results = $this->principal_action->execute();
+
+		$ts_end = microtime(true);
+		$this->execute_duration = $ts_end - $ts_start;
 
 		return $this->results;
 	}
@@ -609,7 +630,7 @@ class SqlParser
 
 	/* GETTERS */
 
-	public function getDatabse()
+	public function getDatabase()
 	{
 		return $this->database;
 	}
@@ -697,6 +718,20 @@ class SqlParser
 
 
 	/* SETTERS */
+
+	public function setDatabase($database)
+	{
+		//$this->database = $database;
+
+		if (is_null($this->database)) {
+			$this->database = [];
+		}
+
+		foreach ($database as $table_name => $table) {
+			$this->database[$table_name] = $table;
+		}
+
+	}
 
 	public function setSql($sql)
 	{

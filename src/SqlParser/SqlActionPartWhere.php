@@ -50,7 +50,12 @@ class SqlActionPartWhere extends SqlActionPart
 					$item->detectFields();
 
 				} else if ($item->type === 'parenthese') {
-					// TODO
+				
+				} else if ($item->type === 'space') {
+
+				} else if ($item->type === 'numeric') {
+
+				} else {
 					throw new \Exception("non implemented case");
 				}
 			}

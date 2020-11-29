@@ -8,7 +8,7 @@ class SqlJoker extends SqlParseItem
 	public $type = 'joker';
 
 
-	public static function startEndJoker(SqlParser $parser, $pos)
+	public static function startEndJoker(SqlQueryParser $parser, $pos)
 	{
 		$parser->logDebug(__METHOD__ . " @ $pos");
 

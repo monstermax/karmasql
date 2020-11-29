@@ -49,6 +49,7 @@ class SqlExpr
 
 		if (empty($alias)) {
 			$alias = trim($this->getExpr(true));
+			$alias = substr($alias, 0, 64);
 		}
 
 		return $alias;
@@ -192,8 +193,39 @@ class SqlExpr
 
 		$tables = $this->action->getTables();
 		
-		foreach ($items as $item) {
-			$code .= $item->toSql(true);
+		$item_next = null;
+		$item_prev = null;
+		$item_prev_prev = null;
+		$buffer_item = null;
+
+		foreach ($items as $idx => $item) {
+			$item_next = ($idx >= count($items)-1) ? null : $items[$idx+1];
+
+			// in_values
+			if ($item->type === 'word' && $item->word_type === 'keyword' && $item->word === 'in') {
+				// in (keyword in)
+
+			} else if ($item_next && $item_next->type === 'word' && $item_next->word_type === 'keyword' && $item_next->word === 'in') {
+				// in (expr before in)
+				$buffer_item = $item;
+
+			} else if ($item_prev && $item_prev->type === 'word' && $item_prev->word_type === 'keyword' && $item_prev->word === 'in') {
+				// in (expr after in)
+				$value = $buffer_item->toSql(true);
+				$in_params = $item->toSql(true);
+				$in_params = '[' . trim($in_params, '()') . ']';
+				$debug = 1;
+				$code .= 'in_array(' . $value . ', ' . $in_params . ')';
+
+			} else {
+				// all other cases
+
+				$code .= $item->toSql(true);
+			}
+
+
+			$item_prev_prev = $item_prev;
+			$item_prev = $item;
 		}
 		eval('$result = (' . $code . ');');
 

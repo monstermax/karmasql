@@ -55,10 +55,10 @@ class SqlActionPartFrom extends SqlActionPart
 
 			if (true) {
 				// find table into database to set fields names
-				
+
 				$parser = $this->getAction()->getParser();
+				$database = $parser->getDatabase();
 				
-				$database = $parser->getDatabse();
 				$data_table = isset($database[$table_name]) ? $database[$table_name] : null;
 
 				if (is_null($data_table)) {
@@ -75,7 +75,10 @@ class SqlActionPartFrom extends SqlActionPart
 					$tables[$table_alias]->addFieldName($field_name);
 				}
 
-				$tables[$table_alias]->setData($data_table);
+
+				// set data from database
+				//$tables[$table_alias]->setData($data_table);
+				$tables[$table_alias]->loadDataFromDatabase($database);
 			}
 
 		}
