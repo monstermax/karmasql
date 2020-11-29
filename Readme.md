@@ -81,7 +81,7 @@ order by sexe
 ```
 
 
-### Rebuilded query (see example in [example2.php](example2.php))
+### Rebuilded query (see example in [example2.php](example2.php#L117))
 ![rewritten query](example2.png)
 
 
