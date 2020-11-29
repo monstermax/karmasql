@@ -27,12 +27,12 @@ function pre($var, $exit=false) {
 
 $database = [
     'users' => [
-        ['id' => 1, 'name' => 'pierre', 'email' => 'pierre@email.com', 'age' => 42, 'sexe' => 'm'],
-        ['id' => 2, 'name' => 'paul', 'email' => 'paul@email.com', 'age' => 49, 'sexe' => 'm'],
-        ['id' => 3, 'name' => 'jacques', 'email' => 'jacques@email.com', 'age' => 53, 'sexe' => 'm'],
-        ['id' => 4, 'name' => 'alain', 'email' => 'jacques@email.com', 'age' => 59, 'sexe' => 'm'],
-        ['id' => 5, 'name' => 'elodie', 'email' => 'elodie@email.com', 'age' => 38, 'sexe' => 'f'],
-        ['id' => 6, 'name' => 'marion', 'email' => 'marion@email.com', 'age' => 42, 'sexe' => 'f'],
+        ['id' => 1, 'name' => 'pierre', 'age' => 42, 'sexe' => 'm'],
+        ['id' => 2, 'name' => 'paul', 'age' => 49, 'sexe' => 'm'],
+        ['id' => 3, 'name' => 'jacques', 'age' => 53, 'sexe' => 'm'],
+        ['id' => 4, 'name' => 'alain', 'age' => 59, 'sexe' => 'm'],
+        ['id' => 5, 'name' => 'elodie', 'age' => 38, 'sexe' => 'f'],
+        ['id' => 6, 'name' => 'marion', 'age' => 42, 'sexe' => 'f'],
     ],
     'sexes' => [
         ['langue' => 'fr', 'code' => 'f', 'name' => 'Femme'],
