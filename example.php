@@ -64,8 +64,22 @@ echo '
 
 if ($sql) {
     $parser = new SqlParser($sql, $database);
-    //pre($parser);
-    $parser->parse();
+
+    // parse query
+    $parser->parse(); // optionnal (called automatically by SqlPaser::getParsedSql and SqlPaser::execute)
+    
+    // display query (with colors)
+    $display_query = true;
+    $sql_parsed = $parser->getParsedSql($display_query);
+
+    // display query string (without colors)
+    //pre($sql_parsed);
+
+    // execute query
+    $rows = $parser->execute();
+
+    // display an HTML table
+    $parser->showResults();
 }
 
 echo '

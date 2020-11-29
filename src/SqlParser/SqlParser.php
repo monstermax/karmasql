@@ -11,6 +11,7 @@ class SqlParser
 	//protected $word = null;
 
 	protected $items = [];
+	protected $results = null;
 
 	protected $principal_action = null;
 	protected $current_action = null;
@@ -526,20 +527,47 @@ class SqlParser
 		$this->principal_action->parseParts();
 
 
-		$sql = $this->rebuildSql(false, true);
+		//$sql = $this->rebuildSql(false, true);
 		//pre($sql);
-
-
-		// STEP 3 : execute query
-		$results = $this->principal_action->execute();
-		//pre($results);
-		$this->showResults($results);
 
 	}
 
 
-	protected function showResults($results)
+	public function getParsedSql($print_sql=false)
 	{
+		if (empty($this->principal_action)) {
+			$this->parse();
+		}
+
+		if (empty($this->principal_action)) {
+			return null;
+		}
+
+		$sql = $this->rebuildSql(false, $print_sql);
+		return $sql;
+	}
+
+
+	public function execute()
+	{
+		if (empty($this->principal_action)) {
+			$this->parse();
+		}
+
+		if (empty($this->principal_action)) {
+			return null;
+		}
+		
+		$this->results = $this->principal_action->execute();
+
+		return $this->results;
+	}
+
+
+	public function showResults()
+	{
+		$results = $this->results;
+
 		if (! $results) {
 			return;
 		}

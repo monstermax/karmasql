@@ -181,6 +181,9 @@ class SqlExecutor
 
 		$this->current_result_row_key = null;
 
+		// reset rows keys
+		$results = array_values($results);
+
 		return $results;
 	}
 

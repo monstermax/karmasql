@@ -35,11 +35,16 @@ $database = [
 $sql = "select * from users order by age, name desc";
 
 $parser = new SqlParser($sql, $database);
-$parser->parse();
+
+// execute query
+$rows = $parser->execute();
+
+// display an HTML table
+$parser->showResults();
 
 ```
 
-### Result
+### Results
 |id|name|age|sexe|
 |--|:--:|:-:|:--:|
 |5|elodie|38|f|
@@ -50,6 +55,7 @@ $parser->parse();
 |4|alain|59|m|
 
 
+<br/><br/>
 
 ## Advanced
 
@@ -74,15 +80,21 @@ order by sexe
 --  limit 1";
 ```
 
-### Result
+
+### Rebuilded query (see example in [example2.php](example2.php))
+![rewritten query](example2.png)
+
+
+### Results
 |id|prenom|sexe|age|nb_users|ages_avg|ages_sum|age_min|age_max|class|sexe_fr|sexe_en|
 |--|:----:|:--:|:-:|:------:|:------:|:------:|:-----:|:-----:|:---:|:-----:|:-----:|
 |5|elodie|f|38|1|38|38|38|38|SqlParser\SqlExpr|Femme|Woman|
 |4|alain|m|59|4|50.75|203|42|59|SqlParser\SqlExpr|Homme|Man|
 
 
-![rewritten query](example2.png)
 
+<br/><br/>
+<br/><br/>
 
 ## TODO next
 

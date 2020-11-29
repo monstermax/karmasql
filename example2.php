@@ -101,9 +101,29 @@ echo '
 
 
 if ($sql) {
+
+    //#### quick usage
+    
+    //$rows = (new SqlParser($sql, $database))->execute();
+    //pre($rows, 1);
+
+
+    //#### detailed usage
+
     $parser = new SqlParser($sql, $database);
-    //pre($parser);
-    $parser->parse();
+    
+    // display query (with colors)
+    $display_query = true;
+    $sql_parsed = $parser->getParsedSql($display_query);
+
+    // display query string (without colors)
+    //pre($sql_parsed);
+
+    // execute query
+    $rows = $parser->execute();
+
+    // display an HTML table
+    $parser->showResults();
 }
 
 echo '
