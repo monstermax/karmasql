@@ -18,12 +18,12 @@ use \SqlParser\SqlParser;
 
 $database = [
     'users' => [
-        ['id' => 1, 'name' => 'pierre', 'age' => 42, 'sexe' => 'm'],
-        ['id' => 2, 'name' => 'paul', 'age' => 49, 'sexe' => 'm'],
+        ['id' => 1, 'name' => 'pierre' , 'age' => 42, 'sexe' => 'm'],
+        ['id' => 2, 'name' => 'paul'   , 'age' => 49, 'sexe' => 'm'],
         ['id' => 3, 'name' => 'jacques', 'age' => 53, 'sexe' => 'm'],
-        ['id' => 4, 'name' => 'alain', 'age' => 59, 'sexe' => 'm'],
-        ['id' => 5, 'name' => 'elodie', 'age' => 38, 'sexe' => 'f'],
-        ['id' => 6, 'name' => 'marion', 'age' => 42, 'sexe' => 'f'],
+        ['id' => 4, 'name' => 'alain'  , 'age' => 59, 'sexe' => 'm'],
+        ['id' => 5, 'name' => 'elodie' , 'age' => 38, 'sexe' => 'f'],
+        ['id' => 6, 'name' => 'marion' , 'age' => 42, 'sexe' => 'f'],
     ],
 ];
 
