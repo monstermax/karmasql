@@ -8,6 +8,8 @@
 No dependencies.
 
 
+## Usage
+
 ```php
 use \SqlParser\SqlParser;
 
@@ -48,6 +50,35 @@ $parser->parse();
 |4|alain|59|m|
 
 
+
+## Advanced
+
+```php
+$sql = "select id, ucfirst(name) as prenom, sexe, age, count(*) as nb_users
+, avg(age) as ages_avg
+, sum(age) as ages_sum
+, min(age) as age_min
+, max(age) as age_max
+, get_class(\$this) as class
+-- , file_get_contents('https://min-api.cryptocompare.com/data/price?fsym=BTC&tsyms=EUR') as prix_btc
+, s.name as sexe_fr
+, s_en.name as sexe_en
+from users u
+inner join sexes s on s.code = u.sexe and s.langue = 'fr' 
+inner join sexes s_en on s_en.code = u.sexe and s_en.langue = 'en'
+where 1
+-- and age < 53
+-- and sexe = 'm'
+group by sexe
+order by sexe
+--  limit 1";
+```
+
+### Result
+|id|prenom|sexe|age|nb_users|ages_avg|ages_sum|age_min|age_max|class|sexe_fr|sexe_en|
+|--|:----:|:--:|:-:|:------:|:------:|:------:|:-----:|:-----:|:---:|:-----:|:-----:|
+|5|elodie|f|38|1|38|38|38|38|SqlParser\SqlExpr|Femme|Woman|
+|4|alain|m|59|4|50.75|203|42|59|SqlParser\SqlExpr|Home|Man|
 
 
 
