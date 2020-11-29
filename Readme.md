@@ -25,12 +25,6 @@ $database = [
         ['id' => 5, 'name' => 'elodie', 'age' => 38, 'sexe' => 'f'],
         ['id' => 6, 'name' => 'marion', 'age' => 42, 'sexe' => 'f'],
     ],
-    'sexes' => [
-        ['langue' => 'fr', 'code' => 'f', 'name' => 'Femme'],
-        ['langue' => 'fr', 'code' => 'm', 'name' => 'Homme'],
-        ['langue' => 'en', 'code' => 'f', 'name' => 'Woman'],
-        ['langue' => 'en', 'code' => 'm', 'name' => 'Man'],
-    ],
 ];
 
 
@@ -62,6 +56,24 @@ $parser->showResults();
 ## Advanced
 
 ```php
+
+$database = [
+    'users' => [
+        ['id' => 1, 'name' => 'pierre', 'email' => 'pierre@email.com', 'age' => 42, 'sexe' => 'm'],
+        ['id' => 2, 'name' => 'paul', 'email' => 'paul@email.com', 'age' => 49, 'sexe' => 'm'],
+        ['id' => 3, 'name' => 'jacques', 'email' => 'jacques@email.com', 'age' => 53, 'sexe' => 'm'],
+        ['id' => 4, 'name' => 'alain', 'email' => 'jacques@email.com', 'age' => 59, 'sexe' => 'm'],
+        ['id' => 5, 'name' => 'elodie', 'email' => 'elodie@email.com', 'age' => 38, 'sexe' => 'f'],
+    ],
+    'sexes' => [
+        ['langue' => 'fr', 'code' => 'f', 'name' => 'Femme'],
+        ['langue' => 'fr', 'code' => 'm', 'name' => 'Homme'],
+        ['langue' => 'en', 'code' => 'f', 'name' => 'Woman'],
+        ['langue' => 'en', 'code' => 'm', 'name' => 'Man'],
+    ],
+];
+
+
 $sql = "select id, ucfirst(name) as prenom, sexe, age, count(*) as nb_users
 , avg(age) as ages_avg
 , sum(age) as ages_sum
@@ -109,6 +121,10 @@ order by sexe
 - order by grouped field or by alias
 - order by 1
 - other actions (update, delete, insert, set, desc)
+- insert into ... select ...
+- create table ... as select ...
+- value in (x, y, z)
+- join with using
 
 
 
