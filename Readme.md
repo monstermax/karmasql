@@ -81,6 +81,8 @@ order by sexe
 |4|alain|m|59|4|50.75|203|42|59|SqlParser\SqlExpr|Home|Man|
 
 
+![rewritten query](example2.png)
+
 
 ## TODO next
 
