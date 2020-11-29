@@ -8,7 +8,7 @@
 No dependencies.
 
 
-```
+```php
 use \SqlParser\SqlParser;
 
 
@@ -30,7 +30,7 @@ $database = [
 ];
 
 
-$sql = "select * from users";
+$sql = "select * from users order by age, name desc";
 
 $parser = new SqlParser($sql, $database);
 $parser->parse();
