@@ -11,6 +11,8 @@ No dependencies.
 ## Usage
 
 ```php
+require __DIR__ . '/vendor/autoload.php';
+
 use \SqlParser\SqlParser;
 
 

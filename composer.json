@@ -8,5 +8,11 @@
             "email": "max@karma-solutions.fr"
         }
     ],
-    "require": {}
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "SqlParser\\": "src/SqlParser"
+        }
+    }
+
 }

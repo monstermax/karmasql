@@ -1,18 +1,8 @@
 <?php
 
-// php -S 0.0.0.0:8080 example.php
+// php -S 0.0.0.0:8080 example2.php
 
-// CONFIG
-define('APP_DIR', __DIR__);
-define('VENDOR_DIR', APP_DIR . '/vendor');
-
-
-// AUTOLOAD
-$loader = require VENDOR_DIR . '/autoload.php';
-$loader->setPsr4('SqlParser\\', APP_DIR . '/src/SqlParser');
-
-ini_set('display_errors', 1);
-
+require __DIR__ . '/vendor/autoload.php';
 
 use \SqlParser\SqlParser;
 
@@ -103,7 +93,7 @@ echo '
 if ($sql) {
 
     //#### quick usage
-    
+
     //$rows = (new SqlParser($sql, $database))->execute();
     //pre($rows, 1);
 
