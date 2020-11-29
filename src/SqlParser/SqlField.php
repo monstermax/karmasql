@@ -1,0 +1,124 @@
+<?php
+
+namespace SqlParser;
+
+
+class SqlField /* extends SqlExpr */
+{
+	use SqlName_trait;
+	use SqlAlias_trait;
+	use SqlDebugInfo_trait;
+
+	public $parent; // @SqlWord
+	protected $table; // @SqlTable
+	//public $tmp_table_alias = null;
+
+
+	public function __construct($name, SqlTable $table=null, $alias=null)
+	{
+		$this->name = $name;
+		$this->table = $table;
+		$this->alias = $alias ? $alias : $name;
+		
+		//unset($this->items);
+	}
+
+
+	public function getCalculatedValues(SqlExecutor $executor, $row_data)
+	{
+		$table_alias = $this->getTable()->getAlias();
+
+		return [
+			$this->alias => $row_data[$table_alias][$this->alias],
+		];
+
+		/*
+		return [
+			$this->alias => $row[$this->name],
+		];
+		*/
+	}
+
+
+	public function toPhp()
+	{
+		$field_name = $this->getName();
+		//$field_alias = $this->getAlias();
+
+		$table = $this->getTable();
+		if (! $table) {
+			throw new \Exception('missing table', 1);
+		}
+
+		//$table_name = $table->getName();
+		$table_alias = $table->getAlias();
+
+		//$sql = '$tables["' . $table_alias . '"][$current_row_idx]["' . $field_name . '"]';
+		$sql = '$row_data["' . $table_alias . '"]["' . $field_name . '"]';
+
+		return $sql;
+	}
+
+	public function toSql($to_php=false, $print_debug=false)
+	{
+		if ($to_php) {
+			$sql = $this->toPhp();
+
+			if ($print_debug) {
+				echo $sql;
+			}
+
+			return $sql;
+		}
+
+		$field_name = $this->getName();
+		$field_alias = $this->getAlias();
+
+		$table = $this->getTable();
+		if (! $table) {
+			throw new \Exception('missing table on field ' . $field_name, 1);
+			$sql = "UNKNOWN_TABLE_C." . $field_name;
+
+		} else {
+
+            //$table_name = $table->getName();
+            $table_alias = $table->getAlias();
+
+            //$sql = $field_name;
+            $sql = $table_alias . "." . $field_name;
+
+            if ($field_alias && $field_alias != $field_name) {
+                // append alias
+                $sql .= " as " . $field_alias;
+            }
+        }
+
+		if ($print_debug) {
+			echo $sql;
+		}
+
+		return $sql;
+	}
+
+
+	/**
+	 * Get the value of table
+	 */ 
+	public function getTable()
+	{
+		return $this->table;
+	}
+
+	/**
+	 * Set the value of table
+	 *
+	 * @return  self
+	 */ 
+	public function setTable(SqlTable $table)
+	{
+		$this->table = $table;
+
+		return $this;
+	}
+
+}

@@ -1,0 +1,12 @@
+{
+    "name": "monstermax/karmasql",
+    "description": "SQL engine made in PHP",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Max F",
+            "email": "max@karma-solutions.fr"
+        }
+    ],
+    "require": {}
+}
