@@ -78,7 +78,7 @@ order by sexe
 |id|prenom|sexe|age|nb_users|ages_avg|ages_sum|age_min|age_max|class|sexe_fr|sexe_en|
 |--|:----:|:--:|:-:|:------:|:------:|:------:|:-----:|:-----:|:---:|:-----:|:-----:|
 |5|elodie|f|38|1|38|38|38|38|SqlParser\SqlExpr|Femme|Woman|
-|4|alain|m|59|4|50.75|203|42|59|SqlParser\SqlExpr|Home|Man|
+|4|alain|m|59|4|50.75|203|42|59|SqlParser\SqlExpr|Homme|Man|
 
 
 ![rewritten query](example2.png)
