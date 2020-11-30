@@ -5,7 +5,9 @@
  
  
 
-No dependencies.
+No dependencies. 
+
+Available commands: SELECT, INSERT, UPDATE, DELETE, SET.
 
 
 ## Usage
@@ -115,12 +117,10 @@ order by sexe
 #### Features
 
 - subqueries
-- variables SQL @myvar
 - distinct
 - jointures (à améliorer)
 - order by grouped field or by alias
 - order by 1
-- other actions (update, delete, set, desc)
 - insert into ... select ...
 - create table ... as select ...
 - join with using
@@ -128,7 +128,7 @@ order by sexe
 - multiples queries separated by ;
 - autoincrement
 - indexes
-- default values
+- insert default values
 
 
 

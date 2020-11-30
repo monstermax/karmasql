@@ -3,18 +3,22 @@
 namespace SqlParser;
 
 
-class SqlActionSelect extends SqlAction
+class SqlActionUpdate extends SqlAction
 {
 
 	public function executeAction(SqlExecutor $executor)
 	{
-		$select_fields = $this->getFieldsSelect();
+		$table_update = $this->getTableUpdate();
 		$group_fields = $this->getFieldsGroupBy();
 		$order_fields = $this->getFieldsOrderBy();
 
-		$table_from = $this->getTableFrom();
+		if (empty($table_update)) {
+			throw new \Exception("missing update table", 1);
+		}
 
 		$conditions_where = $this->getConditionsWhere();
+		$update_sets = $this->getUpdateSets();
+
 		$joins = $this->getJoins();
 		$tables = $this->getTables();
 
@@ -27,40 +31,26 @@ class SqlActionSelect extends SqlAction
 		}
 		$nb_skipped = 0;
 
-		if ($table_from) {
-			$rows = $table_from->getData();
-
-		} else {
-			// no from table found
-			$rows = [];
-			foreach ($select_fields as $select_alias => $select_field) {
-				$row[$select_alias] = $select_alias;
-			}
-			$rows[] = $row;
-		}
-
-		$executor->results_groups = [];
-		$executor->current_group_key = null;
+		$rows = $table_update->getData();
+		$rows_to_update = [];
 		
-
-		$results = []; // TODO: créer SqlResult ? et/ou SqlRecordset ?
-		$results_orders = [];
-
 		$current_row_idx = 0;
-		foreach ($rows as $row) {
+        foreach ($rows as $row_idx => &$row) {
 
 			// 1) check limit
-			if ($limit && count($results) >= $limit) {
+			if ($limit && count($rows_to_update) >= $limit) {
 				break;
 			}
 
+
 			// 2) FROM
 			$row_data = [];
-			if ($table_from) {
-				$table_from_name = $table_from->getName();
-				$table_from_alias = $table_from->getAlias();
+			if ($table_update) {
+				$table_from_name = $table_update->getName();
+				$table_from_alias = $table_update->getAlias();
 				$row_data[$table_from_alias] = $row;
 			}
+
 
 			
 			// 3) resolve joins
@@ -91,6 +81,7 @@ class SqlActionSelect extends SqlAction
 			}
 
 
+
 			// 4) check WHERE conditions
 			$where_result = $executor->validateConditions($row_data, $conditions_where); // TODO: utiliser $row_data a la place de $row
 			if (!$where_result) {
@@ -109,37 +100,34 @@ class SqlActionSelect extends SqlAction
 
 			
 			// 6a) group by
-			if (! $group_fields) {
-				$key = '_' . count($results);
-			} else {
-				$group_results = $executor->calculateFields($row_data, $group_fields);
-				$key = implode("|", array_values($group_results));
-			}
-			$executor->current_group_key = $key;
-			
-			
-			// 7) add result
-			$result = $executor->calculateFields($row_data, $select_fields);
-			$results[$key] = $result;
+			//if (! $group_fields) {
+			//	$key = '_' . count($rows_to_update);
+			//} else {
+			//	$group_results = $executor->calculateFields($row_data, $group_fields);
+			//	$key = implode("|", array_values($group_results));
+			//}
+			//$executor->current_group_key = $key;
+
+
+			// 7a) update (build list of items to update)
+			$rows_to_update[$row_idx] = &$row;
 
 
 			// 8a) order by
 			if ($order_fields) {
-				$results_orders[$key] = $executor->calculateFields($row_data, $order_fields);
+				$results_orders[$row_idx] = $executor->calculateFields($row_data, $order_fields);
 			}
 
-
 			$current_row_idx++;
-		}
+        }
 		unset($row);
 		unset($current_row_idx);
 
-		$executor->current_group_key = null;
 
 
 		// 8b) order by
 		if ($order_fields) {
-			uksort($results, function ($a, $b) use ($results_orders) {
+			uksort($rows_to_update, function ($a, $b) use ($results_orders) {
 				$result_order_a = $results_orders[$a];
 				$result_order_b = $results_orders[$b];
 
@@ -163,34 +151,118 @@ class SqlActionSelect extends SqlAction
 			});
 
 		}
-		
+
 		
 		// 6b) group by (retrieve results of eval functions)
-		if ($executor->results_groups) {
-			foreach ($results as $key => $result) {
-				foreach ($executor->results_groups as $field_alias => $field_result) {
-					$results[$key][$field_alias] = $field_result[$key]['result'];
-				}
-				unset($field_alias, $field_result);
-			}
-			unset($key, $result);
+		// TODO
+
+
+		// 7b) update
+		// TODO: deplacer le offset/limit ici
+		foreach ($rows_to_update as &$row) {
+			$this->updateRow($executor, $row, $update_sets);
+
 		}
 
 
+		$table_update->setData($rows, true);
 
-		// reset rows values
-		$results = array_values($results);
+		$database = $this->parser->getDatabase();
+		$table_update->saveDataToDatabase($this->parser, $database);
 
-		return $results;
+		$debug = 1;
+
+
+		return $rows_to_update;
 	}
+
+
+	protected function updateRow($executor, &$row, $update_sets)
+	{
+		$table_update = $this->getTableUpdate();
+		$table_name = $table_update->getName();
+
+		//$data = $table_update->getData();
+
+		foreach ($update_sets as $update_set) {
+			$items = $update_set->getItems(false);
+
+			if (empty($items)) {
+				throw new \Exception("missing items", 1);
+				break;
+			}
+			
+			$field = array_shift($items);
+			$field_name = $field->word;
+
+			$equal = array_shift($items);
+
+			if (count($items) == 1) {
+				$expr_set = $items[0];
+
+			} else {
+				// more than 1 item
+				$expr_set = new SqlExpr; // ou SqlCondition ?
+				//$expr_set->parent = $this;
+				$expr_set->action = $this;
+				$expr_set->parser = $this->parser;
+
+				$expr_set->addItems($items);
+			}
+
+
+			$row_data = [
+				$table_name => $row,
+			];
+
+			$expr_set_value = $expr_set->getCalculatedValues($executor, $row_data);
+
+			$row[$field_name] = array_pop($expr_set_value);
+
+			//$data[$this->curren]
+			$debug = 1;
+
+		}
+
+	}
+
+
+	public function getTableUpdate()
+	{
+		$parts = $this->getPart('update');
+
+		$table = null;
+		foreach ($parts as $part) {
+			$table = $part->getTable();
+			break;
+		}
+
+		return $table;
+	}
+
+
+	public function getUpdateSets()
+	{
+		$parts = $this->getPart('set');
+
+		$fields = [];
+		foreach ($parts as $part) {
+			$fields = $part->getFields();
+			break;
+		}
+
+		return $fields;
+	}
+
+
 
 
 	public function parseParts()
 	{
-		$froms = iterator_to_array($this->getPart('from'));
-		if ($froms) {
-			$froms[0]->parsePart();
-		}
+		$updates = iterator_to_array($this->getPart('update'));
+        if ($updates) {
+            $updates[0]->parsePart();
+        }
 
 		$wheres = iterator_to_array($this->getPart('where'));
 		if ($wheres) {
@@ -204,19 +276,9 @@ class SqlActionSelect extends SqlAction
 			}
 		}
 
-		$selects = iterator_to_array($this->getPart('select'));
-		if ($selects) {
-			$selects[0]->parsePart();
-		}
-
-		$groups = iterator_to_array($this->getPart('group by'));
-		if ($groups) {
-			$groups[0]->parsePart();
-		}
-
-		$orders = iterator_to_array($this->getPart('order by'));
-		if ($orders) {
-			$orders[0]->parsePart();
+		$sets = iterator_to_array($this->getPart('set'));
+		if ($sets) {
+			$sets[0]->parsePart();
 		}
 
 		$limits = iterator_to_array($this->getPart('limit'));
@@ -224,8 +286,9 @@ class SqlActionSelect extends SqlAction
 			$limits[0]->parsePart();
 		}
 
+		$debug = 1;
 
-		// Note: parser les subqueries
+		// TODO: parser les subqueries
 	}
 
 
@@ -235,7 +298,7 @@ class SqlActionSelect extends SqlAction
 		$tables = [];
 
         if ($include_from) {
-            $from_table = $this->getTableFrom();
+            $from_table = $this->getTableUpdate();
             if ($from_table) {
 				$table_alias = $from_table->getAlias();
 				$tables[$table_alias] = $from_table;
@@ -255,6 +318,5 @@ class SqlActionSelect extends SqlAction
 
 		return $tables;
 	}
-
 
 }

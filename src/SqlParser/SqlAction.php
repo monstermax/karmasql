@@ -38,7 +38,7 @@ class SqlAction
 		} else if ($name == 'update') {
 			$part = new SqlActionUpdate($parser, $name);
 
-		} else if ($name == 'insert') {
+		} else if ($name == 'delete') {
 			$part = new SqlActionDelete($parser, $name);
 
 		} else if ($name == 'set') {
@@ -98,25 +98,8 @@ class SqlAction
 	{
 		$tables = [];
 
-        if ($include_from) {
-            $from_table = $this->getTableFrom();
-            if ($from_table) {
-				$table_alias = $from_table->getAlias();
-				$tables[$table_alias] = $from_table;
-				
-            } else {
-                //throw new \Exception("missing from table");
-            }
-        }
-
-        if ($include_joins) {
-            $join_tables = $this->getTablesJoin();
-            $tables = array_merge($tables, $join_tables);
-
-            $subqueries_tables = $this->getTablesSubqueries();
-            $tables = array_merge($tables, $subqueries_tables);
-        }
-
+		// EXTEND ME
+		
 		return $tables;
 	}
 

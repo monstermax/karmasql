@@ -8,6 +8,8 @@ class SqlWord extends SqlParseItem
 	public $word_type = 'undefined'; // keyword or operator or field or ...?
 	public $word = '';
 	public $fields = null;
+	public $var_name;
+	public $var_value;
 
 
 	public static function startWord(SqlQueryParser $parser, $pos) {
@@ -202,6 +204,15 @@ class SqlWord extends SqlParseItem
 			// detection field
 			$word = $this->word;
 
+			$is_var = (substr($word, 0, 1) === '@');
+
+			if ($is_var) {
+				$this->word_type = 'variable_sql';
+				$this->var_name = ltrim($word, '@');
+				$this->var_value = null;
+				return;
+			}
+
 			$table_alias = null;
 			$field_name = $word;
 
@@ -350,15 +361,7 @@ class SqlWord extends SqlParseItem
 					// field = myfield
 					// field_name précisé (sans alias de table)
 
-					$from_table = $this->parent->getAction()->getTableFrom();
-
-					if (!$from_table) {
-						throw new \Exception("missing from table", 1);
-					}
-
-					$join_tables = []; //$parser->getTablesJoin(); // TODO
-					
-					$tables = array_merge([$from_table], $join_tables);
+					$tables = $this->action->getTables();
 
 					foreach ($tables as $table) {
 						$fields_names = $table->getFieldsNames();
@@ -379,6 +382,23 @@ class SqlWord extends SqlParseItem
 				}
 			}
 		}
+	}
+
+
+	public function getCalculatedValues(SqlExecutor $executor, $row_data)
+	{
+        if ($this->word_type === 'variable_sql') {
+			$var_name = $this->var_name;
+
+			$database = $this->parser->getDatabase();
+			$var = isset($database['_variables'][$var_name]) ? $database['_variables'][$var_name] : null;
+
+			return $var;
+
+        } else {
+			throw new \Exception("non implemented case", 1);
+		}
+
 	}
 
 }

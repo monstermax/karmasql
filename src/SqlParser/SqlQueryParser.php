@@ -78,8 +78,10 @@ class SqlQueryParser
 			'order by' => 1,
 			'limit' => 1,
 		],
+		'set' => [
+			'set' => 1,
+		],
 		'replace' => 1,
-		'set' => 1,
 		'show' => 1,
 		'desc' => 1,
 		'alter' => 1,
@@ -210,6 +212,7 @@ class SqlQueryParser
 			$is_underscore = ($char === '_');
 			$is_asterisk = ($char === '*'); // TODO: creer une class SqlJoker
 			$is_dot = ($char === '.');
+			$is_arobase = ($char === '@');
 			$is_dollar = ($char === '$');
 			$is_comma = ($char === ',');
 			$is_exclamation = ($char === '!'); // note: a gerer comme le keyword "not"
@@ -429,7 +432,7 @@ class SqlQueryParser
 			// debut de word ?
 			if (! $this->current_word) {
 				// on n'est PAS dans un mot
-				if ($is_alpha_lower || $is_alpha_upper || $is_underscore || $is_dollar) {
+				if ($is_alpha_lower || $is_alpha_upper || $is_arobase || $is_underscore || $is_dollar) {
 					SqlWord::startWord($this, $pos);
 					continue;
 				}

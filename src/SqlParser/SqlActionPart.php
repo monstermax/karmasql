@@ -60,6 +60,15 @@ class SqlActionPart
 		} else if ($name == 'values') {
 			$part = new SqlActionPartValues($action, $name);
 
+		} else if ($name == 'update') {
+			$part = new SqlActionPartUpdate($action, $name);
+
+		} else if ($name == 'set') {
+			$part = new SqlActionPartSet($action, $name);
+
+		} else if ($name == 'delete') {
+			$part = new SqlActionPartDelete($action, $name);
+
 		} else {
 			throw new \Exception('non implemented case');
 			$part = new SqlActionPart($action, $name);

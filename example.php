@@ -17,18 +17,9 @@ function pre($var, $exit=false) {
 
 $database = [
     'users' => [
-        ['id' => 1, 'name' => 'pierre', 'age' => 42, 'sexe' => 'm'],
-        ['id' => 2, 'name' => 'paul', 'age' => 49, 'sexe' => 'm'],
+        ['id' => 1, 'name' => 'pierre' , 'age' => 42, 'sexe' => 'm'],
+        ['id' => 2, 'name' => 'paul'   , 'age' => 49, 'sexe' => 'm'],
         ['id' => 3, 'name' => 'jacques', 'age' => 53, 'sexe' => 'm'],
-        ['id' => 4, 'name' => 'alain', 'age' => 59, 'sexe' => 'm'],
-        ['id' => 5, 'name' => 'elodie', 'age' => 38, 'sexe' => 'f'],
-        ['id' => 6, 'name' => 'marion', 'age' => 42, 'sexe' => 'f'],
-    ],
-    'sexes' => [
-        ['langue' => 'fr', 'code' => 'f', 'name' => 'Femme'],
-        ['langue' => 'fr', 'code' => 'm', 'name' => 'Homme'],
-        ['langue' => 'en', 'code' => 'f', 'name' => 'Woman'],
-        ['langue' => 'en', 'code' => 'm', 'name' => 'Man'],
     ],
 ];
 
@@ -55,15 +46,18 @@ echo '
 if ($sql) {
     $parser = new SqlQueryParser($sql, $database);
 
-    // parse query
-    $parser->parse(); // optionnal (called automatically by SqlPaser::getParsedSql and SqlPaser::execute)
-    
-    // display query (with colors)
     $display_query = true;
-    $sql_parsed = $parser->getParsedSql($display_query);
+    if ($display_query) {
+        // parse query
+        $parser->parse(); // optionnal (called automatically by SqlPaser::getParsedSql and SqlPaser::execute)
+        
+        // display query (with colors)
+        $display_query = true;
+        $sql_parsed = $parser->getParsedSql($display_query);
 
-    // display query string (without colors)
-    //pre($sql_parsed);
+        // display query string (without colors)
+        //pre($sql_parsed);
+    }
 
     // execute query
     $rows = $parser->execute();

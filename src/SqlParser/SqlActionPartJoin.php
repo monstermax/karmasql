@@ -138,7 +138,8 @@ class SqlActionPartJoin extends SqlActionPart
 					$this->table->addFieldName($field_name);
 				}
 
-				$this->table->setData($data_table);
+                //$this->table->setData($data_table);
+                $this->table->loadDataFromDatabase($database);
 			}
         }
 

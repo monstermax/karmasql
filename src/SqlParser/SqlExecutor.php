@@ -6,7 +6,7 @@ namespace SqlParser;
 class SqlExecutor
 {
 	public $results_groups;
-	public $current_result_row_key;
+	public $current_group_key;
 	protected $current_field;
 
 
@@ -67,7 +67,7 @@ class SqlExecutor
 
 	public function getCurrentRowKey()
 	{
-		return $this->current_result_row_key;
+		return $this->current_group_key;
 	}
 
 
@@ -175,7 +175,7 @@ class SqlExecutor
     public function sum($expr)
     {
 		$alias = $this->current_field->getAlias();
-		$row_key = $this->current_result_row_key;
+		$row_key = $this->current_group_key;
 
 		if (! isset($this->results_groups[$alias])) {
 			$this->results_groups[$alias] = [];
@@ -195,7 +195,7 @@ class SqlExecutor
     public function avg($expr)
     {
 		$alias = $this->current_field->getAlias();
-		$row_key = $this->current_result_row_key;
+		$row_key = $this->current_group_key;
 
 		if (! isset($this->results_groups[$alias])) {
 			$this->results_groups[$alias] = [];
@@ -219,7 +219,7 @@ class SqlExecutor
     public function count($expr)
     {
 		$alias = $this->current_field->getAlias();
-		$row_key = $this->current_result_row_key;
+		$row_key = $this->current_group_key;
 
 		if (! isset($this->results_groups[$alias])) {
 			$this->results_groups[$alias] = [];
@@ -241,7 +241,7 @@ class SqlExecutor
     public function min($expr)
     {
 		$alias = $this->current_field->getAlias();
-		$row_key = $this->current_result_row_key;
+		$row_key = $this->current_group_key;
 
 		if (! isset($this->results_groups[$alias])) {
 			$this->results_groups[$alias] = [];
@@ -265,7 +265,7 @@ class SqlExecutor
     public function max($expr)
     {
 		$alias = $this->current_field->getAlias();
-		$row_key = $this->current_result_row_key;
+		$row_key = $this->current_group_key;
 
 		if (! isset($this->results_groups[$alias])) {
 			$this->results_groups[$alias] = [];

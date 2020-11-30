@@ -1,6 +1,6 @@
 <?php
 
-// php -S 0.0.0.0:8080 example2.php
+// php -S 0.0.0.0:8080 demo.php
 
 require __DIR__ . '/vendor/autoload.php';
 
@@ -34,25 +34,24 @@ $database = [
 
 
 
-$sql = "select id, ucfirst(name) as prenom, sexe, age, count(*) as nb_users
-, avg(age) as ages_avg
-, sum(age) as ages_sum
-, min(age) as age_min
-, max(age) as age_max
-, get_class(\$this) as class
--- , file_get_contents('https://min-api.cryptocompare.com/data/price?fsym=BTC&tsyms=EUR') as prix_btc
-, s.name as sexe_fr
-, s_en.name as sexe_en
-from users u
-inner join sexes s on s.code = u.sexe and s.langue = 'fr' 
-inner join sexes s_en on s_en.code = u.sexe and s_en.langue = 'en'
-where 1
--- and age < 53
--- and sexe = 'm'
-group by sexe
-order by sexe
---  limit 1";
+
+$sql = isset($_GET['sql']) ? $_GET['sql'] : '';
+
+if (empty($sql)) {
+
+    $default_sql = "select *
+from users
+where age >= 30
+order by age, name desc";
     
+    $form_sql = $default_sql;
+
+} else {
+    $form_sql = $sql;
+}
+
+
+
 
 echo '
 <html>
@@ -65,6 +64,12 @@ echo '
 
     <div class="container-fluid">
         <div class="m-3"></div>
+
+            <form>
+                <textarea name="sql" class="form-control" style="width:100%; height:400px;">' . htmlspecialchars($form_sql) . '</textarea>
+                <br />
+                <input type="submit" value="Exécuter" class="btn btn-primary" />
+            </form>
         ';
 
 
@@ -94,6 +99,28 @@ if ($sql) {
     $parser->showResults();
 
     pre(['parse_duration' => $parser->parse_duration, 'execute_duration' => $parser->execute_duration]);
+
+
+
+    if (true) {
+        // SECOND QUERY
+        echo '<br /><hr /><br />';
+        echo '<h2>SELECT</h2>';
+
+        $sql = "select *, @demo from users order by id";
+        $parser = new SqlQueryParser($sql, $database);
+        $rows = $parser->execute();
+
+        // display query (with colors)
+        $parser->getParsedSql(true);
+        
+        // display results in an HTML table
+        $parser->showResults();
+
+        pre(['parse_duration' => $parser->parse_duration, 'execute_duration' => $parser->execute_duration]);
+    }
+
+
 
 }
 

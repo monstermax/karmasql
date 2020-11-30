@@ -3,13 +3,12 @@
 namespace SqlParser;
 
 
-class SqlActionSelect extends SqlAction
+class SqlActionDelete extends SqlAction
 {
 
 	public function executeAction(SqlExecutor $executor)
 	{
-		$select_fields = $this->getFieldsSelect();
-		$group_fields = $this->getFieldsGroupBy();
+		//$group_fields = $this->getFieldsGroupBy();
 		$order_fields = $this->getFieldsOrderBy();
 
 		$table_from = $this->getTableFrom();
@@ -27,30 +26,25 @@ class SqlActionSelect extends SqlAction
 		}
 		$nb_skipped = 0;
 
-		if ($table_from) {
-			$rows = $table_from->getData();
 
-		} else {
-			// no from table found
-			$rows = [];
-			foreach ($select_fields as $select_alias => $select_field) {
-				$row[$select_alias] = $select_alias;
-			}
-			$rows[] = $row;
-		}
+		if (empty($table_from)) {
+			throw new \Exception("missing update table", 1);
+        }
+        
+        $rows = $table_from->getData();
 
 		$executor->results_groups = [];
 		$executor->current_group_key = null;
 		
 
-		$results = []; // TODO: créer SqlResult ? et/ou SqlRecordset ?
+		$rows_to_update = []; // TODO: créer SqlResult ? et/ou SqlRecordset ?
 		$results_orders = [];
 
 		$current_row_idx = 0;
-		foreach ($rows as $row) {
+		foreach ($rows as $row_idx => $row) {
 
 			// 1) check limit
-			if ($limit && count($results) >= $limit) {
+			if ($limit && count($rows_to_update) >= $limit) {
 				break;
 			}
 
@@ -109,23 +103,22 @@ class SqlActionSelect extends SqlAction
 
 			
 			// 6a) group by
-			if (! $group_fields) {
-				$key = '_' . count($results);
-			} else {
-				$group_results = $executor->calculateFields($row_data, $group_fields);
-				$key = implode("|", array_values($group_results));
-			}
-			$executor->current_group_key = $key;
+			//if (! $group_fields) {
+			//	$key = '_' . count($rows_to_update);
+			//} else {
+			//	$group_results = $executor->calculateFields($row_data, $group_fields);
+			//	$key = implode("|", array_values($group_results));
+			//}
+			//$executor->current_group_key = $key;
 			
 			
-			// 7) add result
-			$result = $executor->calculateFields($row_data, $select_fields);
-			$results[$key] = $result;
+			// 7a) update (build list of items to delete)
+			$rows_to_update[$row_idx] = $row;
 
 
 			// 8a) order by
 			if ($order_fields) {
-				$results_orders[$key] = $executor->calculateFields($row_data, $order_fields);
+				$results_orders[$row_idx] = $executor->calculateFields($row_data, $order_fields);
 			}
 
 
@@ -134,12 +127,10 @@ class SqlActionSelect extends SqlAction
 		unset($row);
 		unset($current_row_idx);
 
-		$executor->current_group_key = null;
-
 
 		// 8b) order by
 		if ($order_fields) {
-			uksort($results, function ($a, $b) use ($results_orders) {
+			uksort($rows_to_update, function ($a, $b) use ($results_orders) {
 				$result_order_a = $results_orders[$a];
 				$result_order_b = $results_orders[$b];
 
@@ -163,35 +154,50 @@ class SqlActionSelect extends SqlAction
 			});
 
 		}
-		
+        $executor->current_group_key = null;
+
+
 		
 		// 6b) group by (retrieve results of eval functions)
-		if ($executor->results_groups) {
-			foreach ($results as $key => $result) {
-				foreach ($executor->results_groups as $field_alias => $field_result) {
-					$results[$key][$field_alias] = $field_result[$key]['result'];
-				}
-				unset($field_alias, $field_result);
-			}
-			unset($key, $result);
+        // TODO
+        
+
+
+		// 7b) delete
+        // TODO: deplacer le offset/limit ici
+		foreach ($rows_to_update as $row_idx => $row) {
+			$this->deleteRow($rows, $row_idx);
 		}
 
+        $table_from->setData( array_values($rows) );
+
+		$database = $this->parser->getDatabase();
+		$table_from->saveDataToDatabase($this->parser, $database);
 
 
-		// reset rows values
-		$results = array_values($results);
-
+		$results = array_values($rows_to_update);
 		return $results;
 	}
 
 
+    protected function deleteRow(&$data_table, $row_idx)
+    {
+        unset($data_table[$row_idx]);
+    }
+
+
 	public function parseParts()
 	{
+		$deletes = iterator_to_array($this->getPart('delete'));
+        if ($deletes) {
+            $deletes[0]->parsePart();
+        }
+
 		$froms = iterator_to_array($this->getPart('from'));
 		if ($froms) {
 			$froms[0]->parsePart();
-		}
-
+        }
+        
 		$wheres = iterator_to_array($this->getPart('where'));
 		if ($wheres) {
 			$wheres[0]->parsePart();
@@ -204,28 +210,14 @@ class SqlActionSelect extends SqlAction
 			}
 		}
 
-		$selects = iterator_to_array($this->getPart('select'));
-		if ($selects) {
-			$selects[0]->parsePart();
-		}
-
-		$groups = iterator_to_array($this->getPart('group by'));
-		if ($groups) {
-			$groups[0]->parsePart();
-		}
-
-		$orders = iterator_to_array($this->getPart('order by'));
-		if ($orders) {
-			$orders[0]->parsePart();
-		}
-
 		$limits = iterator_to_array($this->getPart('limit'));
 		if ($limits) {
 			$limits[0]->parsePart();
 		}
 
+		$debug = 1;
 
-		// Note: parser les subqueries
+		// TODO: parser les subqueries
 	}
 
 
@@ -256,5 +248,6 @@ class SqlActionSelect extends SqlAction
 		return $tables;
 	}
 
-
 }
+
+

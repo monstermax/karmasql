@@ -1,6 +1,6 @@
 <?php
 
-// php -S 0.0.0.0:8080 example2.php
+// php -S 0.0.0.0:8080 example4_update.php
 
 require __DIR__ . '/vendor/autoload.php';
 
@@ -34,25 +34,6 @@ $database = [
 
 
 
-$sql = "select id, ucfirst(name) as prenom, sexe, age, count(*) as nb_users
-, avg(age) as ages_avg
-, sum(age) as ages_sum
-, min(age) as age_min
-, max(age) as age_max
-, get_class(\$this) as class
--- , file_get_contents('https://min-api.cryptocompare.com/data/price?fsym=BTC&tsyms=EUR') as prix_btc
-, s.name as sexe_fr
-, s_en.name as sexe_en
-from users u
-inner join sexes s on s.code = u.sexe and s.langue = 'fr' 
-inner join sexes s_en on s_en.code = u.sexe and s_en.langue = 'en'
-where 1
--- and age < 53
--- and sexe = 'm'
-group by sexe
-order by sexe
---  limit 1";
-    
 
 echo '
 <html>
@@ -68,34 +49,46 @@ echo '
         ';
 
 
-if ($sql) {
+// FIRST QUERY (UPDATE)
+if (true) {
 
-    //#### quick usage
+    echo '<h2>UPDATE</h2>';
 
-    //$rows = (new SqlQueryParser($sql, $database))->execute();
-    //pre($rows, 1);
-
-
-    //#### detailed usage
-
+    $sql = "update users set age = 12, email = concat(name, '@', name, '.com') where id in (1, 3)";
     $parser = new SqlQueryParser($sql, $database);
-    
-    $display_query = true;
-    if ($display_query) {
-        // display query (with colors)
-        $display_query = true;
-        $sql_parsed = $parser->getParsedSql($display_query);
-    }
+
+    // display query (with colors)
+    $parser->getParsedSql(true);
 
     // execute query
     $rows = $parser->execute();
 
     // display results in an HTML table
     $parser->showResults();
+    
+    pre(['parse_duration' => $parser->parse_duration, 'execute_duration' => $parser->execute_duration]);
+}
+
+
+// SECOND QUERY (SELECT)
+if (true) {
+    echo '<br /><hr /><br />';
+    echo '<h2>SELECT</h2>';
+
+    $sql = "select * from users order by id";
+    $parser = new SqlQueryParser($sql, $database);
+    $rows = $parser->execute();
+
+    // display query (with colors)
+    $parser->getParsedSql(true);
+    
+    // display results in an HTML table
+    $parser->showResults();
 
     pre(['parse_duration' => $parser->parse_duration, 'execute_duration' => $parser->execute_duration]);
-
 }
+
+
 
 echo '
     </div>
@@ -104,7 +97,3 @@ echo '
 
 //echo '<hr /><pre>table users: ' . print_r($database['users'], true) . '</pre>';
 //echo '<hr /><pre>table sexes: ' . print_r($database['sexes'], true) . '</pre>';
-
-if (isset($parser)) {
-    echo '<hr /><pre>DATABASE: ' . print_r($database, true) . '</pre>';
-}

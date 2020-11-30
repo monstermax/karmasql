@@ -54,6 +54,10 @@ class SqlActionPartWhere extends SqlActionPart
 				} else if ($item->type === 'space') {
 
 				} else if ($item->type === 'numeric') {
+					
+				} else if ($item->type === 'comparator') {
+
+				} else if ($item->type === 'string') {
 
 				} else {
 					throw new \Exception("non implemented case");

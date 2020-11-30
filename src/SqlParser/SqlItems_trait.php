@@ -138,9 +138,20 @@ trait SqlItems_trait
 	public function addItem(SqlParseItem $item)
 	{
 		$item->action = $this->action;
+		//$item->parent = $this; // TODO: a tester
 
 		$this->items[] = $item;
 
+		return $this;
+	}
+	
+	public function addItems($items)
+	{
+		foreach ($items as $item) {
+			$this->addItem($item);
+			$item->parent = $this;
+		}
+		
 		return $this;
 	}
 
