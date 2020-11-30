@@ -13,7 +13,7 @@ No dependencies.
 ```php
 require __DIR__ . '/vendor/autoload.php';
 
-use \SqlParser\SqlParser;
+use \SqlParser\SqlQueryParser;
 
 
 $database = [
@@ -30,7 +30,7 @@ $database = [
 
 $sql = "select * from users order by age, name desc";
 
-$parser = new SqlParser($sql, $database);
+$parser = new SqlQueryParser($sql, $database);
 
 // execute query
 $rows = $parser->execute();
@@ -120,7 +120,7 @@ order by sexe
 - jointures (à améliorer)
 - order by grouped field or by alias
 - order by 1
-- other actions (update, delete, insert, set, desc)
+- other actions (update, delete, set, desc)
 - insert into ... select ...
 - create table ... as select ...
 - join with using
