@@ -96,13 +96,13 @@ class SqlTable
 	}
 
 
-	public function saveDataToDatabase(SqlQueryParser $parser, $database)
+	public function saveDataToDatabase(SqlQueryParser $parser, $database, $table_name=null)
 	{
 		$table_name = $this->getName();
 		
 		$database[$table_name] = $this->data;
 
-		$parser->setDatabase($database);
+		$parser->setDatabase($database, $table_name);
 
 	}
 

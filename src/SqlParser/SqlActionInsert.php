@@ -35,7 +35,8 @@ class SqlActionInsert extends SqlAction
 		$table_into->setData($data, true);
 
 		$database = $this->parser->getDatabase();
-		$table_into->saveDataToDatabase($this->parser, $database);
+		$table_name = $table_into->getName();
+		$table_into->saveDataToDatabase($this->parser, $database, $table_name);
 
 		//pre($table_into->getData());
 		$debug = 1;

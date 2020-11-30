@@ -66,7 +66,7 @@ class SqlActionPartFrom extends SqlActionPart
 				}
 
 				if (empty($data_table)) {
-					throw new \Exception("empty table '" . $table_name . "'", 1);
+					throw new \Exception("empty table '" . $table_name . "' => cannot match fields", 1);
 				}
 
 				$fields_names = array_keys($data_table[0]);

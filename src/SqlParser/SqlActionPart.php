@@ -69,6 +69,15 @@ class SqlActionPart
 		} else if ($name == 'delete') {
 			$part = new SqlActionPartDelete($action, $name);
 
+		} else if ($name == 'create table') {
+			$part = new SqlActionPartCreateTable($action, $name);
+
+		} else if ($name == 'drop table') {
+			$part = new SqlActionPartDropTable($action, $name);
+
+		} else if ($name == 'truncate table') {
+			$part = new SqlActionPartTruncateTable($action, $name);
+
 		} else {
 			throw new \Exception('non implemented case');
 			$part = new SqlActionPart($action, $name);

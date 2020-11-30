@@ -44,6 +44,15 @@ class SqlAction
 		} else if ($name == 'set') {
 			$part = new SqlActionSet($parser, $name);
 
+		} else if ($name == 'create table') {
+			$part = new SqlActionCreateTable($parser, $name);
+
+		} else if ($name == 'drop table') {
+			$part = new SqlActionDropTable($parser, $name);
+
+		} else if ($name == 'truncate table') {
+			$part = new SqlActionTruncateTable($parser, $name);
+
 		} else {
 			$part = new SqlAction($parser, $name);
 		}

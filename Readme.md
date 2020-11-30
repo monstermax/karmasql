@@ -7,7 +7,7 @@
 
 No dependencies. 
 
-Available commands: SELECT, INSERT, UPDATE, DELETE, SET.
+Available commands: SELECT, INSERT, UPDATE, DELETE, SET, CREATE, DROP, TRUNCATE.
 
 
 ## Usage
@@ -116,16 +116,16 @@ order by sexe
 
 #### Features
 
+- multiples queries separated by ;
+- insert into ... select ...
+- create table ... as select ...
+- join with using
 - subqueries
 - distinct
 - jointures (à améliorer)
 - order by grouped field or by alias
 - order by 1
-- insert into ... select ...
-- create table ... as select ...
-- join with using
 - case when
-- multiples queries separated by ;
 - autoincrement
 - indexes
 - insert default values

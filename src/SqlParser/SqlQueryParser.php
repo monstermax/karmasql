@@ -81,15 +81,23 @@ class SqlQueryParser
 		'set' => [
 			'set' => 1,
 		],
+		'create table' => [
+			'create table' => 1,
+		],
+		'drop table' => [
+			'drop table' => 1,
+		],
+		'rename' => [
+			'rename table' => 1,
+		],
+		'truncate table' => [
+			'truncate table' => 1,
+		],
 		'replace' => 1,
 		'show' => 1,
 		'desc' => 1,
 		'alter' => 1,
-		'create' => 1,
-		'drop' => 1,
-		'truncate' => 1,
 		'use' => 1,
-		'rename' => 1,
 	];
 
 	protected $keywords = [
@@ -213,6 +221,7 @@ class SqlQueryParser
 			$is_asterisk = ($char === '*'); // TODO: creer une class SqlJoker
 			$is_dot = ($char === '.');
 			$is_arobase = ($char === '@');
+			$is_semicolon = ($char === ';');
 			$is_dollar = ($char === '$');
 			$is_comma = ($char === ',');
 			$is_exclamation = ($char === '!'); // note: a gerer comme le keyword "not"
@@ -226,6 +235,7 @@ class SqlQueryParser
 			$is_joker2 = $is_asterisk && !is_null($prev_char_no_space) && in_array($prev_char_no_space, ['.', '(']); // on capture ici seulement les variantes comme "mytable.*" ou "count(*)" (et pas le joker global "*")
 
 			//echo "debug character at position $pos : $char<hr >";
+
 
             if (! is_null($prev_char_no_space) && !$is_space) {
 				$prev_char_no_space = $char;
@@ -453,7 +463,13 @@ class SqlQueryParser
 			if (! $this->current_space) {
 				// on n'est PAS dans un space
 				if ($is_space) {
-					SqlSpace::startSpace($this, $pos);
+					if ($this->current_word) {
+						// cas des mots composés (alter table, order by, group by, inner join, ...)
+						$this->current_word->append($char);
+
+					} else {
+						SqlSpace::startSpace($this, $pos);
+					}
 					continue;
 				}
 			}
@@ -483,6 +499,13 @@ class SqlQueryParser
 			// comparator ?
 			if ($is_comparator) {
 				SqlComparator::startComparator($this, $pos);
+				continue;
+			}
+
+
+			if ($is_semicolon) {
+				// fin de requete. se preparer pour parser une nouvelle requete
+				// TODO
 				continue;
 			}
 
@@ -530,7 +553,7 @@ class SqlQueryParser
 		if ($this->current_action) {
 			$this->current_action->setCurrentPart(null);
 		}
-		unset($this->current_action);
+		$this->current_action = null;
 
 
 		if (! $this->principal_action) {
@@ -722,7 +745,7 @@ class SqlQueryParser
 
 	/* SETTERS */
 
-	public function setDatabase($database)
+	public function setDatabase($database, $table_name=null)
 	{
 		//$this->database = $database;
 
@@ -730,8 +753,11 @@ class SqlQueryParser
 			$this->database = [];
 		}
 
-		foreach ($database as $table_name => $table) {
-			$this->database[$table_name] = $table;
+		foreach ($database as $tmp_table_name => $table) {
+			if (! is_null($table_name) && $tmp_table_name !== $table_name) {
+				continue;
+			}
+			$this->database[$tmp_table_name] = $table;
 		}
 
 	}
@@ -806,7 +832,14 @@ class SqlQueryParser
 			$current_action = $this->getCurrentAction();
 
 			if (! $current_action) {
+				
+				if ($item->type === 'space') {
+					// skip error for spaces
+					return;
+				}
 				//if (count($this->getWords()) > 1) {
+
+
 					throw new \Exception("missing current_action", 1);
 				//}
 				

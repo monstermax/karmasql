@@ -99,30 +99,36 @@ if ($sql) {
     $parser->showResults();
 
     pre(['parse_duration' => $parser->parse_duration, 'execute_duration' => $parser->execute_duration]);
-
-
-
-    if (true) {
-        // SECOND QUERY
-        echo '<br /><hr /><br />';
-        echo '<h2>SELECT</h2>';
-
-        $sql = "select *, @demo from users order by id";
-        $parser = new SqlQueryParser($sql, $database);
-        $rows = $parser->execute();
-
-        // display query (with colors)
-        $parser->getParsedSql(true);
-        
-        // display results in an HTML table
-        $parser->showResults();
-
-        pre(['parse_duration' => $parser->parse_duration, 'execute_duration' => $parser->execute_duration]);
-    }
-
-
-
 }
+
+
+if (false) {
+    // SECOND QUERY
+    $sql = "insert into toto (id, name, age) values (7, 'luc', 29), (8, 'sophie', 49)";
+    $parser = new SqlQueryParser($sql, $database);
+    $rows = $parser->execute();
+}
+
+if (false) {
+    // THIRD QUERY
+    echo '<br /><hr /><br />';
+    echo '<h2>SELECT</h2>';
+
+    $sql = "select *, @demo from users order by id";
+    $parser = new SqlQueryParser($sql, $database);
+    $rows = $parser->execute();
+
+    // display query (with colors)
+    $parser->getParsedSql(true);
+    
+    // display results in an HTML table
+    $parser->showResults();
+
+    pre(['parse_duration' => $parser->parse_duration, 'execute_duration' => $parser->execute_duration]);
+}
+
+
+
 
 echo '
     </div>

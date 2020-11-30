@@ -168,7 +168,8 @@ class SqlActionUpdate extends SqlAction
 		$table_update->setData($rows, true);
 
 		$database = $this->parser->getDatabase();
-		$table_update->saveDataToDatabase($this->parser, $database);
+		$table_name = $table_update->getName();
+		$table_update->saveDataToDatabase($this->parser, $database, $table_name);
 
 		$debug = 1;
 

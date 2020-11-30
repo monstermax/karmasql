@@ -35,8 +35,8 @@ class SqlWord extends SqlParseItem
 		$this->word = $this->outer_text;
 
 		$next_char = substr($this->parser->getSql(), $pos+1, 1);
-		if (in_array($this->word, ['group', 'order', 'inner', 'outer', 'left', 'left']) && $next_char == ' ') {
-			// on ne eut pas creer un nouveau mot. on va concatener ce mot avec le prochain
+		if (in_array($this->word, ['group', 'order', 'inner', 'outer', 'left', 'left', 'create', 'drop', 'rename', 'truncate']) && $next_char == ' ') {
+			// on ne veut pas creer un nouveau mot. on va concatener ce mot avec le prochain
 			return;
 		}
 

@@ -50,12 +50,14 @@ class SqlExecutor
 
 			$field_values = $field->getCalculatedValues($this, $row_data); // NOTE: $field est un SqlField ou un SqlExpr -- il peut contenir 1 champ ou plusieurs si "*"
 
-			foreach ($field_values as $field_alias => $value) {
-				if ($fields_aliases) {
-					// cas pour le insert into
-					$field_alias = $fields_aliases[$idx]->word;
+			if ($field_values) {
+				foreach ($field_values as $field_alias => $value) {
+					if ($fields_aliases) {
+						// cas pour le insert into
+						$field_alias = $fields_aliases[$idx]->word;
+					}
+					$values[$field_alias] = $value;
 				}
-				$values[$field_alias] = $value;
 			}
 
 			$idx++;
@@ -81,7 +83,7 @@ class SqlExecutor
         $suffix = '';
 
         if (defined('APP_DIR')) {
-            $cmd = 'cd ' . APP_DIR . '; git rev-parse master';
+            $cmd = 'cd ' . __DIR__ . '; git rev-parse master';
             $commit_id = trim(shell_exec($cmd));
             if ($commit_id) {
                 $suffix = '-' . substr($commit_id, 0, 7);

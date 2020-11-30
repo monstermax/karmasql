@@ -10,6 +10,7 @@ class SqlActionPartInto extends SqlActionPart
     protected $table = null;
     protected $fields = [];
 
+	
 	public function parsePart()
 	{
         $tmp_params = $this->getParamsFromItems(false);
