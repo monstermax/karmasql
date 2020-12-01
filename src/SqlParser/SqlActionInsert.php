@@ -22,6 +22,8 @@ class SqlActionInsert extends SqlAction
 		if ($table_from) {
 			$action_select = new SqlActionSelect($this->parser, 'select');
 			$parts = array_slice($this->parts, 2);
+
+			// on change l'action de chaque part de la requete select (la nouvelle action est un SqlActionSelect et non plus un SqlActionInsert)
 			foreach ($parts as &$part) {
 				$part->setAction($action_select);
 			}

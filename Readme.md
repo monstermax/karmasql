@@ -112,7 +112,6 @@ group by sexe";
 #### Features
 
 - order by x desc
-- insert into ... select ...
 - create table ... as select ...
 - join with using
 - subqueries
