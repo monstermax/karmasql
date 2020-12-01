@@ -95,10 +95,8 @@ class SqlParseItem implements \JsonSerializable
 
 			if (! $current_action) {
 				if (count($parser->getWords()) > 1) {
-					throw new \Exception("missing current_action", 1);
-
-				}else {
-					//pre($this, 0, "warning: item without action => ");
+					//throw new \Exception("missing current_action", 1); // désactivé car sinon empeche les multiples queries
+					// TODO: A REVOIR
 				}
 				
 			} else {

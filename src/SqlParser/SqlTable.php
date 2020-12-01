@@ -69,7 +69,7 @@ class SqlTable
 	 *
 	 * @return  array
 	 */ 
-	public function getData()
+	public function & getData()
 	{
 		return $this->data;
 	}
@@ -79,9 +79,9 @@ class SqlTable
 	 *
 	 * @return  self
 	 */ 
-	public function setData(array $data)
+	public function setData(array &$data)
 	{
-		$this->data = $data;
+		$this->data = &$data;
 		
 		return $this;
 	}

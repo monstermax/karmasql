@@ -144,4 +144,24 @@ group by sexe";
             - SqlComma
             - SqlComment
 
+    
+    Evolution possible :
+     - créer SqlFragment (un SqlFragment contient une liste de SqlType*)
+     - renommer SqlWord en SqlTypeWord
+     - renommer SqlString en SqlTypeString
+     - renommer SqlNumeric en SqlTypeNumeric
+     - renommer SqlJoker en SqlTypeJoker
+     - renommer SqlOperator en SqlTypeOperator
+     - renommer SqlComparator en SqlTypeComparator
+     - renommer SqlSpace en SqlTypeSpace
+     - renommer SqlComma en SqlTypeComma
+     - renommer SqlComment en SqlTypeComment
+     
+     - renommer SqlField en SqlTypeWord_Field
+     - transformer les SqlExpr en SqlFragment
+ 
+     - une action est un SqlFragment
+     - une action_part est un SqlFragment
+     - une parenthese est un SqlFragment
+
 

@@ -246,20 +246,16 @@ class SqlParser
 			$is_space = in_array($char_id, [9, 10, 13, 32]);
 			$is_comparator = in_array($char, ['=', '<', '>']) || ($is_exclamation && $next_char === '=');
 			$is_operator = in_array($char, ['+', '-', '%', '^', '&', '|']) || ($char === '*' && $prev_char !== '/' && $next_char !== '/') || ($char === '/' && $prev_char !== '*' && $next_char !== '*');
-			$is_joker  = $is_asterisk && !is_null($prev_char_no_space) && in_array($prev_char_no_space, ['', ',']); // on capture ici seulement le joker global "*" (et pas les variantes comme "mytable.*" ou "count(*)")
-			$is_joker2 = $is_asterisk && !is_null($prev_char_no_space) && in_array($prev_char_no_space, ['.', '(']); // on capture ici seulement les variantes comme "mytable.*" ou "count(*)" (et pas le joker global "*")
+			$is_joker  = $is_asterisk && in_array($prev_char_no_space, ['', ',']); // on capture ici seulement le joker global "*" (et pas les variantes comme "mytable.*" ou "count(*)")
+			$is_joker2 = $is_asterisk && in_array($prev_char_no_space, ['.', '(']); // on capture ici seulement les variantes comme "mytable.*" ou "count(*)" (et pas le joker global "*")
 
 			if ($is_asterisk) {
 				$debug = 1;
 			}
 			//echo "debug character at position $pos : $char<hr >";
 
-			if (! is_null($prev_char_no_space) && !$is_space) {
+			if ($this->current_action && !$is_space) {
 				$prev_char_no_space = $char;
-			}
-			if (is_null($prev_char_no_space) && $is_space) {
-				// au 1er espace que l'on rencontre, on "active" la variable
-				$prev_char_no_space = "";
 			}
 
 			// fin de space ?
@@ -513,6 +509,7 @@ class SqlParser
 				$this->current_query = new SqlQuery;
 				$this->queries[] = $this->current_query;
 				$prev_char_no_space = null;
+				$this->current_action = null;
 				continue;
 			}
 
@@ -632,6 +629,7 @@ class SqlParser
 		$results = null;
 
 		foreach ($this->queries as $query) {
+			$debug = $this->database;
 			$results = $query->execute();
 		}
 

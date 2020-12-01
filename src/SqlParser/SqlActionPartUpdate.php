@@ -14,6 +14,7 @@ class SqlActionPartUpdate extends SqlActionPart
 	{
         $tmp_params = $this->getParamsFromItems(false);
         $table_name = $tmp_params[0]->word;
+        $tmp_params[0]->word_type = 'table_name';
 
         $this->table = new SqlTable($table_name);
 

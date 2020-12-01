@@ -28,7 +28,7 @@ class SqlActionSelect extends SqlAction
 		$nb_skipped = 0;
 
 		if ($table_from) {
-			$rows = $table_from->getData();
+			$rows = & $table_from->getData();
 
 		} else {
 			// no from table found
