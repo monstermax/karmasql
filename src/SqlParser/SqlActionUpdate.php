@@ -22,6 +22,14 @@ class SqlActionUpdate extends SqlAction
 		$joins = $this->getJoins();
 		$tables = $this->getTables();
 
+		
+		// load data
+		$database = $this->parser->getDatabase();
+		foreach ($tables as $table) {
+			$table->loadDataFromDatabase($database);
+		}
+		
+
 		$limit_offset = $this->getLimit();
 		$limit = $limit_offset['limit'];
 		$offset = $limit_offset['offset'];

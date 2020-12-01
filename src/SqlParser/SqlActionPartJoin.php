@@ -139,7 +139,7 @@ class SqlActionPartJoin extends SqlActionPart
 				}
 
                 //$this->table->setData($data_table);
-                $this->table->loadDataFromDatabase($database);
+                //$this->table->loadDataFromDatabase($database);
 			}
         }
 

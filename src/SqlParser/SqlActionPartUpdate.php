@@ -43,9 +43,9 @@ class SqlActionPartUpdate extends SqlActionPart
 
 
         // load data from database
-        $parser = $this->getAction()->getParser();
-        $database = $parser->getDatabase();
-        $this->table->loadDataFromDatabase($database);
+        //$parser = $this->getAction()->getParser();
+        //$database = $parser->getDatabase();
+        //$this->table->loadDataFromDatabase($database);
 
         $debug = 1;
 

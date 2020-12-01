@@ -13,7 +13,7 @@ class SqlActionInsert extends SqlAction
 		$insert_values = $this->getInsertValues();
 
 		$table_name = $table_into->getName();
-		$data = &$table_into->getData();
+		$data = $table_into->getData();
 
 		$new_data = [];
 

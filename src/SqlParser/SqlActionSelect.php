@@ -22,13 +22,19 @@ class SqlActionSelect extends SqlAction
 		$limit = $limit_offset['limit'];
 		$offset = $limit_offset['offset'];
 
+		// load data
+		$database = $this->parser->getDatabase();
+		foreach ($tables as $table) {
+			$table->loadDataFromDatabase($database);
+		}
+
 		if (empty($offset)) {
 			$offset = 0;
 		}
 		$nb_skipped = 0;
 
 		if ($table_from) {
-			$rows = & $table_from->getData();
+			$rows = $table_from->getData();
 
 		} else {
 			// no from table found

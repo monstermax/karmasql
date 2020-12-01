@@ -101,7 +101,7 @@ class SqlActionPartFrom extends SqlActionPart
 
 				// set data from database
 				//$tables[$table_alias]->setData($data_table);
-				$tables[$table_alias]->loadDataFromDatabase($database);
+				//$tables[$table_alias]->loadDataFromDatabase($database);
 			}
 
 		}

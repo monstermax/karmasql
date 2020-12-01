@@ -31,7 +31,11 @@ class SqlActionDelete extends SqlAction
 			throw new \Exception("missing update table", 1);
         }
         
-        $rows = $table_from->getData();
+		
+		// load data
+		$database = $this->parser->getDatabase();
+		$rows = $table_from->loadDataFromDatabase($database);
+		
 
 		$executor->results_groups = [];
 		$executor->current_group_key = null;

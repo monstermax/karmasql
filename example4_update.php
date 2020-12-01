@@ -56,7 +56,7 @@ $sql = "
 
     update users set age = 12, email = concat(name, '@', upper(name), '.com') where id in (1, 3);
 
-    select * from users where age < 15 order by id;
+    select * from users where age < 40 order by id;
 ";
 $parser = new SqlParser($sql, $database);
 
