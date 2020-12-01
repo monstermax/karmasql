@@ -166,13 +166,16 @@ trait SqlItems_trait
 			'parenthese' => 'purple',
 			'word/action' => '#007fbf',
 			'word/action_part' => '#007fbf',
-			'word/function' => '#b14ac4',
+			'word/function_sql' => '#b14ac4',
+			'word/function_php' => 'red',
 			'word/keyword' => '#00afdf',
 			'word/field' => 'darkcyan',
 			'word/table_name' => 'orange',
 			'word/table_alias' => '#995528',
 			'word/field_name' => 'darkblue',
 			'word/field_alias' => '#795548',
+			'word/variable_php' => 'green',
+			'word/variable_sql' => 'green',
 		];
 
 		$items = $this->getItems();

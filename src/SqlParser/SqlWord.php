@@ -76,7 +76,17 @@ class SqlWord extends SqlParseItem
 
 		} else if (array_key_exists($this->word, $this->parser->getFunctions())) {
 			// le mot correspond à un nom de fonction
-			$this->word_type = 'function';
+			$this->word_type = 'function_sql';
+			
+		} else if ($this->word === '*') {
+			//$this->word_type = 'joker'; // on prefere laisser undefined. Ensuite, la fonction "detectFields" determinera le bon type de joker
+			
+		} else if (substr($this->word, 0, 1) === '$') {
+			$this->word_type = 'variable_php';
+
+		} else {
+			// undefined word type
+			$debug = 1;
 		}
 
 		//$this->detectFields();
@@ -109,20 +119,34 @@ class SqlWord extends SqlParseItem
 			if ($fields) {
 				$outer_text = implode(', ', $fields);
 			}
-		}
 
-		if ($this->word_type == 'function') {
+		} else if ($this->word_type == 'function_sql') {
 			$func_name = $outer_text;
 
             if (is_callable([SqlExecutor::class, $func_name])) {
 				$outer_text = '$executor->' . $func_name;
-				
+			
+			/*
             } else if ($this->parser->allow_php_functions && is_callable($func_name)) {
 				$outer_text = $func_name;
+			*/
 
 			} else {
 				throw new \Exception('unknown function ' . $func_name);
 			}
+			
+		} else if ($this->word_type == 'function_php') {
+			if (! $this->parser->allow_php_functions) {
+				throw new \Exception('PHP functions are not allowed');
+			}
+			
+		} else if ($this->word_type == 'variable_php') {
+			if (! $this->parser->allow_php_variables) {
+				throw new \Exception('PHP variables are not allowed');
+			}
+
+        } else {
+			throw new \Exception("unknown case", 1);
 		}
 
 		return $outer_text;

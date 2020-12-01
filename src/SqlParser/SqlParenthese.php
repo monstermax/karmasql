@@ -84,6 +84,24 @@ class SqlParenthese extends SqlParseItem
 				// functionFoo(...)
 				$current_parenthese->is_function = true;
 				$current_parenthese->function_name = $last_word;
+
+			} else if (is_callable($last_word)) {
+				// the parenthese is the arguments of a php function
+				$current_parenthese->is_function = true;
+				$current_parenthese->function_name = $last_word;
+				
+				// TODO: indiquer au word precedent qu'il s'agit d'un word_type=function_php
+				$parent_items = $current_parenthese->parent->getItems();
+				if ($parent_items) {
+					$last_word_item = $parent_items[count($parent_items)-1];
+					if ($last_word_item->type === 'word') {
+						$last_word_item->word_type = 'function_php';
+					}
+				}
+
+			} else {
+				// undefined parenthese type
+				$debug = 1;
 			}
 		}
 	}

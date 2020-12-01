@@ -6,7 +6,8 @@ namespace SqlParser;
 class SqlParser
 {
 	// CONFIG VARIABLES
-	public $allow_php_functions = true;
+	public $allow_php_functions = false;
+	public $allow_php_variables = false;
 
 
 	// SYSTEM VARIABLES
@@ -652,7 +653,7 @@ class SqlParser
 	{
 		echo '<div class="jumbotron p-3">';
 		echo '<h5>SQL parsing</h5>';
-		echo '<div><small>SQL Parse duration: ' . round($this->parse_duration, 5) . ' second</small></div>';
+		echo '<div><small>SQL parsing duration: ' . round($this->parse_duration, 5) . ' second</small></div>';
 		echo '</div>';
 
         foreach ($this->queries as $query_idx => $query) {

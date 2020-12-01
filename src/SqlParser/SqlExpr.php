@@ -160,6 +160,32 @@ class SqlExpr
 					continue;
 				}
 
+                if ($item->type === 'parenthese') {
+					// parenthese
+
+                } else if ($item->type === 'word') {
+                    if ($item->word_type == 'field') {
+						// field sql
+					
+					} else if ($item->word_type == 'function_sql') {
+						// function sql
+
+					} else if ($item->word_type == 'function_php') {
+						// function php
+
+					} else if ($item->word_type == 'variable_php') {
+						// variable php
+						$debug = 1;
+
+					} else {
+						$debug = $item->type;
+						throw new \Exception("unknown case", 1);
+					}
+
+				} else {
+					throw new \Exception("unknown case", 1);
+				}
+
 				$item_code = $item->toSql(true);   // TODO: toSql à remplacer/renommer par toPhp
 				$item_codes[] = $item_code;
 				
