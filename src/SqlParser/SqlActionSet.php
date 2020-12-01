@@ -42,7 +42,8 @@ class SqlActionSet extends SqlAction
 
         $row_data = [];
 
-        $expr_set_value = $expr_set->getCalculatedValues($executor, $row_data);
+        $expr_set_values = $expr_set->getCalculatedValues($executor, $row_data);
+        $expr_set_value = array_shift($expr_set_values);
 
         //$row[$var_name] = array_pop($expr_set_value);
 
@@ -53,7 +54,13 @@ class SqlActionSet extends SqlAction
         $database['_variables'][$var_name] = $expr_set_value;
         $this->parser->setDatabase($database);
 
-		// TODO: parser les subqueries
+        // TODO: parser les subqueries
+
+        $this->results = [
+            ['@' . $var_name => $expr_set_value],
+        ];
+        
+        return $this->results;
 	}
 
 

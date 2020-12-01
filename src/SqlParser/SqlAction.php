@@ -14,7 +14,7 @@ class SqlAction
 	protected $parts = null;
 
 
-	public function __construct(SqlQueryParser $parser, $name)
+	public function __construct(SqlParser $parser, $name)
 	{
 		$this->name = $name;
 		$this->parser = $parser;
@@ -27,7 +27,7 @@ class SqlAction
 	}
 
 
-	public static function startAction(SqlQueryParser $parser, $name)
+	public static function startAction(SqlParser $parser, $name)
 	{
 		if ($name == 'select') {
 			$part = new SqlActionSelect($parser, $name);

@@ -9,7 +9,7 @@ class SqlNumeric extends SqlParseItem
 	public $number = '';
 
 
-	public static function startNumeric(SqlQueryParser $parser, $pos)
+	public static function startNumeric(SqlParser $parser, $pos)
 	{
 		$parser->logDebug(__METHOD__ . " @ $pos");
 

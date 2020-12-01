@@ -96,7 +96,7 @@ class SqlTable
 	}
 
 
-	public function saveDataToDatabase(SqlQueryParser $parser, $database, $table_name=null)
+	public function saveDataToDatabase(SqlParser $parser, $database, $table_name=null)
 	{
 		$table_name = $this->getName();
 		

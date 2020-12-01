@@ -5,7 +5,7 @@ namespace SqlParser;
 
 class SqlActionCreateTable extends SqlAction
 {
-    protected $table = null;
+	protected $table = null;
 
 
 	public function executeAction(SqlExecutor $executor)
@@ -21,7 +21,8 @@ class SqlActionCreateTable extends SqlAction
 			throw new \Exception("table already exists", 1);
 		}
 
-		$database[$table_name] = [];
+		//$database[$table_name] = [];
+		$table_create->setData([]);
 		$table_create->saveDataToDatabase($this->parser, $database, $table_name);
 	}
 
@@ -29,18 +30,18 @@ class SqlActionCreateTable extends SqlAction
 
 	public function parseParts()
 	{
-        $creates = iterator_to_array($this->getPart('create table'));
+		$creates = iterator_to_array($this->getPart('create table'));
 
-        if ($creates) {
+		if ($creates) {
 			$creates[0]->parsePart();
 			$table = $creates[0]->getTable();
 			
 			$this->table = $table;
-        }
+		}
 
 
-        $debug = 1;
+		$debug = 1;
 
-    }
+	}
 
 }

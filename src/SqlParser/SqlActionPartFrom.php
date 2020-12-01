@@ -27,13 +27,30 @@ class SqlActionPartFrom extends SqlActionPart
 				// expr
 				$param_items = $param->getItems();
 
-				//$param->detectAlias();
-				
-				$table_name = $param_items[0]->word;
-				$param_items[0]->word_type = 'table_name';
+				// table_name
+				$param_item = array_shift($param_items);
+				if (!$param_item || $param_item->type !== 'word') {
+					throw new \Exception("excpected table name", 1);
+				}
+				$param_item->word_type = 'table_name';
+				$table_name = $param_item->word;
 
-				$table_alias = $param_items[count($param_items)-1]->word;
-				$param_items[count($param_items)-1]->word_type = 'table_alias';
+				// keyword "as" and/or alias
+				$param_item = array_shift($param_items);
+				if (!$param_item || $param_item->type !== 'word') {
+					throw new \Exception("excpected keyword 'as' or table alias", 1);
+				}
+                if ($param_item->word_type === 'keyword' && $param_item->word == 'as') {
+					// keyword 'as'
+					$param_item = array_shift($param_items);
+                }
+
+				// alias
+				if (!$param_item || $param_item->type !== 'word') {
+					throw new \Exception("excpected table alias", 1);
+				}
+				$table_alias = $param_item->word;
+				$param_item->word_type = 'table_alias';
 
 			} else if (get_class($param) == SqlSpace::class) {
 				// space => skip
@@ -56,20 +73,26 @@ class SqlActionPartFrom extends SqlActionPart
 			if (true) {
 				// find table into database to set fields names
 
-				$parser = $this->getAction()->getParser();
-				$database = $parser->getDatabase();
-				
-				$data_table = isset($database[$table_name]) ? $database[$table_name] : null;
+				$fields_names = null;
 
-				if (is_null($data_table)) {
-					throw new \Exception("table '" . $table_name . "' is not in the database", 1);
+				// TODO: stocker les fields_names en metadonnée. Comme ca si on fait un "truncate" ou "delete" on pourra continuer a utiliser la table
+
+				if (empty($fields_names)) {
+					$parser = $this->getAction()->getParser();
+					$database = $parser->getDatabase();
+					
+					$data_table = isset($database[$table_name]) ? $database[$table_name] : null;
+	
+					if (is_null($data_table)) {
+						throw new \Exception("table '" . $table_name . "' is not in the database", 1);
+					}
+	
+					if (empty($data_table)) {
+						throw new \Exception("empty table '" . $table_name . "' => cannot match fields", 1);
+					}
+	
+					$fields_names = array_keys($data_table[0]);
 				}
-
-				if (empty($data_table)) {
-					throw new \Exception("empty table '" . $table_name . "' => cannot match fields", 1);
-				}
-
-				$fields_names = array_keys($data_table[0]);
 
 				foreach ($fields_names as $field_name) {
 					$tables[$table_alias]->addFieldName($field_name);

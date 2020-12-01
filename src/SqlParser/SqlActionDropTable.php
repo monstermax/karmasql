@@ -5,16 +5,13 @@ namespace SqlParser;
 
 class SqlActionDropTable extends SqlAction
 {
-    protected $table = null;
+	protected $table = null;
 
 
 	public function executeAction(SqlExecutor $executor)
 	{
 		$table_drop = $this->table;
 		$table_name = $table_drop->getName();
-
-		$debug = 1;
-
 		$database = $this->parser->getDatabase();
 
 		if (! isset($database[$table_name])) {
@@ -29,18 +26,17 @@ class SqlActionDropTable extends SqlAction
 
 	public function parseParts()
 	{
-        $drops = iterator_to_array($this->getPart('drop table'));
+		$drops = iterator_to_array($this->getPart('drop table'));
 
-        if ($drops) {
+		if ($drops) {
 			$drops[0]->parsePart();
 			$table = $drops[0]->getTable();
 			
 			$this->table = $table;
-        }
+		}
 
 
-        $debug = 1;
-
-    }
+		$debug = 1;
+	}
 
 }

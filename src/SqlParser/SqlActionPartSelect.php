@@ -64,7 +64,7 @@ class SqlActionPartSelect extends SqlActionPart
 				$param->detectFields();
 
 				if ($param->word_type == 'variable_sql') {
-					$fields[$field_name] = $param;
+					$fields[ $param->var_name ] = $param;
 					
 				} else if ($param->word_type == 'field' && ! empty($param->fields)) {
 					// multiple fields * => on unpack les fields

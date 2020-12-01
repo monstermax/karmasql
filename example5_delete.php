@@ -4,7 +4,7 @@
 
 require __DIR__ . '/vendor/autoload.php';
 
-use \SqlParser\SqlQueryParser;
+use \SqlParser\SqlParser;
 
 
 function pre($var, $exit=false) {
@@ -13,6 +13,21 @@ function pre($var, $exit=false) {
         exit;
     }
 }
+
+
+echo '
+<html>
+<head>
+    <title>SqlParser Demo</title>
+</head>
+<body>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+    <style>.table thead {font-weight:bold; text-align:center;}</style>
+
+    <div class="container-fluid">
+        <div class="m-3"></div>
+';
+
 
 
 $database = [
@@ -34,59 +49,22 @@ $database = [
 
 
 
+$sql = "delete from users where sexe = 'm' and age <> 49 ; select * from users order by id";
+$parser = new SqlParser($sql, $database);
 
-echo '
-<html>
-<head>
-    <title>SqlParser Demo</title>
-</head>
-<body>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
-    <style>.table thead {font-weight:bold; text-align:center;}</style>
+$parser->showInputSql();
 
-    <div class="container-fluid">
-        <div class="m-3"></div>
-        ';
+// display query (with colors)
+$parser->showParsedSql(true);
 
+// execute query
+$rows = $parser->execute();
 
-// FIRST QUERY (DELETE)
-if (true) {
+// display results in an HTML table
+$parser->showResults();
 
-    echo '<h2>DELETE</h2>';
-
-    $sql = "delete from users where sexe = 'm' and age <> 49";
-    $parser = new SqlQueryParser($sql, $database);
-
-    // display query (with colors)
-    $parser->getParsedSql(true);
-
-    // execute query
-    $rows = $parser->execute();
-
-    // display results in an HTML table
-    $parser->showResults();
-    
-    pre(['parse_duration' => $parser->parse_duration, 'execute_duration' => $parser->execute_duration]);
-}
-
-
-// SECOND QUERY (SELECT)
-if (true) {
-    echo '<br /><hr /><br />';
-    echo '<h2>SELECT</h2>';
-
-    $sql = "select * from users order by id";
-    $parser = new SqlQueryParser($sql, $database);
-    $rows = $parser->execute();
-
-    // display query (with colors)
-    $parser->getParsedSql(true);
-    
-    // display results in an HTML table
-    $parser->showResults();
-
-    pre(['parse_duration' => $parser->parse_duration, 'execute_duration' => $parser->execute_duration]);
-}
+// show database (at its final state)
+$parser->showDatabase();
 
 
 
@@ -95,5 +73,3 @@ echo '
 </body>
 </html>';
 
-//echo '<hr /><pre>table users: ' . print_r($database['users'], true) . '</pre>';
-//echo '<hr /><pre>table sexes: ' . print_r($database['sexes'], true) . '</pre>';

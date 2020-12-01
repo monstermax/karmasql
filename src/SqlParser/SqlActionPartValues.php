@@ -23,6 +23,10 @@ class SqlActionPartValues extends SqlActionPart
             
             $row = [];
             foreach ($parenthese_params as $idx => $param) {
+                if ($param->type === 'word') {
+                    $param->detectFields();
+                }
+
                 $item_key = $insert_keys[$idx];
                 $field_name = $item_key->word;
                 $row[$field_name] = $param;

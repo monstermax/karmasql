@@ -22,7 +22,7 @@ class SqlSpace extends SqlParseItem
 	}
 
 
-	public static function startSpace(SqlQueryParser $parser, $pos)
+	public static function startSpace(SqlParser $parser, $pos)
 	{
 		$parser->logDebug(__METHOD__ . " @ $pos");
 

@@ -11,7 +11,7 @@ class SqlString extends SqlParseItem
 
 
 
-	public static function isStringStart(SqlQueryParser $parser, $char)
+	public static function isStringStart(SqlParser $parser, $char)
 	{
 		if ($parser->getCurrentString()) {
 			// on est deja dans une string
@@ -63,7 +63,7 @@ class SqlString extends SqlParseItem
 	}
 	
 
-	public static function startString(SqlQueryParser $parser, $pos, $string_type='simple_quote')
+	public static function startString(SqlParser $parser, $pos, $string_type='simple_quote')
 	{
 		$parser->logDebug(__METHOD__ . " @ $pos");
 

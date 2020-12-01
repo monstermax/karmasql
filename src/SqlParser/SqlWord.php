@@ -12,7 +12,7 @@ class SqlWord extends SqlParseItem
 	public $var_value;
 
 
-	public static function startWord(SqlQueryParser $parser, $pos) {
+	public static function startWord(SqlParser $parser, $pos) {
 		$parser->logDebug(__METHOD__ . " @ $pos");
 
 		$current_word = new self;
@@ -32,7 +32,7 @@ class SqlWord extends SqlParseItem
 
 		$this->end($pos);
 
-		$this->word = $this->outer_text;
+		$this->word = strtolower($this->outer_text);
 
 		$next_char = substr($this->parser->getSql(), $pos+1, 1);
 		if (in_array($this->word, ['group', 'order', 'inner', 'outer', 'left', 'left', 'create', 'drop', 'rename', 'truncate']) && $next_char == ' ') {
@@ -117,20 +117,13 @@ class SqlWord extends SqlParseItem
             if (is_callable([SqlExecutor::class, $func_name])) {
 				$outer_text = '$executor->' . $func_name;
 				
-            } else if (is_callable($func_name)) {
+            } else if ($this->parser->allow_php_functions && is_callable($func_name)) {
 				$outer_text = $func_name;
 
 			} else {
 				throw new \Exception('unknown function ' . $func_name);
 			}
 		}
-
-		/*
-		if ($this->word_type == 'table_name') {
-			$table_name = $this->word;
-			$outer_text = '$this->database["' . $table_name . '"]';
-		}
-		*/
 
 		return $outer_text;
 	}
@@ -387,16 +380,25 @@ class SqlWord extends SqlParseItem
 
 	public function getCalculatedValues(SqlExecutor $executor, $row_data)
 	{
-        if ($this->word_type === 'variable_sql') {
+        if ($this->word_type === 'field_name') {
+			// when field_name is calculated by the "order by"
+			$field_alias = $this->word;
+			return [
+				$field_alias => $executor->current_result[$field_alias],
+			];
+
+        } else if ($this->word_type === 'variable_sql') {
 			$var_name = $this->var_name;
 
 			$database = $this->parser->getDatabase();
 			$var = isset($database['_variables'][$var_name]) ? $database['_variables'][$var_name] : null;
 
-			return $var;
+			return [
+				'@' . $var_name => $var,
+			];
 
         } else {
-			throw new \Exception("non implemented case", 1);
+			throw new \Exception("unknown word '" . $this->word . "'. don't known how to evaluate", 1);
 		}
 
 	}

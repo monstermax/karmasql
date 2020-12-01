@@ -24,7 +24,8 @@ class SqlActionInsert extends SqlAction
 			//$new_row = $insert_row;
 			//$row_data = $new_row[$idx];
 
-			$row_insert_data = array_fill_keys($insert_fields_names, null);
+			// preload les data avec la liste des champs de la table
+			$row_insert_data = $insert_fields_names ? array_fill_keys($insert_fields_names, null) : [];
 
 			$row_insert_data = array_merge($row_insert_data, $executor->calculateFields(null, $insert_row, $insert_keys));
 			
@@ -89,10 +90,16 @@ class SqlActionInsert extends SqlAction
 
 	public function parseParts()
 	{
+		$inserts = iterator_to_array($this->getPart('insert'));
+		if ($inserts) {
+			$inserts[0]->parsePart();
+		}
+
 		$intos = iterator_to_array($this->getPart('into'));
 		if ($intos) {
 			$intos[0]->parsePart();
 		}
+
 
 		$values = iterator_to_array($this->getPart('values'));
 		if ($values) {

@@ -15,7 +15,7 @@ Available commands: SELECT, INSERT, UPDATE, DELETE, SET, CREATE, DROP, TRUNCATE.
 ```php
 require __DIR__ . '/vendor/autoload.php';
 
-use \SqlParser\SqlQueryParser;
+use \SqlParser\SqlParser;
 
 
 $database = [
@@ -32,7 +32,7 @@ $database = [
 
 $sql = "select * from users order by age, name desc";
 
-$parser = new SqlQueryParser($sql, $database);
+$parser = new SqlParser($sql, $database);
 
 // execute query
 $rows = $parser->execute();
@@ -116,7 +116,7 @@ order by sexe
 
 #### Features
 
-- multiples queries separated by ;
+- order by x desc
 - insert into ... select ...
 - create table ... as select ...
 - join with using
@@ -124,7 +124,6 @@ order by sexe
 - distinct
 - jointures (à améliorer)
 - order by grouped field or by alias
-- order by 1
 - case when
 - autoincrement
 - indexes

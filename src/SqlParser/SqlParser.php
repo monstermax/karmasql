@@ -3,24 +3,30 @@
 namespace SqlParser;
 
 
-class SqlQueryParser
+class SqlParser
 {
+	// CONFIG VARIABLES
+	public $allow_php_functions = true;
+
+
+	// SYSTEM VARIABLES
+
 	protected $sql;
 	protected $database = null;
 	//protected $pos = null;
 	//protected $word = null;
 
 	protected $items = [];
-	protected $results = null;
+	protected $queries = [];
 
 	public $parse_duration = null;
-	public $execute_duration = null;
 
-	protected $principal_action = null;
+	protected $current_query = null;
+
 	protected $current_action = null;
 
 	protected $current_space = null;
-	
+
 	protected $current_operator = null;
 	protected $operators = [];
 
@@ -35,13 +41,13 @@ class SqlQueryParser
 
 	protected $comments = [];
 	protected $current_comment = null;
-	
+
 	protected $parentheses = [];
 	protected $current_parenthese = null;
 
 	protected $words = [];
 	protected $current_word = null;
-	
+
 	protected $actions = [
 		'select' => [
 			'select' => 1,
@@ -118,7 +124,7 @@ class SqlQueryParser
 		'using' => 1,
 		'on' => 1,
 	];
-	
+
 	protected $functions = [
 		'version' => 1,
 		'curl' => 1, // test
@@ -196,12 +202,21 @@ class SqlQueryParser
 
 	public function parse()
 	{
+		$this->parseSQL();
+	}
+
+	
+	public function parseSQL()
+	{
 		$ts_start = microtime(true);
 
 		$sql_len = strlen($this->sql);
 
-		//pre($this->sql);
-		//echo "<hr />";
+		
+		if (empty($this->current_query)) {
+			$this->current_query = new SqlQuery;
+			$this->queries[] = $this->current_query;
+		}
 
 		$prev_char_no_space = null;
 
@@ -234,12 +249,14 @@ class SqlQueryParser
 			$is_joker  = $is_asterisk && !is_null($prev_char_no_space) && in_array($prev_char_no_space, ['', ',']); // on capture ici seulement le joker global "*" (et pas les variantes comme "mytable.*" ou "count(*)")
 			$is_joker2 = $is_asterisk && !is_null($prev_char_no_space) && in_array($prev_char_no_space, ['.', '(']); // on capture ici seulement les variantes comme "mytable.*" ou "count(*)" (et pas le joker global "*")
 
+			if ($is_asterisk) {
+				$debug = 1;
+			}
 			//echo "debug character at position $pos : $char<hr >";
 
-
-            if (! is_null($prev_char_no_space) && !$is_space) {
+			if (! is_null($prev_char_no_space) && !$is_space) {
 				$prev_char_no_space = $char;
-            }
+			}
 			if (is_null($prev_char_no_space) && $is_space) {
 				// au 1er espace que l'on rencontre, on "active" la variable
 				$prev_char_no_space = "";
@@ -252,7 +269,6 @@ class SqlQueryParser
 					// on continue le space
 					//$this->current_space->append($char);
 					continue;
-
 				} else {
 					// fin de space
 					$this->current_space->endSpace($pos-1);
@@ -265,7 +281,7 @@ class SqlQueryParser
 				// on identifie s'il s'agit de l'operator * ou du regroupeur de champs (comme dans count(*) ou mytable.* )
 
 				// Ce code ne detecte que les mytable.* (et non les "*", qui sont gérés comme des operators)
- 
+
 				if (in_array($prev_char, ['.', '('])) {
 					// TODO: gerer s'il y a des espaces entre "(" et "*"
 
@@ -288,7 +304,6 @@ class SqlQueryParser
 					// on continue le operator
 					$this->current_operator->append($char);
 					continue;
-
 				} else {
 					// fin de operator
 					$this->current_operator->endOperator($pos-1);
@@ -302,7 +317,6 @@ class SqlQueryParser
 					// on continue le comparator
 					$this->current_comparator->append($char);
 					continue;
-
 				} else {
 					// fin de comparator
 					$this->current_comparator->endComparator($pos-1);
@@ -316,7 +330,6 @@ class SqlQueryParser
 					// on continue le word
 					$this->current_word->append($char);
 					continue;
-
 				} else {
 					// fin de word
 					$this->current_word->endWord($pos-1);
@@ -332,7 +345,6 @@ class SqlQueryParser
 					// on continue le number
 					$this->current_numeric->append($char);
 					continue;
-
 				} else {
 					// fin de number
 					$this->current_numeric->endNumeric($pos-1);
@@ -350,16 +362,14 @@ class SqlQueryParser
 					$enclosure_end_len = strlen($this->current_comment->enclosure_end);
 					$this->current_comment->endComment($pos, $comment_type);
 					if ($enclosure_end_len > 1) {
-						$pos += $enclosure_end_len-1;	
+						$pos += $enclosure_end_len-1;
 					}
-					
 				} else {
 					//throw new \Exception("debug me", 1);
 				}
 				unset($comment_type);
 				
 				continue;
-
 			} else {
 				// on n'est PAS dans un commentaire
 				$comment_type = SqlComment::isCommentStart($this, $char, $next_char);
@@ -384,8 +394,7 @@ class SqlQueryParser
 				unset($string_type);
 				continue;
 
-				// TODO: revoir la detection des strings imbriquées (ex: concat('<b>', '<span class="error">xx</span>', '</b>') )
-
+			// TODO: revoir la detection des strings imbriquées (ex: concat('<b>', '<span class="error">xx</span>', '</b>') )
 			} else {
 				// on n'est PAS dans un string
 
@@ -399,7 +408,6 @@ class SqlQueryParser
 					}
 					unset($string_type);
 				}
-
 			}
 
 
@@ -423,7 +431,6 @@ class SqlQueryParser
 					continue;
 				}
 				unset($parenthese_type);
-
 			} else {
 				// on n'est PAS dans une parenthese
 				$parenthese_type = SqlParenthese::isParentheseStart($this, $char);
@@ -434,7 +441,6 @@ class SqlQueryParser
 					continue;
 				}
 				unset($parenthese_type);
-
 			}
 
 
@@ -466,7 +472,6 @@ class SqlQueryParser
 					if ($this->current_word) {
 						// cas des mots composés (alter table, order by, group by, inner join, ...)
 						$this->current_word->append($char);
-
 					} else {
 						SqlSpace::startSpace($this, $pos);
 					}
@@ -504,8 +509,10 @@ class SqlQueryParser
 
 
 			if ($is_semicolon) {
-				// fin de requete. se preparer pour parser une nouvelle requete
-				// TODO
+				// fin de requete. on prepare une nouvelle requete
+				$this->current_query = new SqlQuery;
+				$this->queries[] = $this->current_query;
+				$prev_char_no_space = null;
 				continue;
 			}
 
@@ -513,7 +520,6 @@ class SqlQueryParser
 			echo "unknown character at position $pos : $char<hr >";
 			throw new \Exception("debug me", 1);
 			pre($this, 1);
-
 		}
 
 
@@ -556,102 +562,226 @@ class SqlQueryParser
 		$this->current_action = null;
 
 
-		if (! $this->principal_action) {
-			// aucune requete trouvée
-			return [];
-		}
-
-
-		// STEP 2 : analyse query parts
-		$this->principal_action->parseParts();
-
-
-		//$sql = $this->rebuildSql(false, true);
-		//pre($sql);
-
 		$ts_end = microtime(true);
 		$this->parse_duration = $ts_end - $ts_start;
 
+
+		if (! $this->current_query->principal_action) {
+			// aucune requete trouvée
+			return [];
+		}
 	}
 
 
-	public function getParsedSql($print_sql=false)
+	public function getParsedSql()
 	{
-		if (empty($this->principal_action)) {
-			$this->parse();
+		if (empty($this->parse_duration)) {
+			$this->parseSQL();
 		}
 
-		if (empty($this->principal_action)) {
-			return null;
+		$sqls = [];
+
+		foreach ($this->queries as $query) {
+			$sqls[] = $query->rebuildSql(false, false);
 		}
 
-		$sql = $this->rebuildSql(false, $print_sql);
+		$sql = implode("; ", $sqls);
+
 		return $sql;
+	}
+
+
+	public function showParsedSql()
+	{
+		if (empty($this->parse_duration)) {
+			$this->parseSQL();
+		}
+
+		echo '<div>';
+
+		foreach ($this->queries as $query_idx => $query) {
+			if (empty($query->principal_action)) {
+				continue;
+			}
+
+			if (true) {
+				if (empty($query->parse_duration)) {
+					$query->parseQuery();
+				}
+			}
+
+			echo '<div class="jumbotron p-2">';
+
+			echo '<h5>QUERY #' . ($query_idx+1) . ' - ' . strtoupper($query->principal_action->getName()) . ' - REWRITTEN QUERY</h5>';
+			$query->rebuildSql(false, true);
+			
+			echo '</div>';
+		}
+
+		echo '</div>';
+
 	}
 
 
 	public function execute()
 	{
-		if (empty($this->principal_action)) {
-			$this->parse();
+		if (is_null($this->parse_duration)) {
+			$this->parseSQL();
 		}
 
-		if (empty($this->principal_action)) {
-			return null;
+		$results = null;
+
+		foreach ($this->queries as $query) {
+			$results = $query->execute();
 		}
+
+		$this->results = $results;
 		
-		$ts_start = microtime(true);
-
-		$this->results = $this->principal_action->execute();
-
-		$ts_end = microtime(true);
-		$this->execute_duration = $ts_end - $ts_start;
-
 		return $this->results;
 	}
 
 
+	public function showInputSql()
+	{
+		echo '<div class="jumbotron p-3">';
+		echo '<h5>Input SQL</h5>';
+		echo '<pre>' . ($this->sql) . '</pre>';
+		echo '</div>';
+		//echo '<hr />';
+	}
+
 	public function showResults()
 	{
-		$results = $this->results;
+		echo '<div class="jumbotron p-3">';
+		echo '<h5>SQL parsing</h5>';
+		echo '<div><small>SQL Parse duration: ' . round($this->parse_duration, 5) . ' second</small></div>';
+		echo '</div>';
 
-		if (! $results) {
+        foreach ($this->queries as $query_idx => $query) {
+            $this->showQueryResults($query, $query_idx);
+        }
+	}
+
+
+	public function showQueryResults(SqlQuery $query, $query_idx=0)
+	{
+		if (empty($query->principal_action)) {
 			return;
 		}
 
-		$html = '';
+		$results = $query->results;
 
-		$html .= '<hr />';
-		$html .= '<table class="table table-hover table-striped table-bordered" border="1" width="100%">';
+		if (! $results) {
+			$results = [];
+		}
+
+		
+		$html = '';
+		$html .= '<div class="jumbotron p-3">';
+
+		$html .= '<h5>QUERY #' . ($query_idx+1) . ' - ' . strtoupper($query->principal_action->getName()) . ' - RESULTS</h5>';
+
+		$html .= '<table class="table table-hover table-striped table-bordered bg-light" border="1" width="100%">';
 		$html .= '	<thead>';
 		$html .= '		<tr>';
 
-		$rows = array_values($results);
+        if ($results) {
+            $rows = array_values($results);
 
-		foreach ($rows[0] as $field_name => $value) {
-			$html .= '			<td>' . $field_name  . '</td>';
-		}
+            foreach ($rows[0] as $field_name => $value) {
+                $html .= '			<td>' . $field_name  . '</td>';
+            }
 
-		$html .= '		</tr>';
-		$html .= '	</thead>';
-		$html .= '	<tbody>';
+            $html .= '		</tr>';
+            $html .= '	</thead>';
+            $html .= '	<tbody>';
 
-		foreach ($rows as $result_idx => $result) {
-			$html .= '		<tr>';
-			
-            foreach ($result as $field_name => $value) {
-				$html .= '			<td>' . $value  . '</td>';
-			}
-			
-			$html .= '		</tr>';
-		}
+            foreach ($rows as $result_idx => $result) {
+                $html .= '		<tr>';
+                
+                foreach ($result as $field_name => $value) {
+					if (is_null($value)) {
+						$value = '<i>NULL</i>';
+					}
+                    $html .= '			<td>' . $value  . '</td>';
+                }
+                
+                $html .= '		</tr>';
+            }
+        }
 
 		$html .= '	</tbody>';
 		$html .= '</table>';
 
+		$result_name = in_array($query->principal_action->getName(), ['select']) ? 'results' : 'affected rows';
+
+		$html .= '<div><small>Query parsing duration: ' . round($query->parse_duration, 5) . ' second</small></div>';
+		$html .= '<div><small>Execute duration: ' . round($query->execute_duration, 5) . ' second</small><small> (' . count($results) . ' ' . $result_name . ')</small></div>';
+
+		$html .= '</div>';
+
 		echo $html;
 	}
+	
+	
+	public function showDatabase()
+	{
+		//echo '<hr /><pre>DATABASE: ' . print_r($this->database, true) . '</pre>';
 
+		foreach ($this->database as $table_name => $table) {
+			$this->showDatabaseTable($table, $table_name);
+		}
+	}
+	
+	
+	public function showDatabaseTable(array $data_table, $table_name=null)
+	{
+		//echo '<hr /><pre>DATABASE - TABLE `' . $table_name . '` : ' . PHP_EOL . print_r($table, true) . '</pre>';
+
+		if ($table_name == '_variables') {
+			return;
+		}
+
+		$html = '<h5>DATABASE - TABLE `' . $table_name . '`</h5>';
+
+		$html .= '<div class="jumbotron p-3">';
+
+		$html .= '<table class="table table-hover table-striped table-bordered bg-light" border="1" width="100%">';
+		$html .= '	<thead>';
+		$html .= '		<tr>';
+
+        if (! empty($data_table)) {
+            $rows = array_values($data_table);
+
+            foreach ($rows[0] as $field_name => $value) {
+                $html .= '			<td>' . $field_name  . '</td>';
+            }
+
+            $html .= '		</tr>';
+            $html .= '	</thead>';
+            $html .= '	<tbody>';
+
+            foreach ($rows as $result_idx => $result) {
+                $html .= '		<tr>';
+                
+                foreach ($result as $field_name => $value) {
+					if (is_null($value)) {
+						$value = '<i>NULL</i>';
+					}
+                    $html .= '			<td>' . $value  . '</td>';
+                }
+                
+                $html .= '		</tr>';
+            }
+        }
+
+		$html .= '	</tbody>';
+		$html .= '</table>';
+
+		$html .= '</div>';
+
+		echo $html;
+	}
 
 
 	/* GETTERS */
@@ -661,9 +791,17 @@ class SqlQueryParser
 		return $this->database;
 	}
 
+	public function getDatabaseTable($table_name)
+	{
+		return isset($this->database[$table_name]) ? $this->database[$table_name] : null;
+	}
+
 	public function getPrincipalAction()
 	{
-		return $this->principal_action;
+		if (empty($this->current_query)) {
+			throw new \Exception("missing current query", 1);
+		}
+		return $this->current_query->principal_action;
 	}
 
 	public function getCurrentAction()
@@ -769,8 +907,12 @@ class SqlQueryParser
 
 	public function setCurrentAction(SqlAction $action)
 	{
-		if (!$this->principal_action) {
-			$this->principal_action = $action;
+		if (empty($this->current_query)) {
+			throw new \Exception("missing current query", 1);
+		}
+
+		if (!$this->current_query->principal_action) {
+			$this->current_query->principal_action = $action;
 		}
 
 		$this->current_action = $action;
@@ -814,6 +956,12 @@ class SqlQueryParser
 	public function setCurrentComparator($comparator)
 	{
 		$this->current_comparator = $comparator;
+	}
+
+
+	public function LoadTableToDatabase($table_name, array $data_table)
+	{
+		$this->database[$table_name] = $data_table;
 	}
 
 
@@ -905,36 +1053,43 @@ class SqlQueryParser
 
 
 
-	public function rebuildSql($to_php=false, $print_debug=false)
-	{
-		if (empty($this->principal_action)) {
-			throw new \Exception("missing principal_action. query must be parsed first", 1);
-		}
-
-		if ($print_debug) {
-			echo "<hr />";
-		}
-
-		$sql = "";
-
-		$principal_action = $this->principal_action;
-
-		if ($principal_action) {
-			$parts = $principal_action->getParts();
-			if ($parts) {
-				foreach ($parts as $part) {
-					$sql .= $part->itemsToSql($to_php, $print_debug);
-				}
-			}
-		}
-
-		return $sql;
-	}
-
-
 	public function logDebug($str)
 	{
 		//echo "$str<hr />";
+	}
+
+
+
+	/**
+	 * Get the value of queries
+	 */ 
+	public function getQueries()
+	{
+		return $this->queries;
+	}
+
+	/**
+	 * Set the value of queries
+	 *
+	 * @return  self
+	 */ 
+	public function setQueries($queries)
+	{
+		$this->queries = $queries;
+
+		return $this;
+	}
+
+	/**
+	 * Add a query to queries
+	 *
+	 * @return  self
+	 */ 
+	public function addQuery(SqlQuery $query)
+	{
+		$this->queries[] = $query;
+
+		return $this;
 	}
 
 }

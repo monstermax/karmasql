@@ -5,7 +5,7 @@ namespace SqlParser;
 
 class SqlActionTruncateTable extends SqlAction
 {
-    protected $table = null;
+	protected $table = null;
 
 
 	public function executeAction(SqlExecutor $executor)
@@ -21,8 +21,8 @@ class SqlActionTruncateTable extends SqlAction
 			throw new \Exception("table not exist", 1);
 		}
 
-        //$database[$table_name] = [];
-        $table_truncate->setData([]);
+		//$database[$table_name] = [];
+		$table_truncate->setData([]);
 		$table_truncate->saveDataToDatabase($this->parser, $database, $table_name);
 	}
 
@@ -30,18 +30,18 @@ class SqlActionTruncateTable extends SqlAction
 
 	public function parseParts()
 	{
-        $truncates = iterator_to_array($this->getPart('truncate table'));
+		$truncates = iterator_to_array($this->getPart('truncate table'));
 
-        if ($truncates) {
+		if ($truncates) {
 			$truncates[0]->parsePart();
 			$table = $truncates[0]->getTable();
 			
 			$this->table = $table;
-        }
+		}
 
 
-        $debug = 1;
+		$debug = 1;
 
-    }
+	}
 
 }

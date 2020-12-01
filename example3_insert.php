@@ -4,7 +4,7 @@
 
 require __DIR__ . '/vendor/autoload.php';
 
-use \SqlParser\SqlQueryParser;
+use \SqlParser\SqlParser;
 
 
 function pre($var, $exit=false) {
@@ -13,26 +13,6 @@ function pre($var, $exit=false) {
         exit;
     }
 }
-
-
-$database = [
-    'users' => [
-        ['id' => 1, 'name' => 'pierre' , 'email' => 'pierre@email.com' , 'age' => 42, 'sexe' => 'm'],
-        ['id' => 2, 'name' => 'paul'   , 'email' => 'paul@email.com'   , 'age' => 49, 'sexe' => 'm'],
-        ['id' => 3, 'name' => 'jacques', 'email' => 'jacques@email.com', 'age' => 53, 'sexe' => 'm'],
-        ['id' => 4, 'name' => 'alain'  , 'email' => 'alain@email.com', 'age' => 59, 'sexe' => 'm'],
-        ['id' => 5, 'name' => 'elodie' , 'email' => 'elodie@email.com' , 'age' => 38, 'sexe' => 'f'],
-        ['id' => 6, 'name' => 'marion' , 'email' => 'marion@email.com' , 'age' => 42, 'sexe' => 'f'],
-    ],
-    'sexes' => [
-        ['langue' => 'fr', 'code' => 'f', 'name' => 'Femme'],
-        ['langue' => 'fr', 'code' => 'm', 'name' => 'Homme'],
-        ['langue' => 'en', 'code' => 'f', 'name' => 'Woman'],
-        ['langue' => 'en', 'code' => 'm', 'name' => 'Man'],
-    ],
-];
-
-
 
 
 echo '
@@ -46,47 +26,46 @@ echo '
 
     <div class="container-fluid">
         <div class="m-3"></div>
-        ';
+';
 
 
-// FIRST QUERY (INSERT)
-if (true) {
 
-    echo '<h2>INSERT</h2>';
-
-    $sql = "insert into users (id, name, age) values (7, 'luc', 29), (8, 'sophie', 49)";
-    $parser = new SqlQueryParser($sql, $database);
-
-    // display query (with colors)
-    $parser->getParsedSql(true);
-
-    // execute query
-    $rows = $parser->execute();
-
-    // display results in an HTML table
-    $parser->showResults();
-
-    pre(['parse_duration' => $parser->parse_duration, 'execute_duration' => $parser->execute_duration]);
-}
+$database = [
+    'users' => [
+        ['id' => 1, 'name' => 'pierre' , 'email' => 'pierre@email.com' , 'age' => 42, 'sexe' => 'm'],
+        ['id' => 2, 'name' => 'paul'   , 'email' => 'paul@email.com'   , 'age' => 49, 'sexe' => 'm'],
+        ['id' => 3, 'name' => 'jacques', 'email' => 'jacques@email.com', 'age' => 53, 'sexe' => 'm'],
+        ['id' => 4, 'name' => 'alain'  , 'email' => 'alain@email.com'  , 'age' => 59, 'sexe' => 'm'],
+        ['id' => 5, 'name' => 'elodie' , 'email' => 'elodie@email.com' , 'age' => 38, 'sexe' => 'f'],
+        ['id' => 6, 'name' => 'marion' , 'email' => 'marion@email.com' , 'age' => 42, 'sexe' => 'f'],
+    ],
+    'sexes' => [
+        ['langue' => 'fr', 'code' => 'f', 'name' => 'Femme'],
+        ['langue' => 'fr', 'code' => 'm', 'name' => 'Homme'],
+        ['langue' => 'en', 'code' => 'f', 'name' => 'Woman'],
+        ['langue' => 'en', 'code' => 'm', 'name' => 'Man'],
+    ],
+];
 
 
-// SECOND QUERY (SELECT)
-if (true) {
-    echo '<br /><hr /><br />';
-    echo '<h2>SELECT</h2>';
 
-    $sql = "select * from users order by id";
-    $parser = new SqlQueryParser($sql, $database);
-    $rows = $parser->execute();
+$sql_1 = "insert into users (id, name, age) values (7, 'luc', 29), (8, 'sophie', 49)";
+$sql_2 = "select * from users order by id";
+$parser = new SqlParser($sql_1 . ';' . $sql_2, $database);
 
-    // display query (with colors)
-    $parser->getParsedSql(true);
-    
-    // display results in an HTML table
-    $parser->showResults();
+$parser->showInputSql();
 
-    pre(['parse_duration' => $parser->parse_duration, 'execute_duration' => $parser->execute_duration]);
-}
+// display query (with colors)
+$parser->showParsedSql(true);
+
+// execute query
+$rows = $parser->execute();
+
+// display results in an HTML table
+$parser->showResults();
+
+// show database (at its final state)
+$parser->showDatabase();
 
 
 
@@ -94,6 +73,3 @@ echo '
     </div>
 </body>
 </html>';
-
-//echo '<hr /><pre>table users: ' . print_r($database['users'], true) . '</pre>';
-//echo '<hr /><pre>table sexes: ' . print_r($database['sexes'], true) . '</pre>';

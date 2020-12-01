@@ -8,7 +8,7 @@ class SqlJoker extends SqlParseItem
 	public $type = 'joker';
 
 
-	public static function startEndJoker(SqlQueryParser $parser, $pos)
+	public static function startEndJoker(SqlParser $parser, $pos)
 	{
 		$parser->logDebug(__METHOD__ . " @ $pos");
 
@@ -64,17 +64,14 @@ class SqlJoker extends SqlParseItem
 		$action = $this->parent->getAction();
 		$tables = $action->getTables();
 
-		$fields = [];
 		foreach ($tables as $table) {
 			$table_fields_names = $table->getFieldsNames();
-			//$fields_names = array_merge($fields, $table_fields);
 			$table_alias = $table->getAlias();
 
 			$parts = [];
 
             foreach ($table_fields_names as $field_name) {
 				if ($to_php) {
-					//$part = '"' . $field_name . '" => $row["' . $field_name . '"]';
 					$part = '$row["' . $field_name . '"]';
 
 				} else {
@@ -84,7 +81,6 @@ class SqlJoker extends SqlParseItem
 				$parts[$field_name] = $part;
 			}
 			
-			
 			$sql .= implode(', ', $parts);
 
             if ($to_php) {
@@ -93,12 +89,19 @@ class SqlJoker extends SqlParseItem
 			
 		}
 
+        if (empty($sql)) {
+            $sql .= "*";
+        }
+
+
 		if ($to_php) {
 			return $all_parts;
 		}
 
 		if ($print_debug) {
+			echo '<span style="color:darkcyan;">';
 			echo $sql;
+			echo '</span>';
 		}
 
 		return $sql;

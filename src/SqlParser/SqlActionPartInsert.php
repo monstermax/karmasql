@@ -12,12 +12,11 @@ class SqlActionPartInsert extends SqlActionPart
 	{
 		$tmp_params = $this->getParamsFromItems(false);
 
-        $debug = 1;
-
-        // TODO: detecter keyword "ignore"
-        
+		if ($tmp_params) {
+			// TODO: detection le mot "ignore" entre "insert" et "into"
+		}
+		
+		$debug = 1;
 	}
-	
-	
 
 }

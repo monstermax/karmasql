@@ -7,6 +7,8 @@ class SqlExecutor
 {
 	public $results_groups;
 	public $current_group_key;
+	public $current_result;
+
 	protected $current_field;
 
 
@@ -16,7 +18,6 @@ class SqlExecutor
 	}
 
 
-    
 	public function validateConditions($row_data, $conditions_where)
 	{
 		// TODO => valider (ou non) les conditions du where pour la $row donnée
@@ -32,8 +33,8 @@ class SqlExecutor
 		}
 
 		return true;
-    }
-    
+	}
+	
 
 	public function calculateFields($row_data, $select_fields, $fields_aliases=null)
 	{
@@ -64,8 +65,8 @@ class SqlExecutor
 		}
 
 		return $values;
-    }
-    
+	}
+	
 
 	public function getCurrentRowKey()
 	{
@@ -73,109 +74,154 @@ class SqlExecutor
 	}
 
 
-    /* ####################################### */
+
+
+	/* #################### SQL FUNCTIONS ################### */
 
 
 
-    public function version()
-    {
-        $ver = '0.0.1';
-        $suffix = '';
+	public function version()
+	{
+		$ver = '0.0.1';
+		$suffix = '';
 
-        if (defined('APP_DIR')) {
-            $cmd = 'cd ' . __DIR__ . '; git rev-parse master';
-            $commit_id = trim(shell_exec($cmd));
-            if ($commit_id) {
-                $suffix = '-' . substr($commit_id, 0, 7);
-            }
+		$show_commit = false;
+		if ($show_commit) {
+			$cmd = 'cd ' . __DIR__ . '; git rev-parse master';
+			$commit_id = trim(shell_exec($cmd));
+			if ($commit_id) {
+				$suffix = '-' . substr($commit_id, 0, 7);
+			}
+		}
+
+		return 'PhpDB-' . strtolower(PHP_OS) . '-' . $ver . $suffix;
+	}
+
+	public function if($cond, $if_true, $if_false)
+	{
+		return $cond ? $if_true : $if_false;
+	}
+
+	public function ifnull($val, $default_value)
+	{
+		return is_null($val) ? $default_value : $val;
+	}
+
+	public function isnull($val)
+	{
+		return is_null($val);
+	}
+
+
+	public function curl($url)
+	{
+		return file_get_contents($url);
+	}
+
+
+	public function current_timestamp()
+	{
+		return $this->now();
+	}
+
+	public function now()
+	{
+		return date('Y-m-d H:i:s');
+	}
+
+	public function date($sql_ts)
+	{
+		return substr($sql_ts, 0, 10);
+	}
+
+	public function year($sql_ts)
+	{
+		return substr($sql_ts, 0, 4);
+	}
+
+
+
+	public function rand()
+	{
+		$up = 1000000000;
+		return rand(0, $up) / $up;
+	}
+
+
+	public function concat()
+	{
+		$args = func_get_args();
+
+		$result = '';
+		foreach ($args as $arg) {
+			$result .= $arg;
+		}
+		return $result;
+	}
+
+
+	public function replace($source, $search, $replace)
+	{
+		return str_replace($search, $replace, $source);
+	}
+
+
+	public function length($var)
+	{
+		return strlen($var);
+	}
+	
+
+	public function upper($var)
+	{
+		return strtoupper($var);
+	}
+	
+
+	public function lower($var)
+	{
+		return strtolower($var);
+	}
+
+
+	public function substring_index($var, $delimiter, $number)
+	{
+		$parts = explode($delimiter, $var);
+
+        if (empty($number)) {
+            return '';
         }
 
-        return 'PhpDB-' . strtolower(PHP_OS) . '-' . $ver . $suffix;
-    }
+		if ($number > 0) {
+			$parts = array_slice($parts, 0, $number);
+			return implode($delimiter, $parts);
 
-    public function if($cond, $if_true, $if_false)
-    {
-        return $cond ? $if_true : $if_false;
-    }
-
-    public function ifnull($val, $default_value)
-    {
-        return is_null($val) ? $default_value : $val;
-    }
-
-    public function isnull($val)
-    {
-        return is_null($val);
-    }
+		} else {
+			$number = -$number;
+			$parts = array_reverse($parts);
+			$parts = array_slice($parts, 0, $number);
+			$parts = array_reverse($parts);
+			return implode($delimiter, $parts);
+		}
+	}
 
 
-    public function curl($url)
-    {
-        return file_get_contents($url);
-    }
+	public function least()
+	{
+		$args = func_get_args();
+		return min($args);
+	}
 
-
-    public function current_timestamp()
-    {
-        return $this->now();
-    }
-
-    public function now()
-    {
-        return date('Y-m-d H:i:s');
-    }
-
-    public function date($sql_ts)
-    {
-        return substr($sql_ts, 0, 10);
-    }
-
-    public function year($sql_ts)
-    {
-        return substr($sql_ts, 0, 4);
-    }
+	public function greatest()
+	{
+		$args = func_get_args();
+		return max($args);
+	}
 
 
 
-    public function rand()
-    {
-        $up = 1000000000;
-        return rand(0, $up) / $up;
-    }
-
-
-    public function concat()
-    {
-        $args = func_get_args();
-
-        $result = '';
-        foreach ($args as $arg) {
-            $result .= $arg;
-        }
-        return $result;
-    }
-
-    public function replace($source, $search, $replace)
-    {
-        return str_replace($search, $replace, $source);
-    }
-
-    public function least()
-    {
-        $args = func_get_args();
-        return min($args);
-    }
-
-    public function greatest()
-    {
-        $args = func_get_args();
-        return max($args);
-    }
-
-
-
-    public function sum($expr)
-    {
+	public function sum($expr)
+	{
 		$alias = $this->current_field->getAlias();
 		$row_key = $this->current_group_key;
 
@@ -191,11 +237,11 @@ class SqlExecutor
 		$this->results_groups[$alias][$row_key]['result'] += $expr;
 
 		return 'GROUP';
-    }
+	}
 
 
-    public function avg($expr)
-    {
+	public function avg($expr)
+	{
 		$alias = $this->current_field->getAlias();
 		$row_key = $this->current_group_key;
 
@@ -215,11 +261,11 @@ class SqlExecutor
 		$this->results_groups[$alias][$row_key]['result'] = $this->results_groups[$alias][$row_key]['total'] / $this->results_groups[$alias][$row_key]['nb'];
 
 		return 'GROUP';
-    }
+	}
 
 
-    public function count($expr)
-    {
+	public function count($expr)
+	{
 		$alias = $this->current_field->getAlias();
 		$row_key = $this->current_group_key;
 
@@ -237,11 +283,11 @@ class SqlExecutor
 		}
 
 		return 'GROUP';
-    }
+	}
 
 
-    public function min($expr)
-    {
+	public function min($expr)
+	{
 		$alias = $this->current_field->getAlias();
 		$row_key = $this->current_group_key;
 
@@ -254,18 +300,18 @@ class SqlExecutor
 			];
 		}
 
-        if (is_null($this->results_groups[$alias][$row_key]['result'])) {
+		if (is_null($this->results_groups[$alias][$row_key]['result'])) {
 			$this->results_groups[$alias][$row_key]['result'] = $expr;
-        } else {
+		} else {
 			$this->results_groups[$alias][$row_key]['result'] = min($expr, $this->results_groups[$alias][$row_key]['result']);
 		}
 
 		return 'GROUP';
-    }
+	}
 
 
-    public function max($expr)
-    {
+	public function max($expr)
+	{
 		$alias = $this->current_field->getAlias();
 		$row_key = $this->current_group_key;
 
@@ -278,69 +324,39 @@ class SqlExecutor
 			];
 		}
 
-        if (is_null($this->results_groups[$alias][$row_key]['result'])) {
+		if (is_null($this->results_groups[$alias][$row_key]['result'])) {
 			$this->results_groups[$alias][$row_key]['result'] = $expr;
-        } else {
+		} else {
 			$this->results_groups[$alias][$row_key]['result'] = max($expr, $this->results_groups[$alias][$row_key]['result']);
 		}
 
 		return 'GROUP';
-    }
+	}
+
+
+	public function group_concat($expr)
+	{
+		$alias = $this->current_field->getAlias();
+		$row_key = $this->current_group_key;
+
+		if (! isset($this->results_groups[$alias])) {
+			$this->results_groups[$alias] = [];
+		}
+		if (! isset($this->results_groups[$alias][$row_key])) {
+			$this->results_groups[$alias][$row_key] = [
+				'result' => null,
+				'data' => [],
+			];
+		}
+
+		$delimiter = ",";
+
+		$this->results_groups[$alias][$row_key]['data'][] = $expr;
+		$this->results_groups[$alias][$row_key]['result'] = implode($delimiter, $this->results_groups[$alias][$row_key]['data']);
+
+
+		return 'GROUP';
+	}
 
 
 }
-
-/*
-
-		'ifnull' => 1,
-		'isnull' => 1,
-
-		'now' => 1,
-		'current_timestamp' => 1,
-		'current_date' => 1,
-		'current_time' => 1,
-		'date' => 1,
-		'time' => 1,
-		'year' => 1,
-		'month' => 1,
-		'day' => 1,
-		'hour' => 1,
-		'minute' => 1,
-		'second' => 1,
-		'date_add' => 1,
-		'date_sub' => 1,
-		'datediff' => 1,
-
-		'count' => 1,
-		'abs' => 1,
-		'rand' => 1,
-		'round' => 1,
-		'floor' => 1,
-		'ceil' => 1,
-		'sqrt' => 1,
-		'pow' => 1,
-		'pi' => 1,
-
-		'sum' => 1,
-		'avg' => 1,
-		'min' => 1,
-		'max' => 1,
-		'least' => 1,
-		'greatest' => 1,
-
-		'length' => 1,
-		'lower' => 1,
-		'upper' => 1,
-		'mid' => 1,
-		'left' => 1,
-		'right' => 1,
-		'replace' => 1,
-		'locate' => 1,
-		'concat' => 1,
-		'substr' => 1,
-		'substring' => 1,
-		'substring_index' => 1,
-		'trim' => 1,
-		'rtrim' => 1,
-		'ltrim' => 1,
-*/

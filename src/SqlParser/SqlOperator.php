@@ -10,7 +10,7 @@ class SqlOperator extends SqlParseItem
 	public $fields = null;
 
 
-	public static function startOperator(SqlQueryParser $parser, $pos)
+	public static function startOperator(SqlParser $parser, $pos)
 	{
 		$parser->logDebug(__METHOD__ . " @ $pos");
 

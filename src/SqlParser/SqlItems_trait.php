@@ -167,12 +167,12 @@ trait SqlItems_trait
 			'word/action' => '#007fbf',
 			'word/action_part' => '#007fbf',
 			'word/function' => '#b14ac4',
-			'word/keyword' => '#007fbf',
-			'word/field' => '#795548',
-			'word/table_name' => 'darkgreen',
-			'word/table_alias' => 'lightgreen',
+			'word/keyword' => '#00afdf',
+			'word/field' => 'darkcyan',
+			'word/table_name' => 'orange',
+			'word/table_alias' => '#995528',
 			'word/field_name' => 'darkblue',
-			'word/field_alias' => 'lightblue',
+			'word/field_alias' => '#795548',
 		];
 
 		$items = $this->getItems();
@@ -206,7 +206,7 @@ trait SqlItems_trait
 				if ($item->type == 'word') {
 					$title .= ' / ' . $item->word_type;
 
-					if (in_array($item->word_type, ['action', 'action_part'])) {
+					if (in_array($item->word_type, ['action', 'action_part', "keyword"])) {
 						if ($item->word_type === 'action_part') {
 							echo "<br />";
 						}

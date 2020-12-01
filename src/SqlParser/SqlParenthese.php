@@ -32,7 +32,7 @@ class SqlParenthese extends SqlParseItem
 
 
 
-	public static function isParentheseStart(SqlQueryParser $parser, $char)
+	public static function isParentheseStart(SqlParser $parser, $char)
 	{
 		if ($parser->getCurrentComment()) {
 			// on est dans un commentaire
@@ -52,7 +52,7 @@ class SqlParenthese extends SqlParseItem
 	}
 
 
-	public static function startParenthese(SqlQueryParser $parser, $pos)
+	public static function startParenthese(SqlParser $parser, $pos)
 	{
 		$parser->logDebug(__METHOD__ . " @ $pos");
 

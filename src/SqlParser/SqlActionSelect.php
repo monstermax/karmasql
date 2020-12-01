@@ -35,8 +35,8 @@ class SqlActionSelect extends SqlAction
 			$rows = [];
 			foreach ($select_fields as $select_alias => $select_field) {
 				$row[$select_alias] = $select_alias;
+				$rows[] = $row;
 			}
-			$rows[] = $row;
 		}
 
 		$executor->results_groups = [];
@@ -121,6 +121,7 @@ class SqlActionSelect extends SqlAction
 			// 7) add result
 			$result = $executor->calculateFields($row_data, $select_fields);
 			$results[$key] = $result;
+			$executor->current_result = $result;
 
 
 			// 8a) order by
@@ -135,6 +136,7 @@ class SqlActionSelect extends SqlAction
 		unset($current_row_idx);
 
 		$executor->current_group_key = null;
+		$executor->current_result = null;
 
 
 		// 8b) order by
