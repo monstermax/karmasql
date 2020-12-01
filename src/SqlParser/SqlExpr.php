@@ -10,6 +10,7 @@ class SqlExpr
 	use SqlAlias_trait;
 	use SqlParent_trait;
 
+	public $type = 'expr';
 	//public $parent = null; // @SqlActionPart | SqlParenthese
 	public $outer_text;
 	public $action; // @SqlAction
@@ -120,6 +121,7 @@ class SqlExpr
 	public function getCalculatedValues(SqlExecutor $executor, $row_data)
 	{
 		$items = $this->getItems(false);
+		$functions_repository = new SqlFunction($executor); // used by eval
 
 		$results = [];
 		$result = '';
@@ -132,6 +134,8 @@ class SqlExpr
 
 			$item = $items[0];
 			$item_codes = $item->toSql(true);   // TODO: toSql à remplacer/renommer par toPhp
+
+			$functions_repository = new SqlFunction($executor);
 
 			foreach ($item_codes as $field_alias => $item_code) {
 				if (! is_string($item_code)) {
@@ -162,6 +166,10 @@ class SqlExpr
 
                 if ($item->type === 'parenthese') {
 					// parenthese
+					$item->detectFields(); // TODO: a deplacer en amont
+
+				} else if ($item->type === 'numeric') {
+					// numeric
 
                 } else if ($item->type === 'word') {
                     if ($item->word_type == 'field') {
@@ -253,6 +261,8 @@ class SqlExpr
 			$item_prev_prev = $item_prev;
 			$item_prev = $item;
 		}
+		
+		$functions_repository = new SqlFunction($executor); // used by eval
 		eval('$result = (' . $code . ');');
 
 		return !! $result ;

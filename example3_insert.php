@@ -51,7 +51,7 @@ $database = [
 
 $sql_1 = "insert into users (id, name, age) values (7, 'luc', 29), (8, 'sophie', 49)";
 $sql_2 = "select * from users order by id";
-$parser = new SqlParser($sql_1 . ';' . $sql_2, $database);
+$parser = new SqlParser($sql_1 . ' ; ' . $sql_2, $database);
 
 $parser->showInputSql();
 

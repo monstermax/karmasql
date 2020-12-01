@@ -12,6 +12,10 @@ class SqlActionSelect extends SqlAction
 		$group_fields = $this->getFieldsGroupBy();
 		$order_fields = $this->getFieldsOrderBy();
 
+		if (empty($select_fields)) {
+			throw new \Exception("empty select_fields", 1);
+		}
+
 		$table_from = $this->getTableFrom();
 
 		$conditions_where = $this->getConditionsWhere();

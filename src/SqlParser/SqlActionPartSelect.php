@@ -17,9 +17,11 @@ class SqlActionPartSelect extends SqlActionPart
 		$tmp_params = $this->getParamsFromItems(false);
 
 		foreach ($tmp_params as $param) {
+			$is_parenthese = (get_class($param) === SqlParenthese::class);
 			$is_expr = (get_class($param) === SqlExpr::class);
 			$is_word = (get_class($param) === SqlWord::class);
 			$is_numeric = (get_class($param) === SqlNumeric::class);
+			$is_string = (get_class($param) === SqlString::class);
 			$is_asterisk = (get_class($param) === SqlOperator::class && $param->operator == '*');
 			$is_joker = (get_class($param) === SqlJoker::class && $param->outer_text == '*');
 
@@ -97,9 +99,17 @@ class SqlActionPartSelect extends SqlActionPart
 					$fields[$alias] = $param_expr;
 				}
 				
+			} else if ($is_parenthese) {
+				$field_alias = $param->outer_text;
+				$fields[$field_alias] = $param;
+
 			} else if ($is_numeric) {
 				$number = $param->number;
 				$fields[$number] = $param;
+				
+			} else if ($is_string) {
+				$field_alias = $param->inner_text;
+				$fields[$field_alias] = $param;
 
 			} else {
 				throw new \Exception("non implemented case");

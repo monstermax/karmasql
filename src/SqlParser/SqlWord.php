@@ -123,8 +123,8 @@ class SqlWord extends SqlParseItem
 		} else if ($this->word_type == 'function_sql') {
 			$func_name = $outer_text;
 
-            if (is_callable([SqlExecutor::class, $func_name])) {
-				$outer_text = '$executor->' . $func_name;
+            if (is_callable([SqlFunction::class, $func_name])) {
+				$outer_text = '$functions_repository->' . $func_name;
 			
 			/*
             } else if ($this->parser->allow_php_functions && is_callable($func_name)) {
@@ -378,7 +378,7 @@ class SqlWord extends SqlParseItem
 					// field = myfield
 					// field_name précisé (sans alias de table)
 
-					$tables = $this->action->getTables();
+					$tables = $this->action->getTables(); // TODO: a revoir pour le "insert ... select" car ici $this->action pointe alors vers le SqlActionInsert et non vers le SqlActionSelect
 
 					foreach ($tables as $table) {
 						$fields_names = $table->getFieldsNames();
@@ -404,7 +404,7 @@ class SqlWord extends SqlParseItem
 
 	public function getCalculatedValues(SqlExecutor $executor, $row_data)
 	{
-        if ($this->word_type === 'field_name') {
+        if ($this->word_type === 'field') {
 			// when field_name is calculated by the "order by"
 			$field_alias = $this->word;
 			return [

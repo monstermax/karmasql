@@ -251,4 +251,37 @@ class SqlParenthese extends SqlParseItem
 		}
     }
 
+
+	function getCalculatedValues(SqlExecutor $executor, $row_data)
+	{
+		$items = $this->getItems(false);
+		
+		foreach ($items as $item) {
+			if ($item->type === 'word' && $item->word_type === 'undefined') {
+				$item->detectFields();
+			}
+
+			$item_code = $item->toSql(true);   // TODO: toSql à remplacer/renommer par toPhp
+			$item_codes[] = $item_code;
+			
+			if (! is_string($item_code)) {
+				throw new \Exception("invalid return " . print_r($item_code), 1);
+			}
+		}
+		$item_code = implode(' ', $item_codes);
+
+		$field_alias = $this->outer_text;
+		
+		$result = null;
+
+		$functions_repository = new SqlFunction($executor); // used by eval
+		eval('$result = (' . $item_code . ');');
+
+		$results = [
+			$field_alias => $result,
+		];
+
+		return $results;
+	}
+
 }

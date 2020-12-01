@@ -41,7 +41,7 @@ class SqlActionPartOrderBy extends SqlActionPart
             } else if ($is_word) {
 				// order by word
 				$fields[] = $param;
-				$param->word_type = 'field_name';
+				$param->word_type = 'field';
 
             } else if ($is_expr) {
 				// order by expr

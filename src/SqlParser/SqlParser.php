@@ -78,6 +78,18 @@ class SqlParser
 		'insert' => [
 			'into' => 1,
 			'values' => 1,
+			'select' => 1,
+			'from' => 1,
+			'where' => 1,
+			'join' => 1,
+			'inner join' => 1,
+			'left join' => 1,
+			'right join' => 1,
+			'left outer join' => 1,
+			'right outer join' => 1,
+			'group by' => 1,
+			'order by' => 1,
+			'limit' => 1,
 		],
 		'delete' => [
 			'from' => 1,
@@ -982,6 +994,11 @@ class SqlParser
 				
 				if ($item->type === 'space') {
 					// skip error for spaces
+					return;
+				}
+				
+				if ($item->type === 'comment') {
+					// skip error for comments
 					return;
 				}
 				//if (count($this->getWords()) > 1) {

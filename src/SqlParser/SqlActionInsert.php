@@ -9,16 +9,48 @@ class SqlActionInsert extends SqlAction
 	public function executeAction(SqlExecutor $executor)
 	{
 		$table_into = $this->getIntoTable();
-		$insert_keys = $this->getInsertKeys();
-		$insert_values = $this->getInsertValues();
-
 		$table_name = $table_into->getName();
 		$data = $table_into->getData();
 
-		$new_data = [];
-
 		//$insert_fields_names = array_map(function ($item) {return $item->word;}, $insert_keys);
 		$insert_fields_names = $table_into->getFieldsNames();
+
+
+		$insert_keys = $this->getInsertKeys();
+
+		$table_from = $this->getTableFrom(); // insert ... select
+		if ($table_from) {
+			$action_select = new SqlActionSelect($this->parser, 'select');
+			$parts = array_slice($this->parts, 2);
+			foreach ($parts as &$part) {
+				$part->setAction($action_select);
+			}
+			$action_select->parts = $parts;
+			$action_select->parseParts();
+			$tmp_results = $action_select->executeAction($executor);
+
+			foreach ($tmp_results as &$tmp_result) {
+				$tmp_result = array_map(function ($field) {return new SqlResult($field);}, $tmp_result);
+			}
+			
+			$insert_values = $tmp_results;
+
+			if (empty($insert_keys)) {
+				if (! empty($insert_fields_names)) {
+					$insert_keys = $insert_fields_names;
+
+				} else {
+					$insert_keys = array_keys($tmp_results[0]);
+				}
+				// TODO: $insert_keys doivent contenir des SqlParseItem
+			}
+			
+		} else {
+			$insert_values = $this->getInsertValues();
+		}
+
+		$new_data = [];
+
 
 		foreach ($insert_values as $idx => $insert_row) {
 			//$new_row = $insert_row;
@@ -27,7 +59,8 @@ class SqlActionInsert extends SqlAction
 			// preload les data avec la liste des champs de la table
 			$row_insert_data = $insert_fields_names ? array_fill_keys($insert_fields_names, null) : [];
 
-			$row_insert_data = array_merge($row_insert_data, $executor->calculateFields(null, $insert_row, $insert_keys));
+			$insert_data = $executor->calculateFields(null, $insert_row, $insert_keys);
+			$row_insert_data = array_merge($row_insert_data, $insert_data);
 			
 			$data[] = $row_insert_data;
 			$new_data[] = $row_insert_data;
@@ -105,6 +138,48 @@ class SqlActionInsert extends SqlAction
 		if ($values) {
 			$values[0]->parsePart();
 		}
+
+
+		// insert ... select
+		
+		$froms = iterator_to_array($this->getPart('from'));
+		if ($froms) {
+			$froms[0]->parsePart();
+		}
+		/*
+		$wheres = iterator_to_array($this->getPart('where'));
+		if ($wheres) {
+			$wheres[0]->parsePart();
+		}
+
+		$joins = iterator_to_array($this->getPart('join'));
+		if ($joins) {
+			foreach ($joins as $join) {
+				$join->parsePart();
+			}
+		}
+
+		$selects = iterator_to_array($this->getPart('select'));
+		if ($selects) {
+			$selects[0]->parsePart();
+		}
+
+		$groups = iterator_to_array($this->getPart('group by'));
+		if ($groups) {
+			$groups[0]->parsePart();
+		}
+
+		$orders = iterator_to_array($this->getPart('order by'));
+		if ($orders) {
+			$orders[0]->parsePart();
+		}
+
+		$limits = iterator_to_array($this->getPart('limit'));
+		if ($limits) {
+			$limits[0]->parsePart();
+		}
+		*/
+
 
 		$debug = 1;
 

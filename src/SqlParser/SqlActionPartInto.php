@@ -14,32 +14,55 @@ class SqlActionPartInto extends SqlActionPart
 	public function parsePart()
 	{
 		$tmp_params = $this->getParamsFromItems(false);
-		$items = $tmp_params[0]->getItems();
+		$fields  = null;
 
-		$table_name = null;
-		$item_table_name = array_shift($items);
-		$item_fields_names = array_shift($items);
+		if (count($tmp_params) == 1 && $tmp_params[0]->type === 'word') {
+			// into matable
+			$item_table_name = array_shift($tmp_params);
 
-		if (! empty($items)) {
-			throw new \Exception("unknown case", 1);
-		}
-
-		if ($item_table_name->type === 'word' && $item_fields_names && $item_fields_names->type === 'parenthese') {
 			$table_name = $item_table_name->word;
 			$item_table_name->word_type = 'table_name';
-			$fields = $item_fields_names->getParamsFromItems(false);
-
-			foreach ($fields as $field) {
-				if ($field->type !== 'word') {
-					throw new \Exception("unknown case", 1);
-				}
-				$field->word_type = 'field_name';
-			}
 
 		} else {
-			throw new \Exception("unknown case", 1);
-		}
+			// into matable ...
+			$items = $tmp_params[0]->getItems();
 
+			$table_name = null;
+			$item_table_name = array_shift($items);
+			
+			$item_2 = array_shift($items);
+			if ($item_2->type === 'parenthese') {
+				$item_fields_names = $item_2;
+				
+			} else if ($item_2->type === 'action') {
+				$debug = 1;
+	
+			} else {
+				throw new \Exception("unknown case", 1);
+			}
+	
+			if (! empty($items)) {
+				throw new \Exception("unknown case", 1);
+			}
+	
+			if ($item_table_name->type === 'word' && $item_fields_names && $item_fields_names->type === 'parenthese') {
+				$table_name = $item_table_name->word;
+				$item_table_name->word_type = 'table_name';
+				$fields = $item_fields_names->getParamsFromItems(false);
+	
+				foreach ($fields as $field) {
+					if ($field->type !== 'word') {
+						throw new \Exception("unknown case", 1);
+					}
+					$field->word_type = 'field_name';
+				}
+	
+			} else {
+				throw new \Exception("unknown case", 1);
+			}
+	
+		}
+		
 	
 		$this->table = new SqlTable($table_name);
 		$this->fields = $fields;

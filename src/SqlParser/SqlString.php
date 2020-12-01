@@ -118,7 +118,8 @@ class SqlString extends SqlParseItem
 
 	public function getCalculatedValues(SqlExecutor $executor, $row_data)
 	{
-		$alias = $this->pos_start . '-string';
+		//$alias = $this->pos_start . '-string';
+		$alias = $this->inner_text;
 
 		return [
 			$alias => $this->inner_text,
