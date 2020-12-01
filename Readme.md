@@ -64,7 +64,7 @@ $database = [
         ['id' => 1, 'name' => 'pierre' , 'email' => 'pierre@email.com' , 'age' => 42, 'sexe' => 'm'],
         ['id' => 2, 'name' => 'paul'   , 'email' => 'paul@email.com'   , 'age' => 49, 'sexe' => 'm'],
         ['id' => 3, 'name' => 'jacques', 'email' => 'jacques@email.com', 'age' => 53, 'sexe' => 'm'],
-        ['id' => 4, 'name' => 'alain'  , 'email' => 'jacques@email.com', 'age' => 59, 'sexe' => 'm'],
+        ['id' => 4, 'name' => 'alain'  , 'email' => 'alain@email.com'  , 'age' => 59, 'sexe' => 'm'],
         ['id' => 5, 'name' => 'elodie' , 'email' => 'elodie@email.com' , 'age' => 38, 'sexe' => 'f'],
     ],
     'sexes' => [
@@ -76,24 +76,19 @@ $database = [
 ];
 
 
-$sql = "select id, ucfirst(name) as prenom, sexe, age, count(*) as nb_users
-, avg(age) as ages_avg
-, sum(age) as ages_sum
-, min(age) as age_min
-, max(age) as age_max
-, get_class(\$this) as class
--- , file_get_contents('https://min-api.cryptocompare.com/data/price?fsym=BTC&tsyms=EUR') as prix_btc
-, s.name as sexe_fr
-, s_en.name as sexe_en
-from users u
+$sql = "select sexe
+    , count(*) as nb_users
+    , group_concat(u.name) as names
+    , avg(age) as ages_avg
+    , sum(age) as ages_sum
+    , min(age) as age_min
+    , max(age) as age_max
+    , s.name as sexe_fr
+    , s_en.name as sexe_en
+from users as u
 inner join sexes s on s.code = u.sexe and s.langue = 'fr' 
 inner join sexes s_en on s_en.code = u.sexe and s_en.langue = 'en'
-where 1
--- and age < 53
--- and sexe = 'm'
-group by sexe
-order by sexe
---  limit 1";
+group by sexe";
 ```
 
 
