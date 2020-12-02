@@ -4,6 +4,7 @@ namespace SqlParser\SqlType;
 
 use \SqlParser\SqlDebugInfo_trait;
 use \SqlParser\SqlExecutor;
+use SqlParser\SqlFragment\SqlFragment;
 use \SqlParser\SqlFunction;
 use \SqlParser\SqlItems_trait;
 use \SqlParser\SqlParent_trait;
@@ -20,6 +21,7 @@ class SqlTypeParenthese extends SqlType
 	public $type = 'parenthese';
 
 	public $level;
+	public $fragment; // @SqlFragmentParenthese
 	
 	public $is_function;
 	public $function_name;
@@ -33,20 +35,20 @@ class SqlTypeParenthese extends SqlType
 
 	public function __construct()
 	{
-		//$this->debug_skips = ['parser', 'parent', 'action', 'items'];
-		$this->debug_skips = ['parser', 'parent', 'action'];
+		//$this->debug_skips = ['fragment', 'parser', 'parent', 'action', 'items'];
+		$this->debug_skips = ['fragment', 'parser', 'parent', 'action'];
 	}
 
 
 
-	public static function isParentheseStart(SqlParser $parser, $char)
+	public static function isParentheseStart(SqlFragment $fragment, $char)
 	{
-		if ($parser->getCurrentComment()) {
+		if ($fragment->getCurrentComment()) {
 			// on est dans un commentaire
 			return false;
 		}
 
-		if ($parser->getCurrentString()) {
+		if ($fragment->getCurrentString()) {
 			// on est dans une string
 			return false;
 		}
@@ -59,25 +61,25 @@ class SqlTypeParenthese extends SqlType
 	}
 
 
-	public static function startParenthese(SqlParser $parser, $pos)
+	public static function startParenthese(SqlFragment $fragment, $pos)
 	{
-		$parser->logDebug(__METHOD__ . " @ $pos");
+		$fragment->logDebug(__METHOD__ . " @ $pos");
 
-		//$parent = $parser->getCurrentParenthese() ? $parser->getCurrentParenthese() : null;
+		//$parent = $fragment->getCurrentParenthese() ? $fragment->getCurrentParenthese() : null;
 		//$level = $parent ? ($parent->level+1) : 1;
 
 		$current_parenthese = new self;
 
-		$current_parenthese->action = $parser->getCurrentAction();
+		$current_parenthese->action = $fragment->getCurrentAction();
 		
-		$current_parenthese->start($parser, $pos); // bien mettre ceci avant le setCurrentParenthese (sinon mauvaise detection du parent)
+		$current_parenthese->start($fragment, $pos); // bien mettre ceci avant le setCurrentParenthese (sinon mauvaise detection du parent)
 		
 		$current_parenthese->level = get_class($current_parenthese->parent) == self::class ? $current_parenthese->parent->level+1 : 1;
-		$parser->setCurrentParenthese($current_parenthese);
+		$fragment->setCurrentParenthese($current_parenthese);
 
 
 		// detection function
-		$prev_sql = substr($parser->getSql(), 0, $pos);
+		$prev_sql = substr($fragment->getSql(), 0, $pos);
 		$prev_sql = trim(preg_replace('/\s+/', ' ', $prev_sql)); // TODO: attention s'il y a un commentaire entre le nom de la function et la parenthese, ca ne fonctionne plus
 		if ($prev_sql) {
 			$parts = explode(" ", $prev_sql);
@@ -87,7 +89,7 @@ class SqlTypeParenthese extends SqlType
 				// in (...)
 				$current_parenthese->is_in_values = true;
 
-			} else if (array_key_exists($last_word, $parser->getFunctions())) {
+			} else if (array_key_exists($last_word, $fragment->getParser()->getSqlFunctions())) {
 				// functionFoo(...)
 				$current_parenthese->is_function = true;
 				$current_parenthese->function_name = $last_word;
@@ -116,17 +118,17 @@ class SqlTypeParenthese extends SqlType
 
 	public function isParentheseEnd($char)
 	{
-		if (! $this->parser->getCurrentParenthese()) {
+		if (! $this->fragment->getCurrentParenthese()) {
 			// on n'est pas dans une parenthese
 			return false;
 		}
 
-		if ($this->parser->getCurrentComment()) {
+		if ($this->fragment->getCurrentComment()) {
 			// on est dans un commentaire
 			return false;
 		}
 
-		if ($this->parser->getCurrentString()) {
+		if ($this->fragment->getCurrentString()) {
 			// on est dans une string
 			return false;
 		}
@@ -142,9 +144,9 @@ class SqlTypeParenthese extends SqlType
 
 	public function endParenthese($pos)
 	{
-		$this->parser->logDebug(__METHOD__ . " @ $pos");
+		$this->fragment->logDebug(__METHOD__ . " @ $pos");
 
-		$current_parenthese = $this->parser->getCurrentParenthese();
+		$current_parenthese = $this->fragment->getCurrentParenthese();
 
 		if (empty($current_parenthese)) {
 			throw new \Exception("not in a parenthese", 1);
@@ -183,27 +185,27 @@ class SqlTypeParenthese extends SqlType
 
 		// add item
 		if (! $this->parent) {
-			$this->parser->addItem($this);
+			$this->fragment->addItem($this);
 
 		} else {
 			$this->parent->addItem($this);
 		}
 
 		// add parenthese
-		$this->parser->addParenthese($this);
+		$this->fragment->addParenthese($this);
 
 		// set new parent
 		if ($this->parent && get_class($this->parent) == self::class) {
 			// parent is parenthese => level 2+
-			$this->parser->setCurrentParenthese($this->parent);
+			$this->fragment->setCurrentParenthese($this->parent);
 
 		} else {
 			// no parent (or SqlActionPart) => level 1
-			$this->parser->setCurrentParenthese(null);
+			$this->fragment->setCurrentParenthese(null);
 		}
 
 		if ($this->is_subquery) {
-			$this->parser->setCurrentAction($this->action);
+			$this->fragment->setCurrentAction($this->action);
 		}
 	}
 

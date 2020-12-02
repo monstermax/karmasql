@@ -6,6 +6,7 @@ use \SqlParser\SqlAction\SqlAction;
 use \SqlParser\SqlAction\SqlActionPart\SqlActionPart;
 use \SqlParser\SqlExecutor;
 use \SqlParser\SqlField;
+use SqlParser\SqlFragment\SqlFragment;
 use \SqlParser\SqlFunction;
 use \SqlParser\SqlParser;
 
@@ -20,20 +21,20 @@ class SqlTypeWord extends SqlType
 	public $var_value;
 
 
-	public static function startWord(SqlParser $parser, $pos) {
-		$parser->logDebug(__METHOD__ . " @ $pos");
+	public static function startWord(SqlFragment $fragment, $pos) {
+		$fragment->logDebug(__METHOD__ . " @ $pos");
 
 		$current_word = new self;
-		$parser->setCurrentWord($current_word);
+		$fragment->setCurrentWord($current_word);
 
-		$current_word->start($parser, $pos);
+		$current_word->start($fragment, $pos);
 	}
 
 
 	public function endWord($pos) {
-		$this->parser->logDebug(__METHOD__ . " @ $pos");
+		$this->fragment->logDebug(__METHOD__ . " @ $pos");
 
-		$current_word = $this->parser->getCurrentWord();
+		$current_word = $this->fragment->getCurrentWord();
 		if (! $current_word || $current_word !== $this) {
 			throw new \Exception("not in a word", 1);
 		}
@@ -42,31 +43,31 @@ class SqlTypeWord extends SqlType
 
 		$this->word = strtolower($this->outer_text);
 
-		$next_char = substr($this->parser->getSql(), $pos+1, 1);
+		$next_char = substr($this->fragment->getSql(), $pos+1, 1);
 		if (in_array($this->word, ['group', 'order', 'inner', 'outer', 'left', 'left', 'create', 'drop', 'rename', 'truncate']) && $next_char == ' ') {
 			// on ne veut pas creer un nouveau mot. on va concatener ce mot avec le prochain
 			return;
 		}
 
-		$principal_action = $this->parser->getPrincipalAction();
-		$current_action = $this->parser->getCurrentAction();
-		$action_items = $this->parser->getActionItems($current_action);
+		$principal_action = $this->fragment->getPrincipalAction();
+		$current_action = $this->fragment->getCurrentAction();
+		$action_items = $this->fragment->getActionItems($current_action);
 
-		if (!$principal_action && array_key_exists($this->word, $this->parser->getActions())) {
+		if (!$principal_action && array_key_exists($this->word, $this->fragment->getParser()->getSqlActions())) {
 			// determination de l'action de la requete (select, update, insert, ...)
 			$this->word_type = 'action';
 
-			$action = SqlAction::startAction($this->parser, $this->word);
-			$this->parser->setCurrentAction($action);
+			$action = SqlAction::startAction($this->fragment, $this->word);
+			$this->fragment->setCurrentAction($action);
 
 			$action_part = SqlActionPart::startPart($action, $this->word);
 			$action->setCurrentPart($action_part);
 
-		} else if (!empty($this->parser->getCurrentAction()) && array_key_exists($this->word, $action_items)) {
+		} else if (!empty($this->fragment->getCurrentAction()) && array_key_exists($this->word, $action_items)) {
 			// determination de la partie de la requete dans laquelle on est (select, from, where, group by, ...)
 			$this->word_type = 'action_part';
 
-			$current_action = $this->parser->getCurrentAction();
+			$current_action = $this->fragment->getCurrentAction();
 
 			$part_name = $this->word;
 
@@ -78,11 +79,11 @@ class SqlTypeWord extends SqlType
 
 			$current_action->setCurrentPart($action_part);
 
-		} else if (array_key_exists($this->word, $this->parser->getKeywords())) {
+		} else if (array_key_exists($this->word, $this->fragment->getParser()->getSqlKeywords())) {
 			// le mot correspond à un keyword sql
 			$this->word_type = 'keyword';
 
-		} else if (array_key_exists($this->word, $this->parser->getFunctions())) {
+		} else if (array_key_exists($this->word, $this->fragment->getParser()->getSqlFunctions())) {
 			// le mot correspond à un nom de fonction
 			$this->word_type = 'function_sql';
 			
@@ -99,10 +100,10 @@ class SqlTypeWord extends SqlType
 
 		//$this->detectFields();
 
-		$this->parser->addItem($this);
-		$this->parser->addWord($this);
+		$this->fragment->addItem($this);
+		$this->fragment->addWord($this);
 
-		$this->parser->setCurrentWord(null);
+		$this->fragment->setCurrentWord(null);
 	}
 
 
@@ -135,7 +136,7 @@ class SqlTypeWord extends SqlType
 				$outer_text = '$functions_repository->' . $func_name;
 			
 			/*
-            } else if ($this->parser->allow_php_functions && is_callable($func_name)) {
+            } else if ($this->fragment->allow_php_functions && is_callable($func_name)) {
 				$outer_text = $func_name;
 			*/
 
@@ -144,12 +145,12 @@ class SqlTypeWord extends SqlType
 			}
 			
 		} else if ($this->word_type == 'function_php') {
-			if (! $this->parser->allow_php_functions) {
+			if (! $this->fragment->allow_php_functions) {
 				throw new \Exception('PHP functions are not allowed');
 			}
 			
 		} else if ($this->word_type == 'variable_php') {
-			if (! $this->parser->allow_php_variables) {
+			if (! $this->fragment->allow_php_variables) {
 				throw new \Exception('PHP variables are not allowed');
 			}
 
@@ -223,7 +224,7 @@ class SqlTypeWord extends SqlType
 	{
 		// called by SqlActionPartSelect::parsePart
 
-		// $table = $parser->getTableFrom();
+		// $table = $fragment->getTableFrom();
 
 		if ($this->word_type == 'undefined') {
 			// detection field
@@ -422,7 +423,7 @@ class SqlTypeWord extends SqlType
         } else if ($this->word_type === 'variable_sql') {
 			$var_name = $this->var_name;
 
-			$database = $this->parser->getDatabase();
+			$database = $this->fragment->getDatabase();
 			$var = isset($database['_variables'][$var_name]) ? $database['_variables'][$var_name] : null;
 
 			return [

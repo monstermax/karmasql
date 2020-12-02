@@ -92,7 +92,7 @@ trait SqlItems_trait
 
 						$current_param = new SqlExpr($expr_first_part->outer_text); // TODO: il manque les espaces dans le outer_text du SqlExpr que l'on créé
 						$current_param->parent = $this;
-						$current_param->parser = $this->parser;
+						//$current_param->parser = $this->getQuery()->getParser();
 						$current_param->action = $this->action;
 						
 						

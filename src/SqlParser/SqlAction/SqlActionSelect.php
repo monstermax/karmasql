@@ -29,7 +29,7 @@ class SqlActionSelect extends SqlAction
 		$offset = $limit_offset['offset'];
 
 		// load data
-		$database = $this->parser->getDatabase();
+		$database = $this->query->getParser()->getDatabase();
 		foreach ($tables as $table) {
 			$table->loadDataFromDatabase($database);
 		}

@@ -3,7 +3,8 @@
 namespace SqlParser\SqlAction;
 
 use \SqlParser\SqlExecutor;
-use \SqlParser\SqlParser;
+//use \SqlParser\SqlParser;
+use \SqlParser\SqlFragment\SqlFragment;
 use \SqlParser\SqlAction\SqlActionPart\SqlActionPart;
 
 use \SqlParser\SqlDebugInfo_trait;
@@ -17,15 +18,15 @@ class SqlAction
 	use SqlName_trait;
 	use SqlParent_trait;
 
-	public $parser;
+	public $query; // @SqlQuery
 	protected $current_part;
 	protected $parts = null;
 
 
-	public function __construct(SqlParser $parser, $name)
+	public function __construct(SqlFragment $query, $name)
 	{
 		$this->name = $name;
-		$this->parser = $parser;
+		$this->query = $query;
 	}
 
 
@@ -35,34 +36,34 @@ class SqlAction
 	}
 
 
-	public static function startAction(SqlParser $parser, $name)
+	public static function startAction(SqlFragment $query, $name)
 	{
 		if ($name == 'select') {
-			$part = new SqlActionSelect($parser, $name);
+			$part = new SqlActionSelect($query, $name);
 
 		} else if ($name == 'insert') {
-			$part = new SqlActionInsert($parser, $name);
+			$part = new SqlActionInsert($query, $name);
 
 		} else if ($name == 'update') {
-			$part = new SqlActionUpdate($parser, $name);
+			$part = new SqlActionUpdate($query, $name);
 
 		} else if ($name == 'delete') {
-			$part = new SqlActionDelete($parser, $name);
+			$part = new SqlActionDelete($query, $name);
 
 		} else if ($name == 'set') {
-			$part = new SqlActionSet($parser, $name);
+			$part = new SqlActionSet($query, $name);
 
 		} else if ($name == 'create table') {
-			$part = new SqlActionCreateTable($parser, $name);
+			$part = new SqlActionCreateTable($query, $name);
 
 		} else if ($name == 'drop table') {
-			$part = new SqlActionDropTable($parser, $name);
+			$part = new SqlActionDropTable($query, $name);
 
 		} else if ($name == 'truncate table') {
-			$part = new SqlActionTruncateTable($parser, $name);
+			$part = new SqlActionTruncateTable($query, $name);
 
 		} else {
-			$part = new SqlAction($parser, $name);
+			$part = new SqlAction($query, $name);
 		}
 
 		return $part;
@@ -288,22 +289,15 @@ class SqlAction
 	}
 
 
-	/**
-	 * Get the value of parser
-	 */ 
-	public function getParser()
+	public function getQuery()
 	{
-		return $this->parser;
+		return $this->query;
 	}
 
-	/**
-	 * Set the value of parser
-	 *
-	 * @return  self
-	 */ 
-	public function setParser($parser)
+	
+	public function setQuery($query)
 	{
-		$this->parser = $parser;
+		$this->query = $query;
 
 		return $this;
 	}

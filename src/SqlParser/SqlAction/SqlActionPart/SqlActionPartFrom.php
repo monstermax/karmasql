@@ -84,7 +84,7 @@ class SqlActionPartFrom extends SqlActionPart
 				// TODO: stocker les fields_names en metadonnée. Comme ca si on fait un "truncate" ou "delete" on pourra continuer a utiliser la table
 
 				if (empty($fields_names)) {
-					$parser = $this->getAction()->getParser();
+					$parser = $this->getQuery()->getParser();
 					$database = $parser->getDatabase();
 					
 					$data_table = isset($database[$table_name]) ? $database[$table_name] : null;

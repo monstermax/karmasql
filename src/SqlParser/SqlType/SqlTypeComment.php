@@ -2,7 +2,7 @@
 
 namespace SqlParser\SqlType;
 
-use \SqlParser\SqlParser;
+use \SqlParser\SqlFragment\SqlFragment;
 
 
 class SqlTypeComment extends SqlType
@@ -19,14 +19,14 @@ class SqlTypeComment extends SqlType
 	}
 
 
-	public static function isCommentStart(SqlParser $parser, $char, $next_char='')
+	public static function isCommentStart(SqlFragment $fragment, $char, $next_char='')
 	{
-		if ($parser->getCurrentComment()) {
+		if ($fragment->getCurrentComment()) {
 			// on est deja dans un commentaire
 			return false;
 		}
 
-		if ($parser->getCurrentString()) {
+		if ($fragment->getCurrentString()) {
 			// on est dans une string
 			return false;
 		}
@@ -50,15 +50,15 @@ class SqlTypeComment extends SqlType
 	}
 
 
-	public static function startComment(SqlParser $parser, $pos, $comment_type='slash')
+	public static function startComment(SqlFragment $fragment, $pos, $comment_type='slash')
 	{
-		$parser->logDebug(__METHOD__ . " @ $pos");
+		$fragment->logDebug(__METHOD__ . " @ $pos");
 
 		$current_comment = new self;
 		$current_comment->comment_type = $comment_type;
-		$parser->setCurrentComment($current_comment);
+		$fragment->setCurrentComment($current_comment);
 		
-		$current_comment->start($parser, $pos);
+		$current_comment->start($fragment, $pos);
 
 		if ($comment_type == 'slash') {
 			$current_comment->enclosure_start = '/*';
@@ -81,14 +81,14 @@ class SqlTypeComment extends SqlType
 
 	public function isCommentEnd($char, $next_char='')
 	{
-		$current_comment = $this->parser->getCurrentComment();
+		$current_comment = $this->fragment->getCurrentComment();
 
 		if (! $current_comment) {
 			// on n'est PAS dans un commentaire
 			return false;
 		}
 
-		if ($this->parser->getCurrentString()) {
+		if ($this->fragment->getCurrentString()) {
 			// on est dans une string
 			return false;
 		}
@@ -113,9 +113,9 @@ class SqlTypeComment extends SqlType
 
 	public function endComment($pos, $comment_type='slash')
 	{
-		$this->parser->logDebug(__METHOD__ . " @ $pos");
+		$this->fragment->logDebug(__METHOD__ . " @ $pos");
 
-		$current_comment = $this->parser->getCurrentComment();
+		$current_comment = $this->fragment->getCurrentComment();
 
 		if (empty($current_comment)) {
 			throw new \Exception("not in a comment", 1);
@@ -131,10 +131,10 @@ class SqlTypeComment extends SqlType
 
 		$this->end($pos);
 
-		$this->parser->addItem($this);
-		$this->parser->addComment($this);
+		$this->fragment->addItem($this);
+		$this->fragment->addComment($this);
 
-		$this->parser->setCurrentComment(null);
+		$this->fragment->setCurrentComment(null);
 	}
 
 }

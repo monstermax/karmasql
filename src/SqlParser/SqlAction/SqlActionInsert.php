@@ -3,6 +3,7 @@
 namespace SqlParser\SqlAction;
 
 use \SqlParser\SqlExecutor;
+use \SqlParser\SqlResult;
 
 
 class SqlActionInsert extends SqlAction
@@ -22,7 +23,7 @@ class SqlActionInsert extends SqlAction
 
 		$table_from = $this->getTableFrom(); // insert ... select
 		if ($table_from) {
-			$action_select = new SqlActionSelect($this->parser, 'select');
+			$action_select = new SqlActionSelect($this->query, 'select');
 			$parts = array_slice($this->parts, 2);
 
 			// on change l'action de chaque part de la requete select (la nouvelle action est un SqlActionSelect et non plus un SqlActionInsert)
@@ -72,9 +73,9 @@ class SqlActionInsert extends SqlAction
 
 		$table_into->setData($data, true);
 
-		$database = $this->parser->getDatabase();
+		$database = $this->query->getParser()->getDatabase();
 		$table_name = $table_into->getName();
-		$table_into->saveDataToDatabase($this->parser, $database, $table_name);
+		$table_into->saveDataToDatabase($this->query->getParser(), $database, $table_name);
 
 		//pre($table_into->getData());
 		$debug = 1;

@@ -2,6 +2,7 @@
 
 namespace SqlParser\SqlType;
 
+use SqlParser\SqlFragment\SqlFragment;
 use \SqlParser\SqlParser;
 
 
@@ -24,32 +25,32 @@ class SqlTypeSpace extends SqlType
 	}
 
 
-	public static function startSpace(SqlParser $parser, $pos)
+	public static function startSpace(SqlFragment $fragment, $pos)
 	{
-		$parser->logDebug(__METHOD__ . " @ $pos");
+		$fragment->logDebug(__METHOD__ . " @ $pos");
 
 		$current_space = new self;
-		$parser->setCurrentSpace($current_space);
+		$fragment->setCurrentSpace($current_space);
 
-		$current_space->start($parser, $pos);
+		$current_space->start($fragment, $pos);
 	}
 
 
 	public function endSpace($pos)
 	{
-		$this->parser->logDebug(__METHOD__ . " @ $pos");
+		$this->fragment->logDebug(__METHOD__ . " @ $pos");
 		
-		$current_space = $this->parser->getCurrentSpace();
+		$current_space = $this->fragment->getCurrentSpace();
 		if (! $current_space || $current_space !== $this) {
 			throw new \Exception("not in a space", 1);
 		}
 
 		$this->end($pos);
 
-		$this->parser->addItem($this);
-		$this->parser->addSpace($this);
+		$this->fragment->addItem($this);
+		$this->fragment->addSpace($this);
 
-		$this->parser->setCurrentSpace(null);
+		$this->fragment->setCurrentSpace(null);
 	}
 
 

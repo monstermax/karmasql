@@ -2,7 +2,7 @@
 
 namespace SqlParser\SqlType;
 
-use \SqlParser\SqlParser;
+use \SqlParser\SqlFragment\SqlFragment;
 
 
 class SqlTypeJoker extends SqlType
@@ -10,19 +10,19 @@ class SqlTypeJoker extends SqlType
 	public $type = 'joker';
 
 
-	public static function startEndJoker(SqlParser $parser, $pos)
+	public static function startEndJoker(SqlFragment $fragment, $pos)
 	{
-		$parser->logDebug(__METHOD__ . " @ $pos");
+		$fragment->logDebug(__METHOD__ . " @ $pos");
 
 		$current_joker = new self;
-		$current_joker->start($parser, $pos);
+		$current_joker->start($fragment, $pos);
 
 		$current_joker->end($pos);
 
-		$parser->addItem($current_joker);
-		//$parser->addJoker($current_joker);
+		$fragment->addItem($current_joker);
+		//$fragment->addJoker($current_joker);
 
-		//$parser->setCurrentJoker(null);
+		//$fragment->setCurrentJoker(null);
 	}
 
 	/*

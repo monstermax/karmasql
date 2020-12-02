@@ -77,7 +77,7 @@ class SqlActionPartJoin extends SqlActionPart
                             $current_condition = new SqlExpr; // ou SqlCondition ?
                             $current_condition->parent = $this;
                             $current_condition->action = $this->action;
-                            $current_condition->parser = $this->parser;
+                            //$current_condition->parser = $this->query->getParser();
                         }
                         
                         $current_condition->addItem($item);
@@ -120,9 +120,9 @@ class SqlActionPartJoin extends SqlActionPart
 
 
 			if (true) {
-				// find table into database to set fields names
+				// find table into database to set fields names // TODO : code a remplacer par une fonction getDataTableFieldsNames
 				
-				$parser = $this->getAction()->getParser();
+				$parser = $this->getQuery()->getParser();
 				
 				$database = $parser->getDatabase();
 				$data_table = isset($database[$table_name]) ? $database[$table_name] : null;

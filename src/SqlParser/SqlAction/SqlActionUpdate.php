@@ -27,7 +27,7 @@ class SqlActionUpdate extends SqlAction
 
 		
 		// load data
-		$database = $this->parser->getDatabase();
+		$database = $this->query->getParser()->getDatabase();
 		foreach ($tables as $table) {
 			$table->loadDataFromDatabase($database);
 		}
@@ -178,9 +178,9 @@ class SqlActionUpdate extends SqlAction
 
 		$table_update->setData($rows, true);
 
-		$database = $this->parser->getDatabase();
+		$database = $this->query->getParser()->getDatabase();
 		$table_name = $table_update->getName();
-		$table_update->saveDataToDatabase($this->parser, $database, $table_name);
+		$table_update->saveDataToDatabase($this->query->getParser(), $database, $table_name);
 
 		$debug = 1;
 
@@ -217,7 +217,7 @@ class SqlActionUpdate extends SqlAction
 				$expr_set = new SqlExpr; // ou SqlCondition ?
 				//$expr_set->parent = $this;
 				$expr_set->action = $this;
-				$expr_set->parser = $this->parser;
+				//$expr_set->parser = $this->query->getParser();
 
 				$expr_set->addItems($items);
 			}

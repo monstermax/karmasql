@@ -42,7 +42,7 @@ class SqlActionPartWhere extends SqlActionPart
 					$current_condition = new SqlExpr; // ou SqlCondition ?
 					$current_condition->parent = $this;
 					$current_condition->action = $this->action;
-					$current_condition->parser = $this->parser;
+					//$current_condition->parser = $this->query->getParser();
 				}
 				
 				$current_condition->addItem($item);

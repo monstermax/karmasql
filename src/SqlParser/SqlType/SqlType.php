@@ -2,6 +2,7 @@
 
 namespace SqlParser\SqlType;
 
+use SqlParser\SqlFragment\SqlFragment;
 use \SqlParser\SqlParser;
 use \SqlParser\SqlParent_trait;
 
@@ -14,7 +15,7 @@ class SqlType implements \JsonSerializable
 	//public $parent = null;  // @SqlActionPart | SqlTypeParenthese
 	public $type = null;
 
-	public $parser; // @SqlParser
+	public $fragment; // @SqlFragment
 	public $action; // @SqlAction
 	
 	public $pos_start;
@@ -34,7 +35,7 @@ class SqlType implements \JsonSerializable
 	public function jsonSerialize() {
 		$values = get_object_vars($this);
 
-		$skips = ['parser', 'parent', 'action', 'items'];
+		$skips = ['fragment', 'parser', 'parent', 'action', 'items'];
 
 		foreach ($skips as $skip) {
 			if (isset($values[$skip])) {
@@ -87,17 +88,17 @@ class SqlType implements \JsonSerializable
 	}
 
 
-	public function start(SqlParser $parser, $pos)
+	public function start(SqlFragment $fragment, $pos)
 	{
 
 		// idenfication du parent
-		$parent = $parser->getCurrentParenthese();
+		$parent = $fragment->getCurrentParenthese();
 		if (empty($parent)) {
 			// on est pas dans une parenthese (on est donc a la racine)
-			$current_action = $parser->getCurrentAction();
+			$current_action = $fragment->getCurrentAction();
 
 			if (! $current_action) {
-				if (count($parser->getWords()) > 1) {
+				if (count($fragment->getWords()) > 1) {
 					//throw new \Exception("missing current_action", 1); // désactivé car sinon empeche les multiples queries
 					// TODO: A REVOIR
 				}
@@ -108,7 +109,7 @@ class SqlType implements \JsonSerializable
 
 				if (! $current_part) {
 					throw new \Exception("missing current_part", 1);
-					//$parent = $parser;
+					//$parent = $fragment;
 					$parent = null;
 
 				} else {
@@ -118,7 +119,7 @@ class SqlType implements \JsonSerializable
 			}
 		}
 
-		$this->parser = $parser;
+		$this->fragment = $fragment;
 		$this->parent = $parent;
 		$this->pos_start = $pos;
 	}
@@ -132,12 +133,12 @@ class SqlType implements \JsonSerializable
 
 		$start = $this->pos_start;
 		$length = $this->pos_end + 1 + $extra_enclosure_end - $this->pos_start;
-		$this->outer_text = substr($this->parser->getSql(), $start, $length);
+		$this->outer_text = substr($this->fragment->getSql(), $start, $length);
 		$this->outer_len = strlen($this->outer_text);
 
 		$start = $this->pos_start + strlen($this->enclosure_start);
 		$length = $this->pos_end + 1 - $this->pos_start - strlen($this->enclosure_start) - intval(!!strlen($this->enclosure_end));
-		$this->inner_text = substr($this->parser->getSql(), $start, $length);
+		$this->inner_text = substr($this->fragment->getSql(), $start, $length);
 		$this->inner_len = strlen($this->inner_text);
 	}
 	

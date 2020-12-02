@@ -71,9 +71,9 @@ class SqlActionPartInto extends SqlActionPart
 
 
 		if (true) {
-			// find table into database to set fields names
+			// find table into database to set fields names // TODO : code a remplacer par une fonction getDataTableFieldsNames
 			
-			$parser = $this->getAction()->getParser();
+			$parser = $this->query->getParser();
 			
 			$database = $parser->getDatabase();
 			$data_table = isset($database[$table_name]) ? $database[$table_name] : null;

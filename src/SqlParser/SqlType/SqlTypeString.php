@@ -3,6 +3,7 @@
 namespace SqlParser\SqlType;
 
 use \SqlParser\SqlExecutor;
+use SqlParser\SqlFragment\SqlFragment;
 use \SqlParser\SqlParser;
 
 
@@ -14,14 +15,14 @@ class SqlTypeString extends SqlType
 
 
 
-	public static function isStringStart(SqlParser $parser, $char)
+	public static function isStringStart(SqlFragment $fragment, $char)
 	{
-		if ($parser->getCurrentString()) {
+		if ($fragment->getCurrentString()) {
 			// on est deja dans une string
 			return false;
 		}
 
-		if ($parser->getCurrentComment()) {
+		if ($fragment->getCurrentComment()) {
 			// on est dans un commentaire
 			return false;
 		}
@@ -42,12 +43,12 @@ class SqlTypeString extends SqlType
 
 	public function isStringEnd($char)
 	{
-		if (! $this->parser->getCurrentString()) {
+		if (! $this->fragment->getCurrentString()) {
 			// on n'est PAS dans une string
 			return false;
 		}
 
-		if ($this->parser->getCurrentComment()) {
+		if ($this->fragment->getCurrentComment()) {
 			// on est dans un commentaire
 			return false;
 		}
@@ -66,15 +67,15 @@ class SqlTypeString extends SqlType
 	}
 	
 
-	public static function startString(SqlParser $parser, $pos, $string_type='simple_quote')
+	public static function startString(Sqlfragment $fragment, $pos, $string_type='simple_quote')
 	{
-		$parser->logDebug(__METHOD__ . " @ $pos");
+		$fragment->logDebug(__METHOD__ . " @ $pos");
 
 		$current_string = new self;
 		$current_string->string_type = $string_type;
-		$parser->setCurrentString($current_string);
+		$fragment->setCurrentString($current_string);
 
-		$current_string->start($parser, $pos);
+		$current_string->start($fragment, $pos);
 
 
 		if ($string_type == 'double_quote') {
@@ -94,9 +95,9 @@ class SqlTypeString extends SqlType
 
 	public function endString($pos, $string_type='simple_quote')
 	{
-		$this->parser->logDebug(__METHOD__ . " @ $pos");
+		$this->fragment->logDebug(__METHOD__ . " @ $pos");
 
-		$current_string = $this->parser->getCurrentString();
+		$current_string = $this->fragment->getCurrentString();
 		if (!$current_string) {
 			throw new \Exception("not in a string", 1);
 		}
@@ -111,10 +112,10 @@ class SqlTypeString extends SqlType
 		$this->end($pos);
 
 
-		$this->parser->addItem($this);
-		$this->parser->addString($this);
+		$this->fragment->addItem($this);
+		$this->fragment->addString($this);
 
-		$this->parser->setCurrentString(null);
+		$this->fragment->setCurrentString(null);
 	}
 
 

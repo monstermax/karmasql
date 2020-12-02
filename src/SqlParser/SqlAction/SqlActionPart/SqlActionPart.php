@@ -10,127 +10,97 @@ use \SqlParser\SqlDebugInfo_trait;
 
 class SqlActionPart
 {
-	use SqlItems_trait;
-	use SqlName_trait;
-	use SqlDebugInfo_trait;
+    use SqlItems_trait;
+    use SqlName_trait;
+    use SqlDebugInfo_trait;
 
-	protected $action;
-	protected $parser;
-
-
-	public function __construct(SqlAction $action, $name)
-	{
-		$this->action = $action;
-		$this->name = $name;
-		$this->parser = $action->getParser();
-	}
-
-	/*
-	public function toPhp()
-	{
-		return $this->name;
-	}
-	*/
+    protected $action;
+    protected $query;
 
 
-	public static function startPart(SqlAction $action, $name)
-	{
-		if ($name == 'select') {
-			$part = new SqlActionPartSelect($action, $name);
+    public function __construct(SqlAction $action, $name)
+    {
+        $this->action = $action;
+        $this->name = $name;
+        $this->query = $action->getQuery();
+    }
 
-		} else if ($name == 'from') {
-			$part = new SqlActionPartFrom($action, $name);
-
-		} else if ($name == 'where') {
-			$part = new SqlActionPartWhere($action, $name);
-
-		} else if ($name == 'group by') {
-			$part = new SqlActionPartGroupBy($action, $name);
-
-		} else if ($name == 'join') {
-			$part = new SqlActionPartJoin($action, $name);
-
-		} else if ($name == 'order by') {
-			$part = new SqlActionPartOrderBy($action, $name);
-
-		} else if ($name == 'limit') {
-			$part = new SqlActionPartLimit($action, $name);
-
-		} else if ($name == 'insert') {
-			$part = new SqlActionPartInsert($action, $name);
-
-		} else if ($name == 'into') {
-			$part = new SqlActionPartInto($action, $name);
-
-		} else if ($name == 'values') {
-			$part = new SqlActionPartValues($action, $name);
-
-		} else if ($name == 'update') {
-			$part = new SqlActionPartUpdate($action, $name);
-
-		} else if ($name == 'set') {
-			$part = new SqlActionPartSet($action, $name);
-
-		} else if ($name == 'delete') {
-			$part = new SqlActionPartDelete($action, $name);
-
-		} else if ($name == 'create table') {
-			$part = new SqlActionPartCreateTable($action, $name);
-
-		} else if ($name == 'drop table') {
-			$part = new SqlActionPartDropTable($action, $name);
-
-		} else if ($name == 'truncate table') {
-			$part = new SqlActionPartTruncateTable($action, $name);
-
-		} else {
-			throw new \Exception('non implemented case');
-			$part = new SqlActionPart($action, $name);
-		}
-
-		return $part;
-	}
+    /*
+    public function toPhp()
+    {
+        return $this->name;
+    }
+    */
 
 
-	/**
-	 * Get the value of action
-	 */ 
-	public function getAction()
-	{
-		return $this->action;
-	}
+    public static function startPart(SqlAction $action, $name)
+    {
+        if ($name == 'select') {
+            $part = new SqlActionPartSelect($action, $name);
+        } elseif ($name == 'from') {
+            $part = new SqlActionPartFrom($action, $name);
+        } elseif ($name == 'where') {
+            $part = new SqlActionPartWhere($action, $name);
+        } elseif ($name == 'group by') {
+            $part = new SqlActionPartGroupBy($action, $name);
+        } elseif ($name == 'join') {
+            $part = new SqlActionPartJoin($action, $name);
+        } elseif ($name == 'order by') {
+            $part = new SqlActionPartOrderBy($action, $name);
+        } elseif ($name == 'limit') {
+            $part = new SqlActionPartLimit($action, $name);
+        } elseif ($name == 'insert') {
+            $part = new SqlActionPartInsert($action, $name);
+        } elseif ($name == 'into') {
+            $part = new SqlActionPartInto($action, $name);
+        } elseif ($name == 'values') {
+            $part = new SqlActionPartValues($action, $name);
+        } elseif ($name == 'update') {
+            $part = new SqlActionPartUpdate($action, $name);
+        } elseif ($name == 'set') {
+            $part = new SqlActionPartSet($action, $name);
+        } elseif ($name == 'delete') {
+            $part = new SqlActionPartDelete($action, $name);
+        } elseif ($name == 'create table') {
+            $part = new SqlActionPartCreateTable($action, $name);
+        } elseif ($name == 'drop table') {
+            $part = new SqlActionPartDropTable($action, $name);
+        } elseif ($name == 'truncate table') {
+            $part = new SqlActionPartTruncateTable($action, $name);
+        } else {
+            throw new \Exception('non implemented case');
+            $part = new SqlActionPart($action, $name);
+        }
 
-	/**
-	 * Set the value of action
-	 *
-	 * @return  self
-	 */ 
+        return $part;
+    }
+
+
+    public function getAction()
+    {
+        return $this->action;
+    }
+
+
 	public function setAction($action)
-	{
-		$this->action = $action;
+    {
+        $this->action = $action;
 
-		return $this;
+        return $this;
 	}
 	
 
-	/**
-	 * Get the value of parser
-	 */ 
-	public function getParser()
-	{
-		return $this->parser;
+    public function getQuery()
+    {
+        return $this->query;
 	}
+	
 
-	/**
-	 * Set the value of parser
-	 *
-	 * @return  self
-	 */ 
-	public function setParser($parser)
-	{
-		$this->parser = $parser;
+    public function setQuery($query)
+    {
+        $this->query = $query;
 
-		return $this;
-	}
+        return $this;
+    }
 }
 

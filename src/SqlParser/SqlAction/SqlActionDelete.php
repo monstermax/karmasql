@@ -35,7 +35,7 @@ class SqlActionDelete extends SqlAction
         
 		
 		// load data
-		$database = $this->parser->getDatabase();
+		$database = $this->query->getParser()->getDatabase();
 		$rows = $table_from->loadDataFromDatabase($database);
 		
 
@@ -177,9 +177,9 @@ class SqlActionDelete extends SqlAction
 
         $table_from->setData( array_values($rows) );
 
-        $database = $this->parser->getDatabase();
+        $database = $this->query->getParser()->getDatabase();
         $table_name = $table_from->getName();
-		$table_from->saveDataToDatabase($this->parser, $database, $table_name);
+		$table_from->saveDataToDatabase($this->query->getParser(), $database, $table_name);
 
 
 		$results = array_values($rows_to_update);

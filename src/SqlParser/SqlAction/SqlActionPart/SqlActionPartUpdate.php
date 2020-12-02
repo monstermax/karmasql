@@ -22,8 +22,8 @@ class SqlActionPartUpdate extends SqlActionPart
 
 
         if (true) {
-            // find table into database to set fields names
-            $parser = $this->getAction()->getParser();
+            // find table into database to set fields names // TODO : code a remplacer par une fonction getDataTableFieldsNames
+            $parser = $this->query->getParser();
             
             $database = $parser->getDatabase();
             $data_table = isset($database[$table_name]) ? $database[$table_name] : null;
