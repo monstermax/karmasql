@@ -9,7 +9,7 @@ class SqlField /* extends SqlExpr */
 	use SqlAlias_trait;
 	use SqlDebugInfo_trait;
 
-	public $parent; // @SqlWord
+	public $parent; // @SqlTypeWord
 	protected $table; // @SqlTable
 	//public $tmp_table_alias = null;
 

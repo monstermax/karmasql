@@ -2,16 +2,19 @@
 
 namespace SqlParser;
 
+use \SqlParser\SqlAction\SqlActionPart\SqlActionPartSelect;
+
 
 class SqlExpr
 {
+
 	use SqlDebugInfo_trait;
 	use SqlItems_trait;
 	use SqlAlias_trait;
 	use SqlParent_trait;
 
 	public $type = 'expr';
-	//public $parent = null; // @SqlActionPart | SqlParenthese
+	//public $parent = null; // @SqlActionPart | SqlTypeParenthese
 	public $outer_text;
 	public $action; // @SqlAction
 	

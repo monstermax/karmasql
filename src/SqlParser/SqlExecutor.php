@@ -2,6 +2,9 @@
 
 namespace SqlParser;
 
+use \SqlParser\SqlAction\SqlAction;
+use \SqlParser\SqlType\SqlTypeWord;
+
 
 class SqlExecutor
 {
@@ -55,7 +58,7 @@ class SqlExecutor
 					// cas pour le insert into ... select
 					$tmp_field_alias = array_shift($fields_aliases);
 					
-					if (is_object($tmp_field_alias) && get_class($tmp_field_alias) === SqlWord::class) {
+					if (is_object($tmp_field_alias) && get_class($tmp_field_alias) === SqlTypeWord::class) {
 						$tmp_field_alias = $tmp_field_alias->word;
 					}
 				}

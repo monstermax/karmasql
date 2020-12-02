@@ -2,6 +2,19 @@
 
 namespace SqlParser;
 
+use \SqlParser\SqlAction\SqlAction;
+use \SqlParser\SqlType\SqlType;
+use \SqlParser\SqlType\SqlTypeComma;
+use \SqlParser\SqlType\SqlTypeComment;
+use \SqlParser\SqlType\SqlTypeComparator;
+use \SqlParser\SqlType\SqlTypeJoker;
+use \SqlParser\SqlType\SqlTypeNumeric;
+use \SqlParser\SqlType\SqlTypeOperator;
+use \SqlParser\SqlType\SqlTypeParenthese;
+use \SqlParser\SqlType\SqlTypeSpace;
+use \SqlParser\SqlType\SqlTypeString;
+use \SqlParser\SqlType\SqlTypeWord;
+
 
 class SqlParser
 {
@@ -246,7 +259,7 @@ class SqlParser
 			$next_char = substr($this->sql, $pos+1, 1);
 
 			$is_underscore = ($char === '_');
-			$is_asterisk = ($char === '*'); // TODO: creer une class SqlJoker
+			$is_asterisk = ($char === '*'); // TODO: creer une class SqlTypeJoker
 			$is_dot = ($char === '.');
 			$is_arobase = ($char === '@');
 			$is_semicolon = ($char === ';');
@@ -294,10 +307,10 @@ class SqlParser
 				if (in_array($prev_char, ['.', '('])) {
 					// TODO: gerer s'il y a des espaces entre "(" et "*"
 
-					SqlWord::startWord($this, $pos);
+					SqlTypeWord::startWord($this, $pos);
 					$this->current_word->endWord($pos);
 					
-					//SqlNumeric::startNumeric($this, $pos);
+					//SqlTypeNumeric::startNumeric($this, $pos);
 					//$this->current_numeric->endNumeric($pos);
 
 					//$is_operator = false;
@@ -381,10 +394,10 @@ class SqlParser
 				continue;
 			} else {
 				// on n'est PAS dans un commentaire
-				$comment_type = SqlComment::isCommentStart($this, $char, $next_char);
+				$comment_type = SqlTypeComment::isCommentStart($this, $char, $next_char);
 				if ($comment_type) {
 					// debut d'un commentaire
-					SqlComment::startComment($this, $pos, $comment_type);
+					SqlTypeComment::startComment($this, $pos, $comment_type);
 					unset($comment_type);
 					continue;
 				}
@@ -408,10 +421,10 @@ class SqlParser
 				// on n'est PAS dans un string
 
 				if (! $this->current_word) {
-					$string_type = SqlString::isStringStart($this, $char, $next_char);
+					$string_type = SqlTypeString::isStringStart($this, $char, $next_char);
 					if ($string_type) {
 						// debut d'un string
-						SqlString::startString($this, $pos, $string_type);
+						SqlTypeString::startString($this, $pos, $string_type);
 						unset($string_type);
 						continue;
 					}
@@ -432,20 +445,20 @@ class SqlParser
 				}
 				unset($is_parenthese_end);
 
-				$parenthese_type = SqlParenthese::isParentheseStart($this, $char);
+				$parenthese_type = SqlTypeParenthese::isParentheseStart($this, $char);
 				if ($parenthese_type) {
 					// debut d'une parenthese (de niveau 2+)
-					SqlParenthese::startParenthese($this, $pos);
+					SqlTypeParenthese::startParenthese($this, $pos);
 					unset($parenthese_type);
 					continue;
 				}
 				unset($parenthese_type);
 			} else {
 				// on n'est PAS dans une parenthese
-				$parenthese_type = SqlParenthese::isParentheseStart($this, $char);
+				$parenthese_type = SqlTypeParenthese::isParentheseStart($this, $char);
 				if ($parenthese_type) {
 					// debut d'une parenthese (de niveau 1)
-					SqlParenthese::startParenthese($this, $pos);
+					SqlTypeParenthese::startParenthese($this, $pos);
 					unset($parenthese_type);
 					continue;
 				}
@@ -458,7 +471,7 @@ class SqlParser
 			if (! $this->current_word) {
 				// on n'est PAS dans un mot
 				if ($is_alpha_lower || $is_alpha_upper || $is_arobase || $is_underscore || $is_dollar) {
-					SqlWord::startWord($this, $pos);
+					SqlTypeWord::startWord($this, $pos);
 					continue;
 				}
 			}
@@ -468,7 +481,7 @@ class SqlParser
 			if (! $this->current_numeric) {
 				// on n'est PAS dans un numeric
 				if ($is_numeric) {
-					SqlNumeric::startNumeric($this, $pos);
+					SqlTypeNumeric::startNumeric($this, $pos);
 					continue;
 				}
 			}
@@ -482,7 +495,7 @@ class SqlParser
 						// cas des mots composés (alter table, order by, group by, inner join, ...)
 						$this->current_word->append($char);
 					} else {
-						SqlSpace::startSpace($this, $pos);
+						SqlTypeSpace::startSpace($this, $pos);
 					}
 					continue;
 				}
@@ -491,28 +504,28 @@ class SqlParser
 
 			// virgule ?
 			if ($is_comma) {
-				SqlComma::startEndComma($this, $pos);
+				SqlTypeComma::startEndComma($this, $pos);
 				continue;
 			}
 
 
 			// joker ?
 			if ($is_joker) {
-				SqlJoker::startEndJoker($this, $pos);
+				SqlTypeJoker::startEndJoker($this, $pos);
 				continue;
 			}
 
 
 			// operator ?
 			if ($is_operator) {
-				SqlOperator::startOperator($this, $pos);
+				SqlTypeOperator::startOperator($this, $pos);
 				continue;
 			}
 
 
 			// comparator ?
 			if ($is_comparator) {
-				SqlComparator::startComparator($this, $pos);
+				SqlTypeComparator::startComparator($this, $pos);
 				continue;
 			}
 
@@ -979,7 +992,7 @@ class SqlParser
 
 	/* ADDERS */
 
-	public function addItem(SqlParseItem $item)
+	public function addItem(SqlType $item)
 	{
 		//$this->items[] = $item;
 
@@ -1027,42 +1040,42 @@ class SqlParser
 		
 	}
 
-	public function addComment(SqlComment $comment)
+	public function addComment(SqlTypeComment $comment)
 	{
 		$this->comments[] = $comment;
 	}
 
-	public function addString(SqlString $string)
+	public function addString(SqlTypeString $string)
 	{
 		$this->strings[] = $string;
 	}
 
-	public function addParenthese(SqlParenthese $parenthese)
+	public function addParenthese(SqlTypeParenthese $parenthese)
 	{
 		$this->parentheses[] = $parenthese;
 	}
 
-	public function addWord(SqlWord $word)
+	public function addWord(SqlTypeWord $word)
 	{
 		$this->words[] = $word;
 	}
 
-	public function addNumeric(SqlNumeric $number)
+	public function addNumeric(SqlTypeNumeric $number)
 	{
 		$this->numerics[] = $number;
 	}
 
-	public function addSpace(SqlSpace $space)
+	public function addSpace(SqlTypeSpace $space)
 	{
 		$this->spaces[] = $space;
 	}
 
-	public function addOperator(SqlOperator $operator)
+	public function addOperator(SqlTypeOperator $operator)
 	{
 		$this->operators[] = $operator;
 	}
 
-	public function addComparator(SqlComparator $comparator)
+	public function addComparator(SqlTypeComparator $comparator)
 	{
 		$this->comparators[] = $comparator;
 	}

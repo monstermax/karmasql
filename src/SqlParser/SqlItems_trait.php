@@ -2,6 +2,8 @@
 
 namespace SqlParser;
 
+use \SqlParser\SqlType\SqlType;
+
 
 trait SqlItems_trait
 {
@@ -10,7 +12,7 @@ trait SqlItems_trait
 	/*
 	Used by:
 	- SqlActionPart
-	- SqlParenthese
+	- SqlTypeParenthese
 	- SqlExpr
 	*/
 
@@ -85,7 +87,7 @@ trait SqlItems_trait
 				} else {
 					if (get_class($current_param) !== SqlExpr::class) {
 						// on transforme un item en expression
-						//$expr_first_part = new SqlParseItem;
+						//$expr_first_part = new SqlType;
 						$expr_first_part = $current_param;
 
 						$current_param = new SqlExpr($expr_first_part->outer_text); // TODO: il manque les espaces dans le outer_text du SqlExpr que l'on créé
@@ -135,7 +137,7 @@ trait SqlItems_trait
 	 * @return  self
 	 */ 
 
-	public function addItem(SqlParseItem $item)
+	public function addItem(SqlType $item)
 	{
 		$item->action = $this->action;
 		//$item->parent = $this; // TODO: a tester

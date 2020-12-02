@@ -11,9 +11,9 @@ trait SqlParent_trait
 	/*
     Used by:
     - SqlAction
-    - SqlParenthese
+    - SqlTypeParenthese
     - SqlExpr
-    - SqlParseItem
+    - SqlType
     */
 
 
