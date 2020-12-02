@@ -2,19 +2,7 @@
 
 namespace SqlParser;
 
-use \SqlParser\SqlAction\SqlAction;
 use \SqlParser\SqlFragment\SqlFragment;
-use \SqlParser\SqlType\SqlType;
-use \SqlParser\SqlType\SqlTypeComma;
-use \SqlParser\SqlType\SqlTypeComment;
-use \SqlParser\SqlType\SqlTypeComparator;
-use \SqlParser\SqlType\SqlTypeJoker;
-use \SqlParser\SqlType\SqlTypeNumeric;
-use \SqlParser\SqlType\SqlTypeOperator;
-use \SqlParser\SqlType\SqlTypeParenthese;
-use \SqlParser\SqlType\SqlTypeSpace;
-use \SqlParser\SqlType\SqlTypeString;
-use \SqlParser\SqlType\SqlTypeWord;
 
 
 class SqlParser
@@ -28,12 +16,8 @@ class SqlParser
 
 	protected $sql;
 	protected $database = null;
-	//protected $pos = null;
-	//protected $word = null;
-
-
-	public $parse_duration = null;
-
+	protected $main_fragment = null;
+	protected $parse_duration = null;
 
 
 	protected $sql_actions = [
@@ -259,12 +243,7 @@ class SqlParser
 			throw new \Exception("invalid parsing. cannot execute", 1);
 		}
 
-		$results = null;
-
-		foreach ($this->main_fragment->getQueries() as $query) {
-			$debug = $this->database;
-			$results = $query->execute();
-		}
+		$results = $this->main_fragment->executeFragment();
 
 		$this->results = $results;
 		

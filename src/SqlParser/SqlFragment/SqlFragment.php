@@ -3,6 +3,7 @@
 namespace SqlParser\SqlFragment;
 
 use \SqlParser\SqlAction\SqlAction;
+use \SqlParser\SqlExecutor;
 use \SqlParser\SqlParser;
 use \SqlParser\SqlQuery;
 use \SqlParser\SqlType\SqlType;
@@ -21,9 +22,9 @@ use \SqlParser\SqlType\SqlTypeWord;
 class SqlFragment
 {
     public $parser;
-
+	
     public $parse_duration = null;
-
+	
     public $sql = '';
     
     public $queries = null;  // si le fragment contient au moins une SqlAction
@@ -31,6 +32,7 @@ class SqlFragment
     public $query = null;  // si le fragment contient une (et une seule) SqlAction
     public $action_parts = null;  // si le fragment est une SqlAction (uniquement si count($queries)==1 )
     
+	
 	protected $parent = null;
 
 	protected $current_query = null;
@@ -61,7 +63,9 @@ class SqlFragment
             
         } else {
             $this->parser = $parent->getParser();
-        }
+		}
+		
+		$this->parent = $parent;
     }
 
 
@@ -429,6 +433,42 @@ class SqlFragment
 			return [];
 		}
 	}
+
+
+
+	public function executeFragment()
+	{
+		// a etendre dans SqlFragmentAction
+
+		// TODO: renommer SqlQuery en SqlFragmentQuery ? ou SqlFragmentAction ?
+
+
+		if ($this->query) {
+			// execute the query
+			$this->query->execute();
+			
+		} else if ($this->queries) {
+			// execute the queries
+
+			$results = null;
+
+			foreach ($this->queries as $query) {
+				$results = $query->execute();
+			}
+
+			return $results;
+
+		} else {
+			throw new \Exception("non-emplemented", 1);
+		}
+	}
+
+
+	public function executeQuery(SqlQuery $query)
+	{
+		// a voir si on le met pas dans SqlFragmentAction ?
+	}
+
 
 
 	public function logDebug($str)

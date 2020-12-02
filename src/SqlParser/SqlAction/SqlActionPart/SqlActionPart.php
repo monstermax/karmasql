@@ -25,13 +25,6 @@ class SqlActionPart
         $this->query = $action->getQuery();
     }
 
-    /*
-    public function toPhp()
-    {
-        return $this->name;
-    }
-    */
-
 
     public static function startPart(SqlAction $action, $name)
     {

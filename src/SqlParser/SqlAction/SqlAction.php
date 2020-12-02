@@ -33,6 +33,7 @@ class SqlAction
 	public function executeAction(SqlExecutor $executor)
 	{
 		// EXTEND ME
+		throw new \Exception("extend me !", 1);
 	}
 
 
@@ -117,6 +118,7 @@ class SqlAction
 		$tables = [];
 
 		// EXTEND ME
+		throw new \Exception("extend me !", 1);
 		
 		return $tables;
 	}
@@ -228,6 +230,7 @@ class SqlAction
 	public function parseParts()
 	{
 		// EXTEND ME
+		throw new \Exception("extend me !", 1);
 	}
 
 
@@ -240,13 +243,6 @@ class SqlAction
 
 	
 
-	/*
-	public function toPhp()
-	{
-		return $this->name;
-	}
-	*/
-
 
 	public function getParts()
 	{
@@ -256,19 +252,16 @@ class SqlAction
 
 	public function getPart($part_name)
 	{
-		//return isset($this->parts[$part_name]) ? $this->parts[$part_name] : null;
-
-		//$parts = [];
+		// GENERATOR
 		foreach ($this->parts as $part) {
 			if ($part->getName() == $part_name) {
 				//$parts[] = $part;
 				yield $part;
 			}
 		}
-
-		//return null;
 	}
 
+	
 	public function getCurrentPart()
 	{
 		return $this->current_part;
