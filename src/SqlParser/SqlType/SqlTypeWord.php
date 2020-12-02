@@ -53,50 +53,107 @@ class SqlTypeWord extends SqlType
 		$current_action = $this->fragment->getCurrentAction();
 		$action_items = $this->fragment->getActionItems($current_action);
 
-		if (!$principal_action && array_key_exists($this->word, $this->fragment->getParser()->getSqlActions())) {
+		if (array_key_exists($this->word, $this->fragment->getParser()->getSqlActions())) {
 			// determination de l'action de la requete (select, update, insert, ...)
-			$this->word_type = 'action';
 
-			$action = SqlAction::startAction($this->fragment, $this->word);
-			$this->fragment->setCurrentAction($action);
+			if ($principal_action) {
+				// principal action already defined
 
-			$action_part = SqlActionPart::startPart($action, $this->word);
-			$action->setCurrentPart($action_part);
+                if ($principal_action->getName() === 'select' && $this->word === 'desc') {
+                    // "desc" after a "select" action
+					$this->word_type = 'keyword';
+					
+                } else if ($principal_action->getName() === 'update' && $this->word === 'set') {
+					// "set" after an "update" action
+					$this->word_type = 'action_part';
+					$part_name = $this->word;
+					
+					$action_part = SqlActionPart::startPart($current_action, $part_name);
+					$current_action->setCurrentPart($action_part);
 
-		} else if (!empty($this->fragment->getCurrentAction()) && array_key_exists($this->word, $action_items)) {
-			// determination de la partie de la requete dans laquelle on est (select, from, where, group by, ...)
-			$this->word_type = 'action_part';
+                } else if ($principal_action->getName() === 'insert' && $this->word === 'select') {
+					// "select" after a "insert" action
 
-			$current_action = $this->fragment->getCurrentAction();
+					/*
+					// a new principal action is detected
+					$this->word_type = 'action';
 
-			$part_name = $this->word;
+					$action = SqlAction::startAction($this->fragment, $this->word);
+					$this->fragment->setCurrentAction($action);
+		
+					$action_part = SqlActionPart::startPart($action, $this->word);
+					$action->setCurrentPart($action_part);
+					*/
+	
+				} else {
+					throw new \Exception("principal action already defined");
 
-			if (in_array($part_name, ['inner join', 'left join', 'right join', 'left outer join', 'right outer join'])) {
-				$part_name = 'join';
-			}			
+				}
 
-			$action_part = SqlActionPart::startPart($current_action, $part_name);
+			} else {
+				// principal action detected
+				$this->word_type = 'action';
 
-			$current_action->setCurrentPart($action_part);
-
-		} else if (array_key_exists($this->word, $this->fragment->getParser()->getSqlKeywords())) {
-			// le mot correspond à un keyword sql
-			$this->word_type = 'keyword';
-
-		} else if (array_key_exists($this->word, $this->fragment->getParser()->getSqlFunctions())) {
-			// le mot correspond à un nom de fonction
-			$this->word_type = 'function_sql';
-			
-		} else if ($this->word === '*') {
-			//$this->word_type = 'joker'; // on prefere laisser undefined. Ensuite, la fonction "detectFields" determinera le bon type de joker
-			
-		} else if (substr($this->word, 0, 1) === '$') {
-			$this->word_type = 'variable_php';
-
-		} else {
-			// undefined word type
-			$debug = 1;
+				$action = SqlAction::startAction($this->fragment, $this->word);
+				$this->fragment->setCurrentAction($action);
+	
+				$action_part = SqlActionPart::startPart($action, $this->word);
+				$action->setCurrentPart($action_part);
+			}
 		}
+
+		if ($this->word_type === 'undefined') {
+			if (!empty($this->fragment->getCurrentAction()) && array_key_exists($this->word, $action_items)) {
+				// determination de la partie de la requete dans laquelle on est (select, from, where, group by, ...)
+				$this->word_type = 'action_part';
+	
+				$current_action = $this->fragment->getCurrentAction();
+	
+				$part_name = $this->word;
+	
+				if (in_array($part_name, ['inner join', 'left join', 'right join', 'left outer join', 'right outer join'])) {
+					$part_name = 'join';
+				}			
+	
+				$action_part = SqlActionPart::startPart($current_action, $part_name);
+				$current_action->setCurrentPart($action_part);
+			}
+		}
+		
+        if ($this->word_type === 'undefined') {
+			if (array_key_exists($this->word, $this->fragment->getParser()->getSqlKeywords())) {
+				// le mot correspond à un keyword sql
+				$this->word_type = 'keyword';
+	
+			}
+		}
+		
+        if ($this->word_type === 'undefined') {
+			if (array_key_exists($this->word, $this->fragment->getParser()->getSqlFunctions())) {
+				// le mot correspond à un nom de fonction
+				$this->word_type = 'function_sql';
+				
+			}
+		}
+		
+        if ($this->word_type === 'undefined') {
+			if ($this->word === '*') {
+				//$this->word_type = 'joker'; // on prefere laisser undefined. Ensuite, la fonction "detectFields" determinera le bon type de joker
+				
+			}
+		}
+
+        if ($this->word_type === 'undefined') {
+            if (substr($this->word, 0, 1) === '$') {
+                $this->word_type = 'variable_php';
+            }
+        }
+
+        if ($this->word_type === 'undefined') {
+			// undefined word type => it can be a table name or a field name
+			$debug = 1;
+			//throw new \Exception("non implemented case", 1);
+        }
 
 		//$this->detectFields();
 
