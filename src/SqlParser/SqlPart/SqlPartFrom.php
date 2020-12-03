@@ -1,6 +1,6 @@
 <?php
 
-namespace SqlParser\SqlAction\SqlActionPart;
+namespace SqlParser\SqlPart;
 
 use \SqlParser\SqlExpr;
 use \SqlParser\SqlTable;
@@ -9,7 +9,7 @@ use \SqlParser\SqlType\SqlTypeSpace;
 use \SqlParser\SqlType\SqlTypeWord;
 
 
-class SqlActionPartFrom extends SqlActionPart
+class SqlPartFrom extends SqlPart
 {
 	protected $part_name = 'from';
 
@@ -21,6 +21,8 @@ class SqlActionPartFrom extends SqlActionPart
 		$params = $this->getParamsFromItems(false);
 
 		$tables = [];
+
+		// TODO: transformer SqlPart en un SqlFragmentPart. et SqlAction ?
 
 		foreach ($params as $param) {
 			if (get_class($param) == SqlTypeWord::class) {

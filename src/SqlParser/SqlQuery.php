@@ -2,6 +2,7 @@
 
 namespace SqlParser;
 
+throw new \Exception("deprecated", 1);
 
 class SqlQuery
 {

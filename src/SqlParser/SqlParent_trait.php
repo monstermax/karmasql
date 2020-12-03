@@ -2,19 +2,12 @@
 
 namespace SqlParser;
 
+use \SqlParser\SqlFragment\SqlFragment;
+
 
 trait SqlParent_trait
 {
-	//protected $parent;
-	public $parent;
-
-	/*
-    Used by:
-    - SqlAction
-    - SqlTypeParenthese
-    - SqlExpr
-    - SqlType
-    */
+	protected $parent;
 
 
 	/**
@@ -22,7 +15,7 @@ trait SqlParent_trait
 	 */ 
 	public function getParent()
 	{
-		return $this->parent;
+		return $this->parent; /* @SqlFragment */
 	}
 
 	/**
@@ -30,7 +23,7 @@ trait SqlParent_trait
 	 *
 	 * @return  self
 	 */ 
-	public function setParent($parent)
+	public function setParent(SqlFragment $parent)
 	{
 		$this->parent = $parent;
 

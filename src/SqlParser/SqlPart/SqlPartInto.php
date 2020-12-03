@@ -1,11 +1,11 @@
 <?php
 
-namespace SqlParser\SqlAction\SqlActionPart;
+namespace SqlParser\SqlPart;
 
 use \SqlParser\SqlTable;
 
 
-class SqlActionPartInto extends SqlActionPart
+class SqlPartInto extends SqlPart
 {
 	protected $part_name = 'into';
 

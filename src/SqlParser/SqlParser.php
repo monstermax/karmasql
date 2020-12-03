@@ -2,7 +2,8 @@
 
 namespace SqlParser;
 
-use \SqlParser\SqlFragment\SqlFragment;
+use \SqlParser\SqlFragment\SqlFragmentMain;
+use \SqlParser\SqlFragment\SqlFragmentQuery;
 
 
 class SqlParser
@@ -181,17 +182,22 @@ class SqlParser
 		$this->sql = $sql;
 		$this->database = & $database;
 		
-		$this->main_fragment = new SqlFragment($this);
-		$this->main_fragment->sql = $sql;
+		$this->main_fragment = new SqlFragmentMain($this, $sql);
 
 		$this->main_fragment->parseSQL();
-		$this->parse_duration = $this->main_fragment->parse_duration;
+		$this->parse_duration = $this->main_fragment->getParseDuration();
 	}
 
 	
 	public function LoadTableToDatabase($table_name, array $data_table)
 	{
 		$this->database[$table_name] = $data_table;
+	}
+
+
+	public function getParser()
+	{
+		return $this;
 	}
 
 
@@ -243,7 +249,7 @@ class SqlParser
 			throw new \Exception("invalid parsing. cannot execute", 1);
 		}
 
-		$results = $this->main_fragment->executeFragment();
+		$results = $this->main_fragment->executeQueries();
 
 		$this->results = $results;
 		
@@ -273,13 +279,13 @@ class SqlParser
 	}
 
 
-	public function showQueryResults(SqlQuery $query, $query_idx=0)
+	public function showQueryResults(SqlFragmentQuery $query, $query_idx=0)
 	{
-		if (empty($query->principal_action)) {
+		if (empty($query->getAction())) {
 			return;
 		}
 
-		$results = $query->results;
+		$results = $query->getResults();
 
 		if (! $results) {
 			$results = [];
@@ -289,7 +295,7 @@ class SqlParser
 		$html = '';
 		$html .= '<div class="jumbotron p-3">';
 
-		$html .= '<h5>QUERY #' . ($query_idx+1) . ' - ' . strtoupper($query->principal_action->getName()) . ' - RESULTS</h5>';
+		$html .= '<h5>QUERY #' . ($query_idx+1) . ' - ' . strtoupper($query->getAction()->getName()) . ' - RESULTS</h5>';
 
 		$html .= '<table class="table table-hover table-striped table-bordered bg-light" border="1" width="100%">';
 		$html .= '	<thead>';
@@ -323,10 +329,10 @@ class SqlParser
 		$html .= '	</tbody>';
 		$html .= '</table>';
 
-		$result_name = in_array($query->principal_action->getName(), ['select']) ? 'results' : 'affected rows';
+		$result_name = in_array($query->getAction()->getName(), ['select']) ? 'results' : 'affected rows';
 
-		$html .= '<div><small>Query parsing duration: ' . round($query->parse_duration, 5) . ' second</small></div>';
-		$html .= '<div><small>Execute duration: ' . round($query->execute_duration, 5) . ' second</small><small> (' . count($results) . ' ' . $result_name . ')</small></div>';
+		$html .= '<div><small>Query parsing duration: ' . round($query->getParseDuration(), 5) . ' second</small></div>';
+		$html .= '<div><small>Execute duration: ' . round($query->getExecuteDuration(), 5) . ' second</small><small> (' . count($results) . ' ' . $result_name . ')</small></div>';
 
 		$html .= '</div>';
 

@@ -1,9 +1,9 @@
 <?php
 
-namespace SqlParser\SqlAction\SqlActionPart;
+namespace SqlParser\SqlPart;
 
 
-class SqlActionPartValues extends SqlActionPart
+class SqlPartValues extends SqlPart
 {
 	protected $part_name = 'values';
     

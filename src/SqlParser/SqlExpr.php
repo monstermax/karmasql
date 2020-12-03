@@ -24,13 +24,15 @@ class SqlExpr
 		$this->debug_skips = ['parser', 'parent', 'action', 'items'];
 		//$this->debug_skips = ['parser', 'parent', 'action'];
 		$this->outer_text = $outer_text;
+
+		//throw new \Exception("replace SqlExr by SqlFragment*", 1);
 	}
 
 	public function getExpr($with_spaces=false, $with_comments=false)
 	{
 		$sql = '';
 
-		$items = $this->getItems();
+		$items = $this->getItems(true);
 
 		foreach ($items as $item) {
 			if (! $with_comments && $item->type == 'comment') {
@@ -170,6 +172,9 @@ class SqlExpr
                 if ($item->type === 'parenthese') {
 					// parenthese
 					$item->detectFields(); // TODO: a deplacer en amont
+
+				} else if ($item->type === 'joker') {
+					// joker
 
 				} else if ($item->type === 'numeric') {
 					// numeric

@@ -1,11 +1,11 @@
 <?php
 
-namespace SqlParser\SqlAction\SqlActionPart;
+namespace SqlParser\SqlPart;
 
 use \SqlParser\SqlTable;
 
 
-class SqlActionPartUpdate extends SqlActionPart
+class SqlPartUpdate extends SqlPart
 {
 	protected $part_name = 'update';
     

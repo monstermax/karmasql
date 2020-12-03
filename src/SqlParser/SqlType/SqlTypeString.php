@@ -3,7 +3,7 @@
 namespace SqlParser\SqlType;
 
 use \SqlParser\SqlExecutor;
-use SqlParser\SqlFragment\SqlFragment;
+use \SqlParser\SqlFragment\SqlFragmentMain;
 use \SqlParser\SqlParser;
 
 
@@ -15,14 +15,14 @@ class SqlTypeString extends SqlType
 
 
 
-	public static function isStringStart(SqlFragment $fragment, $char)
+	public static function isStringStart(SqlFragmentMain $fragment_main, $char)
 	{
-		if ($fragment->getCurrentString()) {
+		if ($fragment_main->getCurrentString()) {
 			// on est deja dans une string
 			return false;
 		}
 
-		if ($fragment->getCurrentComment()) {
+		if ($fragment_main->getCurrentComment()) {
 			// on est dans un commentaire
 			return false;
 		}
@@ -67,15 +67,15 @@ class SqlTypeString extends SqlType
 	}
 	
 
-	public static function startString(Sqlfragment $fragment, $pos, $string_type='simple_quote')
+	public static function startString(SqlFragmentMain $fragment_main, $pos, $string_type='simple_quote')
 	{
-		$fragment->logDebug(__METHOD__ . " @ $pos");
+		$fragment_main->logDebug(__METHOD__ . " @ $pos");
 
 		$current_string = new self;
 		$current_string->string_type = $string_type;
-		$fragment->setCurrentString($current_string);
+		$fragment_main->setCurrentString($current_string);
 
-		$current_string->start($fragment, $pos);
+		$current_string->start($fragment_main, $pos);
 
 
 		if ($string_type == 'double_quote') {

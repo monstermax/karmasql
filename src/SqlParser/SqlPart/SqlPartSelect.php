@@ -1,6 +1,6 @@
 <?php
 
-namespace SqlParser\SqlAction\SqlActionPart;
+namespace SqlParser\SqlPart;
 
 use \SqlParser\SqlField;
 use \SqlParser\SqlExpr;
@@ -12,7 +12,7 @@ use \SqlParser\SqlType\SqlTypeString;
 use \SqlParser\SqlType\SqlTypeWord;
 
 
-class SqlActionPartSelect extends SqlActionPart
+class SqlPartSelect extends SqlPart
 {
 	protected $part_name = 'select';
 	

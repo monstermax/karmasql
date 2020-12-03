@@ -2,21 +2,26 @@
 
 namespace SqlParser\SqlType;
 
-use SqlParser\SqlFragment\SqlFragment;
-use \SqlParser\SqlParser;
+use \SqlParser\SqlFragment\SqlFragmentMain;
 use \SqlParser\SqlParent_trait;
 
 
 class SqlType implements \JsonSerializable
 {
 	//use SqlDebugInfo_trait;
-	use SqlParent_trait;
 	
-	//public $parent = null;  // @SqlActionPart | SqlTypeParenthese
+	use SqlParent_trait;
+	//protected $parent = null;  // @SqlActionPart | SqlTypeParenthese
+	
 	public $type = null;
+	
+	public $fragment_main = null;
+	public $query = null;
+	public $action = null;
+	public $part = null;
 
-	public $fragment; // @SqlFragment
-	public $action; // @SqlAction
+	//public $fragment; // le fragment (parent) auquel le type appartient => @SqlFragment*
+	//public $action; // @SqlAction
 	
 	public $pos_start;
 	public $pos_end;
@@ -35,7 +40,7 @@ class SqlType implements \JsonSerializable
 	public function jsonSerialize() {
 		$values = get_object_vars($this);
 
-		$skips = ['fragment', 'parser', 'parent', 'action', 'items'];
+		$skips = ['fragment', 'parent', 'action'];
 
 		foreach ($skips as $skip) {
 			if (isset($values[$skip])) {
@@ -50,6 +55,112 @@ class SqlType implements \JsonSerializable
 
 		return $values;
 	}
+
+
+
+	public function __construct(SqlFragmentMain $fragment_main, $pos)
+	{
+		$this->pos_start = $pos;
+
+		$this->fragment_main = $fragment_main;
+		$this->fragment_main->addItem($this);
+
+		$this->setParents();
+
+		$debug = 1;
+	}
+
+
+	public function setParents()
+	{
+		// TODO: ajouter les items a tous les niveaux de parents (et parentheses incluses)
+
+		$old_query = $this->query;
+		$old_action = $this->action;
+		$old_part = $this->part;
+
+		$this->parent = $this->fragment_main->getCurrentParent();
+		$this->query = $this->parent->getQuery();
+
+		if ($this->query) {
+			$this->query->addItem($this);
+		}
+
+		$this->action = $this->query->getCurrentAction();
+		if ($this->action) {
+			$this->action->addItem($this);
+			
+			$current_part = $this->action->getCurrentPart();
+			if ($current_part) {
+				$current_part->addItem($this);
+			}
+
+		} else {
+			$current_part = null;
+		}
+		$this->part = $current_part;
+
+
+		// delete old parent's item
+		if ($old_query && $old_query !== $this->query) {
+			$old_query->removeLastItem();
+		}
+		if ($old_action && $old_action !== $this->action) {
+			$old_action->removeLastItem();
+		}
+		if ($old_part && $old_part !== $this->part) {
+			$old_part->removeLastItem();
+		}
+
+
+		if (in_array($this->parent, [$this->query, $this->action, $this->part])) {
+			// item already added to the parent
+			$debug = 1;
+
+		} else {
+			throw new \Exception("debug me. who is my parent ? who am i ?", 1);
+			$this->parent->addItem($this);
+		}
+
+	}
+
+
+	public function end($pos)
+	{
+		$this->pos_end = $pos;
+
+		$extra_enclosure_end = max(0, strlen($this->enclosure_end)-1);
+
+		$start = $this->pos_start;
+		$length = $this->pos_end + 1 + $extra_enclosure_end - $this->pos_start;
+		$this->outer_text = substr($this->fragment_main->getSql(), $start, $length);
+		$this->outer_len = strlen($this->outer_text);
+
+		$start = $this->pos_start + strlen($this->enclosure_start);
+		$length = $this->pos_end + 1 - $this->pos_start - strlen($this->enclosure_start) - intval(!!strlen($this->enclosure_end));
+		$this->inner_text = substr($this->fragment_main->getSql(), $start, $length);
+		$this->inner_len = strlen($this->inner_text);
+
+
+        if ($this->type === 'word') {
+			// pour le SqlTypeWord, le averification est faitre par lui-meme (car pour le 1er mot de la requete, on n'a pas encore d'action definie)
+
+        }else{
+            if (! $this->parent) {
+                throw new \Exception("missing parent");
+            }
+
+            if (! $this->action) {
+                throw new \Exception("missing action");
+            }
+
+            if (! $this->query) {
+                throw new \Exception("missing query");
+            }
+        }
+
+	}
+	
 
 
 	public function append($val)
@@ -86,70 +197,6 @@ class SqlType implements \JsonSerializable
 
 		return $sql;
 	}
-
-
-	public function start(SqlFragment $fragment, $pos)
-	{
-
-		// idenfication du parent
-		$parent = $fragment->getCurrentParenthese();
-		if (empty($parent)) {
-			// on est pas dans une parenthese (on est donc a la racine)
-			$current_action = $fragment->getCurrentAction();
-
-			if (! $current_action) {
-				if (count($fragment->getWords()) > 1) {
-					//throw new \Exception("missing current_action", 1); // désactivé car sinon empeche les multiples queries
-					// TODO: A REVOIR
-				}
-				
-			} else {
-				// on a defini le type de query (select, update, insert, ...)
-				$current_part = $current_action->getCurrentPart();
-
-				if (! $current_part) {
-					throw new \Exception("missing current_part", 1);
-					//$parent = $fragment;
-					$parent = null;
-
-				} else {
-					// on a defini dans quel partie de la query on est (from, where, group by, ...)
-					$parent = $current_part;
-				}
-			}
-		}
-
-		$this->fragment = $fragment;
-		$this->parent = $parent;
-		$this->pos_start = $pos;
-	}
-	
-
-	public function end($pos)
-	{
-		$this->pos_end = $pos;
-
-		$extra_enclosure_end = max(0, strlen($this->enclosure_end)-1);
-
-		$start = $this->pos_start;
-		$length = $this->pos_end + 1 + $extra_enclosure_end - $this->pos_start;
-		$this->outer_text = substr($this->fragment->getSql(), $start, $length);
-		$this->outer_len = strlen($this->outer_text);
-
-		$start = $this->pos_start + strlen($this->enclosure_start);
-		$length = $this->pos_end + 1 - $this->pos_start - strlen($this->enclosure_start) - intval(!!strlen($this->enclosure_end));
-		$this->inner_text = substr($this->fragment->getSql(), $start, $length);
-		$this->inner_len = strlen($this->inner_text);
-	}
-	
-
-	/*
-	// NE PAS UTILISER CAR CA CHANGE les $POS ET PLUS RIEN NE FONCTIONNE
-	public function replaceOuterTextIn($str, $str_replace='')
-	{
-		return substr($str, 0, $this->pos_start) . $str_replace . substr($str, $this->pos_end + strlen($this->enclosure_end));
-	}
-	*/
 
 
 

@@ -3,12 +3,15 @@
 namespace SqlParser\SqlType;
 
 use \SqlParser\SqlAction\SqlAction;
-use \SqlParser\SqlAction\SqlActionPart\SqlActionPart;
 use \SqlParser\SqlExecutor;
 use \SqlParser\SqlField;
-use SqlParser\SqlFragment\SqlFragment;
+use \SqlParser\SqlFragment\SqlFragment;
+use \SqlParser\SqlFragment\SqlFragmentAction;
+use \SqlParser\SqlFragment\SqlFragmentPart;
+use \SqlParser\SqlFragment\SqlFragmentMain;
 use \SqlParser\SqlFunction;
 use \SqlParser\SqlParser;
+use \SqlParser\SqlPart\SqlPart;
 
 
 class SqlTypeWord extends SqlType
@@ -16,25 +19,19 @@ class SqlTypeWord extends SqlType
 	public $type = 'word';
 	public $word_type = 'undefined'; // keyword or operator or field or ...?
 	public $word = '';
+
+	// for table fields names OR for joker
 	public $fields = null;
+
+	// for functions only
 	public $var_name;
 	public $var_value;
 
 
-	public static function startWord(SqlFragment $fragment, $pos) {
-		$fragment->logDebug(__METHOD__ . " @ $pos");
-
-		$current_word = new self;
-		$fragment->setCurrentWord($current_word);
-
-		$current_word->start($fragment, $pos);
-	}
-
-
 	public function endWord($pos) {
-		$this->fragment->logDebug(__METHOD__ . " @ $pos");
+		$this->parent->logDebug(__METHOD__ . " @ $pos");
 
-		$current_word = $this->fragment->getCurrentWord();
+		$current_word = $this->fragment_main->getCurrentWord();
 		if (! $current_word || $current_word !== $this) {
 			throw new \Exception("not in a word", 1);
 		}
@@ -43,124 +40,165 @@ class SqlTypeWord extends SqlType
 
 		$this->word = strtolower($this->outer_text);
 
-		$next_char = substr($this->fragment->getSql(), $pos+1, 1);
+		$next_char = substr($this->fragment_main->getSql(), $pos+1, 1);
 		if (in_array($this->word, ['group', 'order', 'inner', 'outer', 'left', 'left', 'create', 'drop', 'rename', 'truncate']) && $next_char == ' ') {
 			// on ne veut pas creer un nouveau mot. on va concatener ce mot avec le prochain
 			return;
 		}
 
-		$principal_action = $this->fragment->getPrincipalAction();
-		$current_action = $this->fragment->getCurrentAction();
-		$action_items = $this->fragment->getActionItems($current_action);
+		$query_action = $this->query->getAction(); // principal action of the current query
+		$current_action = $this->query->getAction2() ?: $query_action;  // principal action of the current query => can be different of $query_action only if "insert ... select"
+		$action_items = $current_action ? $this->fragment_main->getActionItems($current_action) : [];
 
-		if (array_key_exists($this->word, $this->fragment->getParser()->getSqlActions())) {
-			// determination de l'action de la requete (select, update, insert, ...)
+		// SEARCH FOR ACTION
+		if ($this->word_type === 'undefined') {
+			if (array_key_exists($this->word, $this->fragment_main->getParser()->getSqlActions())) {
+				// determination de l'action de la requete (select, update, insert, ...)
 
-			if ($principal_action) {
-				// principal action already defined
-
-                if ($principal_action->getName() === 'select' && $this->word === 'desc') {
-                    // "desc" after a "select" action
-					$this->word_type = 'keyword';
-					
-                } else if ($principal_action->getName() === 'update' && $this->word === 'set') {
-					// "set" after an "update" action
-					$this->word_type = 'action_part';
-					$part_name = $this->word;
-					
-					$action_part = SqlActionPart::startPart($current_action, $part_name);
-					$current_action->setCurrentPart($action_part);
-
-                } else if ($principal_action->getName() === 'insert' && $this->word === 'select') {
-					// "select" after a "insert" action
-
-					/*
-					// a new principal action is detected
+				if (! $query_action) {
+					// principal action detected
 					$this->word_type = 'action';
+					$action_name = $this->word;
 
-					$action = SqlAction::startAction($this->fragment, $this->word);
-					$this->fragment->setCurrentAction($action);
+					$query_action = SqlAction::startAction($this->fragment_main->getCurrentQuery(), $action_name);
+					$this->fragment_main->setCurrentAction($query_action);
+
+					$this->action = $query_action;
+
+					$fragment_query_part = SqlPart::startPart($query_action, $action_name);
+					$query_action->setCurrentPart($fragment_query_part);
+
+
+					if (true) {
+						// on réaffecte le parent, la query, l'action et la part de l'item
+						$this->setParents();
+					}
+					
+				} else{
+					// principal action already defined
+
+					if ($query_action->getName() === 'select' && $this->word === 'desc') {
+						// "desc" after a "select" action
+						$this->word_type = 'keyword';
+						
+					} else if ($query_action->getName() === 'update' && $this->word === 'set') {
+						// "set" after an "update" action
+						$this->word_type = 'query_part';
+						$part_name = $this->word;
+						
+						$query_part = SqlPart::startPart($current_action, $part_name);
+						$current_action->setCurrentPart($query_part);
+
+					} else if ($query_action->getName() === 'insert' && $this->word === 'select') {
+						// "select" after a "insert" action
+						// an query_part will be defined in the next code block
+						
+						$this->word_type = 'action';
+						$action_name = $this->word;
 		
-					$action_part = SqlActionPart::startPart($action, $this->word);
-					$action->setCurrentPart($action_part);
-					*/
-	
-				} else {
-					throw new \Exception("principal action already defined");
+						$query_action = SqlAction::startAction($this->fragment_main->getCurrentQuery(), $action_name);
+						$this->fragment_main->setCurrentAction($query_action);
+		
+						$this->setAction($query_action);
+		
+						$fragment_query_part = SqlPart::startPart($query_action, $action_name);
+						$query_action->setCurrentPart($fragment_query_part);
+			
+					} else {
+						throw new \Exception("principal action already defined");
+					}
 
 				}
-
-			} else {
-				// principal action detected
-				$this->word_type = 'action';
-
-				$action = SqlAction::startAction($this->fragment, $this->word);
-				$this->fragment->setCurrentAction($action);
-	
-				$action_part = SqlActionPart::startPart($action, $this->word);
-				$action->setCurrentPart($action_part);
 			}
 		}
 
+		// SEARCH FOR PART
 		if ($this->word_type === 'undefined') {
-			if (!empty($this->fragment->getCurrentAction()) && array_key_exists($this->word, $action_items)) {
+			if ($this->query->getCurrentAction() && array_key_exists($this->word, $action_items)) {
 				// determination de la partie de la requete dans laquelle on est (select, from, where, group by, ...)
 				$this->word_type = 'action_part';
-	
-				$current_action = $this->fragment->getCurrentAction();
-	
 				$part_name = $this->word;
-	
+				$current_action = $this->query->getCurrentAction();
+		
 				if (in_array($part_name, ['inner join', 'left join', 'right join', 'left outer join', 'right outer join'])) {
 					$part_name = 'join';
 				}			
 	
-				$action_part = SqlActionPart::startPart($current_action, $part_name);
-				$current_action->setCurrentPart($action_part);
+				$query_part = SqlPart::startPart($current_action, $part_name);
+				$current_action->setCurrentPart($query_part);
+
+
+				if (true) {
+					// on réaffecte le parent et la part de l'item
+					$this->setParents();
+
+					// TODO: retirer l'item des anciens parents
+				}
+
 			}
 		}
 		
+		// SEARCH FOR KEYWORD
         if ($this->word_type === 'undefined') {
-			if (array_key_exists($this->word, $this->fragment->getParser()->getSqlKeywords())) {
+			if (array_key_exists($this->word, $this->fragment_main->getParser()->getSqlKeywords())) {
 				// le mot correspond à un keyword sql
 				$this->word_type = 'keyword';
-	
+				
 			}
 		}
 		
+		// SEARCH FOR FUNCTION
         if ($this->word_type === 'undefined') {
-			if (array_key_exists($this->word, $this->fragment->getParser()->getSqlFunctions())) {
+			if (array_key_exists($this->word, $this->fragment_main->getParser()->getSqlFunctions())) {
 				// le mot correspond à un nom de fonction
 				$this->word_type = 'function_sql';
 				
 			}
 		}
 		
+		// SEARCH FOR JOKER
         if ($this->word_type === 'undefined') {
 			if ($this->word === '*') {
 				//$this->word_type = 'joker'; // on prefere laisser undefined. Ensuite, la fonction "detectFields" determinera le bon type de joker
 				
+			} else {
+				// here, $word must be a field. Else it is an error
 			}
 		}
-
+		
+		// SEARCH FOR PHP VARIABLE
         if ($this->word_type === 'undefined') {
-            if (substr($this->word, 0, 1) === '$') {
-                $this->word_type = 'variable_php';
+			if (substr($this->word, 0, 1) === '$') {
+				$this->word_type = 'variable_php';
             }
         }
-
+		
+		// ALL OTHER CASES
         if ($this->word_type === 'undefined') {
 			// undefined word type => it can be a table name or a field name
 			$debug = 1;
 			//throw new \Exception("non implemented case", 1);
         }
 
-		//$this->detectFields();
+		
+		if (! $this->parent) {
+			throw new \Exception("missing parent");
+		}
 
-		$this->fragment->addItem($this);
-		$this->fragment->addWord($this);
+		if (! $this->action) {
+			throw new \Exception("missing action");
+		}
 
-		$this->fragment->setCurrentWord(null);
+		if (! $this->query) {
+			throw new \Exception("missing query");
+		}
+
+
+
+		$this->fragment_main->addItem($this);
+		$this->fragment_main->addWord($this);
+
+		$this->fragment_main->setCurrentWord(null);
 	}
 
 
@@ -193,7 +231,7 @@ class SqlTypeWord extends SqlType
 				$outer_text = '$functions_repository->' . $func_name;
 			
 			/*
-            } else if ($this->fragment->allow_php_functions && is_callable($func_name)) {
+            } else if ($this->fragment_main->allow_php_functions && is_callable($func_name)) {
 				$outer_text = $func_name;
 			*/
 
@@ -202,12 +240,12 @@ class SqlTypeWord extends SqlType
 			}
 			
 		} else if ($this->word_type == 'function_php') {
-			if (! $this->fragment->allow_php_functions) {
+			if (! $this->fragment_main->allow_php_functions) {
 				throw new \Exception('PHP functions are not allowed');
 			}
 			
 		} else if ($this->word_type == 'variable_php') {
-			if (! $this->fragment->allow_php_variables) {
+			if (! $this->fragment_main->allow_php_variables) {
 				throw new \Exception('PHP variables are not allowed');
 			}
 
@@ -480,7 +518,7 @@ class SqlTypeWord extends SqlType
         } else if ($this->word_type === 'variable_sql') {
 			$var_name = $this->var_name;
 
-			$database = $this->fragment->getDatabase();
+			$database = $this->fragment_main->getParent()->getDatabase();
 			$var = isset($database['_variables'][$var_name]) ? $database['_variables'][$var_name] : null;
 
 			return [

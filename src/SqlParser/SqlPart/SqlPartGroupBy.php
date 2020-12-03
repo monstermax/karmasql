@@ -1,11 +1,11 @@
 <?php
 
-namespace SqlParser\SqlAction\SqlActionPart;
+namespace SqlParser\SqlPart;
 
 use \SqlParser\SqlExpr;
 
 
-class SqlActionPartGroupBy extends SqlActionPart
+class SqlPartGroupBy extends SqlPart
 {
 	protected $part_name = 'group by';
 	

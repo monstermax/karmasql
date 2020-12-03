@@ -1,12 +1,12 @@
 <?php
 
-namespace SqlParser\SqlAction\SqlActionPart;
+namespace SqlParser\SqlPart;
 
 
-class SqlActionPartTruncateTable extends SqlActionPart
+class SqlPartCreateTable extends SqlPart
 {
-	protected $part_name = 'truncate table';
-	
+	protected $part_name = 'create table';
+
 	protected $table;
 
 
@@ -23,8 +23,8 @@ class SqlActionPartTruncateTable extends SqlActionPart
 		// TODO: detecter keyword "ignore"
 		
 	}
-	
-	
+
+
 
 
 	/**

@@ -24,7 +24,7 @@ class SqlTypeSpace extends SqlType
 		return ' ';
 	}
 
-
+	/*
 	public static function startSpace(SqlFragment $fragment, $pos)
 	{
 		$fragment->logDebug(__METHOD__ . " @ $pos");
@@ -34,23 +34,25 @@ class SqlTypeSpace extends SqlType
 
 		$current_space->start($fragment, $pos);
 	}
+	*/
 
 
 	public function endSpace($pos)
 	{
-		$this->fragment->logDebug(__METHOD__ . " @ $pos");
+
+		$this->parent->logDebug(__METHOD__ . " @ $pos");
 		
-		$current_space = $this->fragment->getCurrentSpace();
+		$current_space = $this->fragment_main->getCurrentSpace();
 		if (! $current_space || $current_space !== $this) {
 			throw new \Exception("not in a space", 1);
 		}
 
 		$this->end($pos);
 
-		$this->fragment->addItem($this);
-		$this->fragment->addSpace($this);
+		$this->fragment_main->addItem($this);
+		$this->fragment_main->addSpace($this);
 
-		$this->fragment->setCurrentSpace(null);
+		$this->fragment_main->setCurrentSpace(null);
 	}
 
 

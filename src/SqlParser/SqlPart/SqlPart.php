@@ -1,18 +1,25 @@
 <?php
 
-namespace SqlParser\SqlAction\SqlActionPart;
+namespace SqlParser\SqlPart;
 
 use \SqlParser\SqlAction\SqlAction;
+use \SqlParser\SqlFragment\SqlFragment;
+
 use \SqlParser\SqlItems_trait;
 use \SqlParser\SqlName_trait;
+use \SqlParser\SqlParent_trait;
 use \SqlParser\SqlDebugInfo_trait;
 
 
-class SqlActionPart
+// TODO: a renommer en SqlFragmentPart
+
+class SqlPart extends SqlFragment
 {
     use SqlItems_trait;
     use SqlName_trait;
     use SqlDebugInfo_trait;
+    use SqlParent_trait;
+
 
     protected $action;
     protected $query;
@@ -23,46 +30,47 @@ class SqlActionPart
         $this->action = $action;
         $this->name = $name;
         $this->query = $action->getQuery();
+        $this->parent = $action;
     }
 
 
     public static function startPart(SqlAction $action, $name)
     {
         if ($name == 'select') {
-            $part = new SqlActionPartSelect($action, $name);
+            $part = new SqlPartSelect($action, $name);
         } elseif ($name == 'from') {
-            $part = new SqlActionPartFrom($action, $name);
+            $part = new SqlPartFrom($action, $name);
         } elseif ($name == 'where') {
-            $part = new SqlActionPartWhere($action, $name);
+            $part = new SqlPartWhere($action, $name);
         } elseif ($name == 'group by') {
-            $part = new SqlActionPartGroupBy($action, $name);
+            $part = new SqlPartGroupBy($action, $name);
         } elseif ($name == 'join') {
-            $part = new SqlActionPartJoin($action, $name);
+            $part = new SqlPartJoin($action, $name);
         } elseif ($name == 'order by') {
-            $part = new SqlActionPartOrderBy($action, $name);
+            $part = new SqlPartOrderBy($action, $name);
         } elseif ($name == 'limit') {
-            $part = new SqlActionPartLimit($action, $name);
+            $part = new SqlPartLimit($action, $name);
         } elseif ($name == 'insert') {
-            $part = new SqlActionPartInsert($action, $name);
+            $part = new SqlPartInsert($action, $name);
         } elseif ($name == 'into') {
-            $part = new SqlActionPartInto($action, $name);
+            $part = new SqlPartInto($action, $name);
         } elseif ($name == 'values') {
-            $part = new SqlActionPartValues($action, $name);
+            $part = new SqlPartValues($action, $name);
         } elseif ($name == 'update') {
-            $part = new SqlActionPartUpdate($action, $name);
+            $part = new SqlPartUpdate($action, $name);
         } elseif ($name == 'set') {
-            $part = new SqlActionPartSet($action, $name);
+            $part = new SqlPartSet($action, $name);
         } elseif ($name == 'delete') {
-            $part = new SqlActionPartDelete($action, $name);
+            $part = new SqlPartDelete($action, $name);
         } elseif ($name == 'create table') {
-            $part = new SqlActionPartCreateTable($action, $name);
+            $part = new SqlPartCreateTable($action, $name);
         } elseif ($name == 'drop table') {
-            $part = new SqlActionPartDropTable($action, $name);
+            $part = new SqlPartDropTable($action, $name);
         } elseif ($name == 'truncate table') {
-            $part = new SqlActionPartTruncateTable($action, $name);
+            $part = new SqlPartTruncateTable($action, $name);
         } else {
             throw new \Exception('non implemented case');
-            $part = new SqlActionPart($action, $name);
+            $part = new SqlPart($action, $name);
         }
 
         return $part;

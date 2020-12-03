@@ -1,11 +1,11 @@
 <?php
 
-namespace SqlParser\SqlAction\SqlActionPart;
+namespace SqlParser\SqlPart;
 
 use \SqlParser\SqlType\SqlTypeNumeric;
 
 
-class SqlActionPartLimit extends SqlActionPart
+class SqlPartLimit extends SqlPart
 {
 	protected $part_name = 'limit';
 	

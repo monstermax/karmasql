@@ -10,49 +10,6 @@ class SqlTypeJoker extends SqlType
 	public $type = 'joker';
 
 
-	public static function startEndJoker(SqlFragment $fragment, $pos)
-	{
-		$fragment->logDebug(__METHOD__ . " @ $pos");
-
-		$current_joker = new self;
-		$current_joker->start($fragment, $pos);
-
-		$current_joker->end($pos);
-
-		$fragment->addItem($current_joker);
-		//$fragment->addJoker($current_joker);
-
-		//$fragment->setCurrentJoker(null);
-	}
-
-	/*
-	public function toPhp($print_debug=false)
-	{
-		$result_fields = [];
-
-		$action = $this->parent->getAction();
-		$tables = $action->getTables();
-
-		$fields = [];
-		foreach ($tables as $table) {
-			$table_fields_names = $table->getFieldsNames();
-			//$fields_names = array_merge($fields, $table_fields);
-			$table_alias = $table->getAlias();
-
-            foreach ($table_fields_names as $field_name) {
-				$part = $table_alias . "." . $field_name;
-				if ($print_debug) {
-					echo $part;
-				}
-				
-            }
-			
-		}
-
-		return $result_fields;
-	}
-	*/
-
 
 	public function toSql($to_php=false, $print_debug=false)
 	{

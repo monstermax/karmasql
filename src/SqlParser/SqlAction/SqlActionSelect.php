@@ -6,9 +6,9 @@ use \SqlParser\SqlExecutor;
 
 
 class SqlActionSelect extends SqlAction
-{
+{	
 
-	public function executeAction(SqlExecutor $executor)
+	protected function executeAction(SqlExecutor $executor)
 	{
 		$select_fields = $this->getFieldsSelect();
 		$group_fields = $this->getFieldsGroupBy();
@@ -195,6 +195,8 @@ class SqlActionSelect extends SqlAction
 		// reset rows values
 		$results = array_values($results);
 
+		$this->results = $results;
+
 		return $results;
 	}
 
@@ -269,6 +271,5 @@ class SqlActionSelect extends SqlAction
 
 		return $tables;
 	}
-
 
 }

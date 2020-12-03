@@ -19,14 +19,14 @@ class SqlTypeComment extends SqlType
 	}
 
 
-	public static function isCommentStart(SqlFragment $fragment, $char, $next_char='')
+	public static function isCommentStart(SqlFragment $fragment_main, $char, $next_char='')
 	{
-		if ($fragment->getCurrentComment()) {
+		if ($fragment_main->getCurrentComment()) {
 			// on est deja dans un commentaire
 			return false;
 		}
 
-		if ($fragment->getCurrentString()) {
+		if ($fragment_main->getCurrentString()) {
 			// on est dans une string
 			return false;
 		}

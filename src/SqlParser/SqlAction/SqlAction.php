@@ -3,71 +3,87 @@
 namespace SqlParser\SqlAction;
 
 use \SqlParser\SqlExecutor;
-//use \SqlParser\SqlParser;
 use \SqlParser\SqlFragment\SqlFragment;
-use \SqlParser\SqlAction\SqlActionPart\SqlActionPart;
+use \SqlParser\SqlFragment\SqlFragmentQuery;
+use \SqlParser\SqlPart\SqlPart;
 
-use \SqlParser\SqlDebugInfo_trait;
 use \SqlParser\SqlName_trait;
 use \SqlParser\SqlParent_trait;
+use \SqlParser\SqlItems_trait;
 
+// TODO: a renommer en SqlFragmentAction
 
-class SqlAction
+class SqlAction extends SqlFragment
 {
-	use SqlDebugInfo_trait;
+	//use SqlDebugInfo_trait;
 	use SqlName_trait;
 	use SqlParent_trait;
+	use SqlItems_trait;
 
-	public $query; // @SqlQuery
+	protected $query; // @SqlQuery
 	protected $current_part;
 	protected $parts = null;
+	protected $results;
 
 
 	public function __construct(SqlFragment $query, $name)
 	{
 		$this->name = $name;
 		$this->query = $query;
+		$this->parent = $query;
 	}
 
 
-	public function executeAction(SqlExecutor $executor)
+	function execute()
+	{
+		if (is_null($this->query->getParseDuration())) {
+			//throw new \Exception("query not parsed", 1);
+			$this->parseParts();
+		}
+
+		$executor = new SqlExecutor;
+		return $this->executeAction($executor);
+    }
+	
+
+	protected function executeAction(SqlExecutor $executor)
 	{
 		// EXTEND ME
 		throw new \Exception("extend me !", 1);
 	}
 
-
-	public static function startAction(SqlFragment $query, $name)
+	
+	public static function startAction(SqlFragmentQuery $query, $name)
 	{
 		if ($name == 'select') {
-			$part = new SqlActionSelect($query, $name);
+			$action = new SqlActionSelect($query, $name);
 
 		} else if ($name == 'insert') {
-			$part = new SqlActionInsert($query, $name);
+			$action = new SqlActionInsert($query, $name);
 
 		} else if ($name == 'update') {
-			$part = new SqlActionUpdate($query, $name);
+			$action = new SqlActionUpdate($query, $name);
 
 		} else if ($name == 'delete') {
-			$part = new SqlActionDelete($query, $name);
+			$action = new SqlActionDelete($query, $name);
 
 		} else if ($name == 'set') {
-			$part = new SqlActionSet($query, $name);
+			$action = new SqlActionSet($query, $name);
 
 		} else if ($name == 'create table') {
-			$part = new SqlActionCreateTable($query, $name);
+			$action = new SqlActionCreateTable($query, $name);
 
 		} else if ($name == 'drop table') {
-			$part = new SqlActionDropTable($query, $name);
+			$action = new SqlActionDropTable($query, $name);
 
 		} else if ($name == 'truncate table') {
-			$part = new SqlActionTruncateTable($query, $name);
+			$action = new SqlActionTruncateTable($query, $name);
 
 		} else {
-			$part = new SqlAction($query, $name);
+			$action = new SqlAction($query, $name);
 		}
 
-		return $part;
+		return $action;
 	}
 
 
@@ -234,15 +250,6 @@ class SqlAction
 	}
 
 
-	function execute()
-	{
-		$executor = new SqlExecutor;
-
-		return $executor->execute($this);
-    }
-
-	
-
 
 	public function getParts()
 	{
@@ -261,14 +268,8 @@ class SqlAction
 		}
 	}
 
-	
-	public function getCurrentPart()
-	{
-		return $this->current_part;
-	}
 
-
-	public function setCurrentPart(SqlActionPart $action_part=null)
+    public function setCurrentPart(SqlPart $action_part=null)
 	{
 		if (is_null($this->parts)) {
 			$this->parts = [];
@@ -276,9 +277,17 @@ class SqlAction
 
 		$this->current_part = $action_part;
 
-		if ($action_part) {
-			$this->parts[] = $this->current_part;
+        if ($action_part) {
+            $this->parts[] = $this->current_part;
 		}
+		
+		$this->getFragmentMain()->setCurrentPart($action_part);
+	}
+
+
+	public function getCurrentPart()
+	{
+		return $this->current_part;
 	}
 
 
@@ -293,6 +302,12 @@ class SqlAction
 		$this->query = $query;
 
 		return $this;
+	}
+
+	
+	public function getResults()
+	{
+		return $this->results;
 	}
 	
 }

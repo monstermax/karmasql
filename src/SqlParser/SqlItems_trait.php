@@ -46,7 +46,7 @@ trait SqlItems_trait
 			}
 		}
 
-		return $items;
+		return $items; /* list of @SqlType* */
 	}
 
 
@@ -91,18 +91,18 @@ trait SqlItems_trait
 						$expr_first_part = $current_param;
 
 						$current_param = new SqlExpr($expr_first_part->outer_text); // TODO: il manque les espaces dans le outer_text du SqlExpr que l'on créé
-						$current_param->parent = $this;
+						//$current_param->parent = $this;
 						//$current_param->parser = $this->getQuery()->getParser();
 						$current_param->action = $this->action;
 						
 						
 						$current_param->addItem($expr_first_part);
-						$expr_first_part->parent = $current_param;
+						//$expr_first_part->parent = $current_param;
 					} 
 
 					// on ajoute a l'expression
 					$current_param->addItem($item);
-					$item->parent = $current_param;
+					//$item->parent = $current_param;
 
 					$current_param->outer_text .= $item->outer_text;
 				}
@@ -139,19 +139,23 @@ trait SqlItems_trait
 
 	public function addItem(SqlType $item)
 	{
-		$item->action = $this->action;
-		//$item->parent = $this; // TODO: a tester
-
 		$this->items[] = $item;
-
+		
 		return $this;
 	}
 	
+	
+	public function removeLastItem()
+	{
+		array_pop($this->items);
+	}
+
+
 	public function addItems($items)
 	{
 		foreach ($items as $item) {
 			$this->addItem($item);
-			$item->parent = $this;
+			//$item->parent = $this;
 		}
 		
 		return $this;

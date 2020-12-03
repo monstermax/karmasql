@@ -14,12 +14,6 @@ class SqlExecutor
 	public $current_field;
 
 
-	function execute(SqlAction $action)
-	{
-		return $action->executeAction($this);
-	}
-
-
 	public function validateConditions($row_data, $conditions_where)
 	{
 		// TODO => valider (ou non) les conditions du where pour la $row donnée

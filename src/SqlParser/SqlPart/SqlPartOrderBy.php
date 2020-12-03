@@ -1,6 +1,6 @@
 <?php
 
-namespace SqlParser\SqlAction\SqlActionPart;
+namespace SqlParser\SqlPart;
 
 use \SqlParser\SqlExpr;
 use \SqlParser\SqlType\SqlTypeWord;
@@ -8,7 +8,7 @@ use \SqlParser\SqlType\SqlTypeString;
 use \SqlParser\SqlType\SqlTypeNumeric;
 
 
-class SqlActionPartOrderBy extends SqlActionPart
+class SqlPartOrderBy extends SqlPart
 {
 	protected $part_name = 'order by';
 	

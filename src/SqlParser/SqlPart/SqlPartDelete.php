@@ -1,9 +1,9 @@
 <?php
 
-namespace SqlParser\SqlAction\SqlActionPart;
+namespace SqlParser\SqlPart;
 
 
-class SqlActionPartDelete extends SqlActionPart
+class SqlPartDelete extends SqlPart
 {
 	protected $part_name = 'delete';
 

@@ -1,11 +1,11 @@
 <?php
 
-namespace SqlParser\SqlAction\SqlActionPart;
+namespace SqlParser\SqlPart;
 
 use \SqlParser\SqlExpr;
 
 
-class SqlActionPartWhere extends SqlActionPart
+class SqlPartWhere extends SqlPart
 {
 	protected $part_name = 'where';
 
@@ -40,13 +40,13 @@ class SqlActionPartWhere extends SqlActionPart
 			} else {
 				if (is_null($current_condition)) {
 					$current_condition = new SqlExpr; // ou SqlCondition ?
-					$current_condition->parent = $this;
+					//$current_condition->parent = $this;
 					$current_condition->action = $this->action;
 					//$current_condition->parser = $this->query->getParser();
 				}
 				
 				$current_condition->addItem($item);
-				$item->parent = $current_condition;
+				//$item->parent = $current_condition;
 
 				if ($item->type === 'word') {
 					$item->detectFields();

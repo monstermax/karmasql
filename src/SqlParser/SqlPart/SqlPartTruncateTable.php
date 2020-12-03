@@ -1,11 +1,12 @@
 <?php
 
-namespace SqlParser\SqlAction\SqlActionPart;
+namespace SqlParser\SqlPart;
 
 
-class SqlActionPartDropTable extends SqlActionPart
+class SqlPartTruncateTable extends SqlPart
 {
-	protected $part_name = 'drop table';
+	protected $part_name = 'truncate table';
+	
 	protected $table;
 
 
@@ -17,10 +18,13 @@ class SqlActionPartDropTable extends SqlActionPart
 
 		$this->table = new SqlTable($table_name);
 
+		$debug = 1;
+
 		// TODO: detecter keyword "ignore"
+		
 	}
-
-
+	
+	
 
 
 	/**
