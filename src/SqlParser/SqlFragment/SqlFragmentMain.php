@@ -25,6 +25,7 @@ class SqlFragmentMain extends SqlFragment
 	use SqlItems_trait;
 
     protected $parse_duration = null;
+    protected $prev_char_no_space = null;
 
 	protected $comments = []; // list of @SqlFragmentComment
 	protected $comparators = []; // list of @SqlFragmentComparator
@@ -75,7 +76,7 @@ class SqlFragmentMain extends SqlFragment
             throw new \Exception("unknwon case", 1);
         }
 
-		$prev_char_no_space = null;
+		$this->prev_char_no_space = null;
 
 		// STEP 1 : browse each character
 
@@ -107,9 +108,9 @@ class SqlFragmentMain extends SqlFragment
 			$is_comparator = in_array($char, ['=', '<', '>']) || ($is_exclamation && $next_char === '=');
 			$is_operator = in_array($char, ['+', '-', '%', '^', '&', '|']) || ($char === '*' && $prev_char !== '/' && $next_char !== '/') || ($char === '/' && $prev_char !== '*' && $next_char !== '*');
 
-			$is_joker  = $is_asterisk && in_array($prev_char_no_space, ['', ',']); // on capture ici seulement le joker global "*" (et pas les variantes comme "mytable.*" ou "count(*)")
-			$is_joker2 = $is_asterisk && in_array($prev_char_no_space, ['.']); // on capture ici seulement les variantes comme "mytable.*"
-			$is_joker3 = $is_asterisk && in_array($prev_char_no_space, ['(']); // on capture ici seulement les "count(*)" (ou autre fonction)
+			$is_joker  = $is_asterisk && in_array($this->prev_char_no_space, ['', ',']); // on capture ici seulement le joker global "*" (et pas les variantes comme "mytable.*" ou "count(*)")
+			$is_joker2 = $is_asterisk && in_array($this->prev_char_no_space, ['.']); // on capture ici seulement les variantes comme "mytable.*"
+			$is_joker3 = $is_asterisk && in_array($this->prev_char_no_space, ['(']); // on capture ici seulement les "count(*)" (ou autre fonction)
 
 			if ($is_dot) {
 				$debug = 1;
@@ -129,7 +130,7 @@ class SqlFragmentMain extends SqlFragment
 			//echo "debug character at position $pos : $char<hr >";
 
 			if ($this->current_action && !$is_space) {
-				$prev_char_no_space = $char;
+				$this->prev_char_no_space = $char;
 			}
 
 			// fin de space ?
@@ -412,7 +413,7 @@ class SqlFragmentMain extends SqlFragment
 				$this->current_query = new SqlFragmentQuery($this);
 				$this->queries[] = $this->current_query;
 	
-				$prev_char_no_space = null;
+				$this->prev_char_no_space = null;
 				$this->current_action = null;
 				$this->current_action = null;
 				$this->current_part = null;
@@ -755,4 +756,11 @@ class SqlFragmentMain extends SqlFragment
     }
     
 
+    public function setPrevCharNoSpace($prev_char_no_space=null)
+    {
+        $this->prev_char_no_space = $prev_char_no_space;
+
+        return $this;
+	}
+	
 }

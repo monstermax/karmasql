@@ -72,6 +72,8 @@ class SqlTypeOperator extends SqlType
 			$parts = [];
 			$idx = 0;
 
+			throw new \Exception("it would be better to have a joker and not a operator_field");
+
 			foreach ($this->fields as $field) {
 				if ($print_debug) {
 					$class = "";

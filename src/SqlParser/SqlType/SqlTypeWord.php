@@ -116,6 +116,8 @@ class SqlTypeWord extends SqlType
 
 						$this->parent = $action_part;
 
+						$this->fragment_main->setPrevCharNoSpace(null);
+
 			
 					} else {
 						throw new \Exception("principal action already defined");
