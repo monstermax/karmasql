@@ -36,11 +36,6 @@ class SqlAction extends SqlFragment
 
 	function execute()
 	{
-		if (is_null($this->query->getParseDuration())) {
-			//throw new \Exception("query not parsed", 1);
-			$this->parseParts();
-		}
-
 		$executor = new SqlExecutor;
 		return $this->executeAction($executor);
     }
@@ -275,9 +270,14 @@ class SqlAction extends SqlFragment
 			$this->parts = [];
 		}
 
+		if ($this->current_part) {
+			$this->current_part->endPart();
+		}
+
 		$this->current_part = $action_part;
 
         if ($action_part) {
+			// si c'est non null on l'ajoute a la liste des parts de l'action
             $this->parts[] = $this->current_part;
 		}
 		

@@ -44,16 +44,51 @@ class SqlFragmentQuery extends SqlFragment
 	
 	public function executeQuery()
 	{
+		if (is_null($this->parse_duration)) {
+            if (! $this->action) {
+				return;
+                //throw new \Exception("query not parsed or do not contain any action", 1);
+			}
+			
+			$this->action->parseParts();
+			
+			if ($this->action2) {
+				throw new \Exception("debug me", 1);
+				$this->action2->parseParts();
+			}
+		}
+
 		$ts_start = microtime(true);
-
 		$results = $this->action->execute();
-
 		$ts_end = microtime(true);
-		
 		$this->execute_duration = $ts_end - $ts_start;
 
 		$this->results = $results;
 	}
+
+
+
+	public function rebuildSql($to_php=false, $print_debug=false)
+	{
+		if (empty($this->action)) {
+			return '';
+			//throw new \Exception("missing action. query must be parsed first", 1);
+		}
+
+		$sql = "";
+
+		if ($this->action) {
+			$parts = $this->action->getParts();
+			if ($parts) {
+				foreach ($parts as $part) {
+					$sql .= $part->itemsToSql($to_php, $print_debug);
+				}
+			}
+		}
+
+		return $sql;
+	}
+
 
 
 	public function getParseDuration()

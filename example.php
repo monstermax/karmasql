@@ -51,7 +51,7 @@ $parser = new SqlParser($sql, $database);
 $parser->showInputSql();
 
 // display rewritten query (with colors)
-//$parser->showParsedSql();
+$parser->showParsedSql();
 
 // execute query
 $rows = $parser->execute();

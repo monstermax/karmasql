@@ -3,7 +3,7 @@
 namespace SqlParser;
 
 use \SqlParser\SqlType\SqlType;
-
+use SqlParser\SqlType\SqlTypeParenthese;
 
 trait SqlItems_trait
 {
@@ -52,8 +52,13 @@ trait SqlItems_trait
 
 	public function getParamsFromItems($with_spaces=true, $with_comments=false)
 	{
-		//$items = $this->items;
-		$items = $this->getItems($with_spaces, true, $with_comments);
+		$items_container = $this;
+
+		if (get_class($this) === SqlTypeParenthese::class) {
+			$items_container = $this->fragments[0];
+		}
+
+		$items = $items_container->getItems($with_spaces, true, $with_comments);
 
 		$params = [];
 		$current_param = null;
@@ -182,6 +187,7 @@ trait SqlItems_trait
 			'word/field_alias' => '#795548',
 			'word/variable_php' => 'green',
 			'word/variable_sql' => 'green',
+			'word/joker_table' => 'darkcyan',
 		];
 
 		$items = $this->getItems();

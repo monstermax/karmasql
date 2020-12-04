@@ -3,6 +3,7 @@
 namespace SqlParser\SqlAction;
 
 use \SqlParser\SqlExecutor;
+use \SqlParser\SqlResult;
 
 
 class SqlActionSelect extends SqlAction
@@ -95,10 +96,12 @@ class SqlActionSelect extends SqlAction
 		
 						if ($ok) {
 							$row_data[$join_alias] = $join_row;
-							break; // TODO: gerer le renvoi de plusieurs lignes de jointure
+							break;
+							// TODO: gerer le renvoi de plusieurs lignes de jointure => créer variable $row_data_rows
 						}
 					}
-
+					// TODO: gerer left/inner join
+					//	=> si inner join et pas de rows de jointure, on passe à la row suivante (continue)
 				}
 			}
 
@@ -119,19 +122,39 @@ class SqlActionSelect extends SqlAction
 				continue;
 			}
 
+
+
 			
 			// 6a) group by
 			if (! $group_fields) {
-				$key = '_' . count($results);
+
+				// 7a) execute result
+				$tmp_result = $executor->calculateFields($row_data, $select_fields);
+				$has_group_results = !empty($executor->results_groups);
+				$executor->results_groups = null;
+
+                if ($has_group_results) {
+                    // si il y a des results_groups
+					$key = '_1';
+					
+                } else {
+					// key = index de la ligne
+					$key = '_' . count($results);
+				}
+
+				
+				
+
 			} else {
 				$group_results = $executor->calculateFields($row_data, $group_fields);
 				$key = implode("|", array_values($group_results));
 			}
-			$executor->current_group_key = $key;
+			$executor->current_group_key = $key; // TODO: si empty($group_fields) mais qu'il y a des fonctions d'aggreg, la key devrait etre "1"
 			
 			
-			// 7) add result
+			// 7b) add result
 			$result = $executor->calculateFields($row_data, $select_fields);
+
 			$results[$key] = $result;
 			$executor->current_result = $result;
 

@@ -2,7 +2,7 @@
 
 namespace SqlParser\SqlType;
 
-use SqlParser\SqlFragment\SqlFragment;
+use SqlParser\SqlFragment\SqlFragmentMain;
 use \SqlParser\SqlParser;
 
 
@@ -12,32 +12,22 @@ class SqlTypeComparator extends SqlType
 	public $comparator = '';
 
 
-	public function toPhp($print_debug=false)
+
+	public function __construct(SqlFragmentMain $fragment_main, $pos)
 	{
-		$comparator = $this->comparator;
-		if ($comparator == '=') {
-			$comparator = '==';
-		}
-		return $comparator;
-	}
+        $fragment_main->logDebug(__CLASS__ . " @ $pos");
 
+		parent::__construct($fragment_main, $pos);
 
-	public static function startComparator(SqlFragment $fragment, $pos)
-	{
-		$fragment->logDebug(__METHOD__ . " @ $pos");
-
-		$current_comparator = new self;
-		$fragment->setCurrentComparator($current_comparator);
-
-		$current_comparator->start($fragment, $pos);
-	}
+		//$fragment_main->addComparator($this);
+    }
 
 
 	public function endComparator($pos)
 	{
-		$this->fragment->logDebug(__METHOD__ . " @ $pos");
+		$this->fragment_main->logDebug(__CLASS__ . " @ $pos");
 		
-		$current_comparator = $this->fragment->getCurrentComparator();
+		$current_comparator = $this->fragment_main->getCurrentComparator();
 
 		if (empty($current_comparator)) {
 			throw new \Exception("not in an comparator", 1);
@@ -50,11 +40,18 @@ class SqlTypeComparator extends SqlType
 
 		$this->comparator = $this->outer_text;
 
-		$this->fragment->addItem($this);
-		$this->fragment->addComparator($this);
-
-		$this->fragment->setCurrentComparator(null);
+		$this->fragment_main->setCurrentComparator(null);
 	}
 	
+
+	public function toPhp($print_debug=false)
+	{
+		$comparator = $this->comparator;
+		if ($comparator == '=') {
+			$comparator = '==';
+		}
+		return $comparator;
+	}
+
 
 }

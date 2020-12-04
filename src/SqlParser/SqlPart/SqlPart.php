@@ -77,6 +77,16 @@ class SqlPart extends SqlFragment
     }
 
 
+    public function endPart()
+    {
+        //$this->pos_end = $pos;
+
+        $debug = 1;
+
+        $this->action->getFragmentMain()->setCurrentPart(null);
+    }
+
+
     public function getAction()
     {
         return $this->action;

@@ -2,7 +2,7 @@
 
 namespace SqlParser\SqlType;
 
-use SqlParser\SqlFragment\SqlFragment;
+use SqlParser\SqlFragment\SqlFragmentMain;
 use \SqlParser\SqlParser;
 
 
@@ -11,20 +11,11 @@ class SqlTypeComma extends SqlType
 	public $type = 'comma';
 
 
-	public static function startEndComma(SqlFragment $fragment, $pos)
+	public function __construct(SqlFragmentMain $fragment_main, $pos)
 	{
-		$fragment->logDebug(__METHOD__ . " @ $pos");
+        $fragment_main->logDebug(__CLASS__ . " @ $pos");
 
-		$current_comma = new self;
-		$current_comma->start($fragment, $pos);
-
-		$current_comma->end($pos);
-
-		$fragment->addItem($current_comma);
-		//$fragment->addComma($current_comma);
-
-		//$fragment->setCurrentComma(null);
-	}
-
+        parent::__construct($fragment_main, $pos);
+    }
 
 }

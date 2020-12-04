@@ -13,7 +13,7 @@ class SqlActionInsert extends SqlAction
 	{
 		$table_into = $this->getIntoTable();
 		$table_name = $table_into->getName();
-		$data = $table_into->getData();
+		$table_into_data = $table_into->getData();
 
 		//$insert_fields_names = array_map(function ($item) {return $item->word;}, $insert_keys);
 		$insert_fields_names = $table_into->getFieldsNames();
@@ -67,11 +67,11 @@ class SqlActionInsert extends SqlAction
 			$insert_data = $executor->calculateFields(null, $insert_row, $insert_keys);
 			$row_insert_data = array_merge($row_insert_data, $insert_data);
 			
-			$data[] = $row_insert_data;
+			$table_into_data[] = $row_insert_data;
 			$new_data[] = $row_insert_data;
 		}
 
-		$table_into->setData($data, true);
+		$table_into->setData($table_into_data, true);
 
 		$database = $this->query->getParser()->getDatabase();
 		$table_name = $table_into->getName();

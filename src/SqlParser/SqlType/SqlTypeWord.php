@@ -28,15 +28,26 @@ class SqlTypeWord extends SqlType
 	public $var_value;
 
 
+	public function __construct(SqlFragmentMain $fragment_main, $pos, $word_type='undefined')
+	{
+		$fragment_main->logDebug(__CLASS__ . " @ $pos");
+
+		parent::__construct($fragment_main, $pos);
+		
+		//$fragment_main->addWord($this);
+		$this->word_type = $word_type;
+    }
+
+
 	public function endWord($pos) {
-		$this->parent->logDebug(__METHOD__ . " @ $pos");
+		$this->fragment_main->logDebug(__METHOD__ . " @ $pos");
 
 		$current_word = $this->fragment_main->getCurrentWord();
 		if (! $current_word || $current_word !== $this) {
 			throw new \Exception("not in a word", 1);
 		}
 
-		$this->end($pos);
+		$this->end($pos, false);
 
 		$this->word = strtolower($this->outer_text);
 
@@ -62,17 +73,14 @@ class SqlTypeWord extends SqlType
 
 					$query_action = SqlAction::startAction($this->fragment_main->getCurrentQuery(), $action_name);
 					$this->fragment_main->setCurrentAction($query_action);
-
 					$this->action = $query_action;
+					
+					$action_part = SqlPart::startPart($query_action, $action_name);
+					$query_action->setCurrentPart($action_part);
+					$this->part = $action_part;
 
-					$fragment_query_part = SqlPart::startPart($query_action, $action_name);
-					$query_action->setCurrentPart($fragment_query_part);
-
-
-					if (true) {
-						// on réaffecte le parent, la query, l'action et la part de l'item
-						$this->setParents();
-					}
+					$this->parent = $action_part;
+					//$this->setParents();
 					
 				} else{
 					// principal action already defined
@@ -83,15 +91,17 @@ class SqlTypeWord extends SqlType
 						
 					} else if ($query_action->getName() === 'update' && $this->word === 'set') {
 						// "set" after an "update" action
-						$this->word_type = 'query_part';
-						$part_name = $this->word;
+						//$this->word_type = 'action_part';
 						
-						$query_part = SqlPart::startPart($current_action, $part_name);
-						$current_action->setCurrentPart($query_part);
+						//$part_name = $this->word;
+						//$action_part = SqlPart::startPart($current_action, $part_name);
+						//$current_action->setCurrentPart($action_part);
 
 					} else if ($query_action->getName() === 'insert' && $this->word === 'select') {
 						// "select" after a "insert" action
-						// an query_part will be defined in the next code block
+						// an action_part will be defined in the next code block
+
+						throw new \Exception("debug me. insert select", 1);
 						
 						$this->word_type = 'action';
 						$action_name = $this->word;
@@ -101,8 +111,8 @@ class SqlTypeWord extends SqlType
 		
 						$this->setAction($query_action);
 		
-						$fragment_query_part = SqlPart::startPart($query_action, $action_name);
-						$query_action->setCurrentPart($fragment_query_part);
+						$action_part = SqlPart::startPart($query_action, $action_name);
+						$query_action->setCurrentPart($action_part);
 			
 					} else {
 						throw new \Exception("principal action already defined");
@@ -124,15 +134,17 @@ class SqlTypeWord extends SqlType
 					$part_name = 'join';
 				}			
 	
-				$query_part = SqlPart::startPart($current_action, $part_name);
-				$current_action->setCurrentPart($query_part);
+				$action_part = SqlPart::startPart($current_action, $part_name);
+				$current_action->setCurrentPart($action_part);
 
 
 				if (true) {
 					// on réaffecte le parent et la part de l'item
-					$this->setParents();
+					//throw new \Exception("debug me", 1);
+					$this->part = $action_part;
+					$this->parent = $action_part;
 
-					// TODO: retirer l'item des anciens parents
+					//$this->setParents();
 				}
 
 			}
@@ -156,13 +168,33 @@ class SqlTypeWord extends SqlType
 			}
 		}
 		
+		// SEARCH FOR TABLE PREFIXED FIELD
+        if ($this->word_type === 'undefined') {
+            if (strpos($this->word, '.') !== false) {
+				$parts = explode('.', $this->word);
+
+				if (count($parts) > 1) {
+					$this->word_type = 'field_undefined';
+
+					//$this->detectFields(); // a faire ici ? ou plus tard ? => ici on ne connait pas encore la liste des tables car le from n'a pas encore été parsé
+				}
+
+
+            }
+        }
+
 		// SEARCH FOR JOKER
         if ($this->word_type === 'undefined') {
 			if ($this->word === '*') {
 				//$this->word_type = 'joker'; // on prefere laisser undefined. Ensuite, la fonction "detectFields" determinera le bon type de joker
+				$debug = 1;
+				$this->word_type = 'joker_undefined';
+
 				
 			} else {
 				// here, $word must be a field. Else it is an error
+				$debug = 1;
+
 			}
 		}
 		
@@ -180,6 +212,9 @@ class SqlTypeWord extends SqlType
 			//throw new \Exception("non implemented case", 1);
         }
 
+
+		$this->addItemToParents();
+
 		
 		if (! $this->parent) {
 			throw new \Exception("missing parent");
@@ -192,11 +227,6 @@ class SqlTypeWord extends SqlType
 		if (! $this->query) {
 			throw new \Exception("missing query");
 		}
-
-
-
-		$this->fragment_main->addItem($this);
-		$this->fragment_main->addWord($this);
 
 		$this->fragment_main->setCurrentWord(null);
 	}
@@ -223,6 +253,9 @@ class SqlTypeWord extends SqlType
 			if ($fields) {
 				$outer_text = implode(', ', $fields);
 			}
+
+		} else if ($this->word_type == 'joker_function') {
+			$outer_text = '1';
 
 		} else if ($this->word_type == 'function_sql') {
 			$func_name = $outer_text;
@@ -321,7 +354,7 @@ class SqlTypeWord extends SqlType
 
 		// $table = $fragment->getTableFrom();
 
-		if ($this->word_type == 'undefined') {
+		if (in_array($this->word_type, ['undefined', 'joker_undefined', 'field_undefined'])) {
 			// detection field
 			$word = $this->word;
 
@@ -347,43 +380,25 @@ class SqlTypeWord extends SqlType
 				// alias de table spécifié
 
 				$table = null;
-				$from_table = $this->parent->getAction()->getTableFrom();
+				$from_table = $this->parent->getQuery()->getCurrentAction()->getTableFrom();
 
 				if (!$from_table) {
 					throw new \Exception("missing from table", 1);
 				}
-
+				
 				$tables = $this->action->getTables(); // TODO: utiliser getTables au lieu du code ci-dessous
 				$debug_here = 1;
-
-				if ($from_table->getAlias() === $table_alias) {
-					$table = $from_table;
+				
+				if (empty($tables[$table_alias])) {
+					throw new \Exception("unknown table " . $table_alias, 1);
 				}
 
-				if (! $table) {
-					// TODO: search field in join tables & subqueries tables
+				$table = $tables[$table_alias];
 
-					$join_tables = $this->parent->getAction()->getTablesJoin();
-					foreach ($join_tables as $join_table) {
-						if ($join_table->getAlias() === $table_alias) {
-							$table = $join_table;
-							break;
-						}
-					}
-
-					$subqueries_tables = $this->parent->getAction()->getTablesSubqueries();
-					foreach ($subqueries_tables as $subquery_table) {
-						if ($subquery_table->getAlias() === $table_alias) {
-							$table = $subquery_table;
-							break;
-						}
-					}
-
-				}
 
 				if ($field_name == '*') {
 					// field = mytable.*
-					$this->word_type = 'field';
+					$this->word_type = 'joker_table';
 
 					if ($this->parent && get_class($this->parent) !== SqlTypeParenthese::class) {
 						// si on n'est pas dans une parenthese, pour s'assurer que ce n'est pas un "count(*)" (à revoir, car risque de ne pas fonctionne avec les suos-requetes)
@@ -515,6 +530,12 @@ class SqlTypeWord extends SqlType
 				$field_alias => $executor->current_result[$field_alias],
 			];
 
+        } else if ($this->word_type === 'joker_undefined') {
+            return [
+                '*' => 1,
+            ];
+
+			
         } else if ($this->word_type === 'variable_sql') {
 			$var_name = $this->var_name;
 

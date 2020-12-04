@@ -81,9 +81,15 @@ class SqlExpr
 
 	public function detectAlias()
 	{
-		if (get_class($this->parent) !== SqlActionPartSelect::class) {
-			// les alias ne peuvent etre qu'au premier niveau (pas dans une parenthese) => TODO: gerer l'exception des sous-requetes
-			return;
+		if (get_class($this->parent) === SqlExpr::class) {
+			// TODO: gerer mieux (avant de remplacer les SqlExpr par autre des fragments)
+			// note: le SqlExpr a un parent null
+
+		} else {
+			if (get_class($this->parent) !== SqlActionPartSelect::class) {
+				// les alias ne peuvent etre qu'au premier niveau (pas dans une parenthese) => TODO: gerer l'exception des sous-requetes
+				return;
+			}
 		}
 
 		$items = $this->getItems(false);

@@ -26,28 +26,28 @@ class SqlFragmentMain extends SqlFragment
 
     protected $parse_duration = null;
 
-    protected $queries = null;
+	protected $comments = []; // list of @SqlFragmentComment
+	protected $comparators = []; // list of @SqlFragmentComparator
+	protected $numerics = []; // list of @SqlFragmentNumeric
+	protected $operators = []; // list of @SqlFragmentOperator
+	protected $parentheses = []; // list of @SqlFragmentParenthese
+	protected $strings = []; // list of @SqlFragmentString
+	protected $words = []; // list of @SqlFragmentWord
+    protected $queries = null; // list of @SqlFragmentQuery
 	
-	protected $current_query = null;
-	protected $current_part = null;
+	protected $current_query = null; // @SqlFragmentQuery
+	protected $current_part = null; // @SqlPart (a renommer en SqlFragmentPart)
     protected $current_action = null; // en theorie plus ou moins un alias de $current_query->getPrincipalAction()
         
-	protected $current_comment = null;
-	protected $current_comparator = null;
-	protected $current_numeric = null;
-	protected $current_operator = null;
-	protected $current_parenthese = null;
-	protected $current_space = null;
-	protected $current_string = null;
-	protected $current_word = null;
+	protected $current_comment = null; // @SqlTypeComment
+	protected $current_comparator = null; // @SqlTypeComparator
+	protected $current_numeric = null; // @SqlTypeNumeric
+	protected $current_operator = null; // @SqlTypeOperator
+	protected $current_parenthese = null; // @SqlTypeParenthese
+	protected $current_string = null; // @SqlTypeString
+	protected $current_word = null; // @SqlTypeWord
+	protected $current_space = null; // @SqlTypeSpace
     
-	protected $comments = [];
-	protected $comparators = [];
-	protected $numerics = [];
-	protected $operators = [];
-	protected $parentheses = [];
-	protected $strings = [];
-	protected $words = [];
 
 
     public function __construct($parent, $sql='')
@@ -79,12 +79,15 @@ class SqlFragmentMain extends SqlFragment
 
 		// STEP 1 : browse each character
 
+		$parsed_sql = "";
+
 		$pos = -1;
 		while ($pos < $sql_len - 1) {
 			$pos++;
 
 			$char = substr($this->sql, $pos, 1);
 			$char_id = ord($char);
+			$parsed_sql .= $char;
 
 			$prev_char = substr($this->sql, $pos-1, 1);
 			$next_char = substr($this->sql, $pos+1, 1);
@@ -103,10 +106,24 @@ class SqlFragmentMain extends SqlFragment
 			$is_space = in_array($char_id, [9, 10, 13, 32]);
 			$is_comparator = in_array($char, ['=', '<', '>']) || ($is_exclamation && $next_char === '=');
 			$is_operator = in_array($char, ['+', '-', '%', '^', '&', '|']) || ($char === '*' && $prev_char !== '/' && $next_char !== '/') || ($char === '/' && $prev_char !== '*' && $next_char !== '*');
-			$is_joker  = $is_asterisk && in_array($prev_char_no_space, ['', ',']); // on capture ici seulement le joker global "*" (et pas les variantes comme "mytable.*" ou "count(*)")
-			$is_joker2 = $is_asterisk && in_array($prev_char_no_space, ['.', '(']); // on capture ici seulement les variantes comme "mytable.*" ou "count(*)" (et pas le joker global "*")
 
+			$is_joker  = $is_asterisk && in_array($prev_char_no_space, ['', ',']); // on capture ici seulement le joker global "*" (et pas les variantes comme "mytable.*" ou "count(*)")
+			$is_joker2 = $is_asterisk && in_array($prev_char_no_space, ['.']); // on capture ici seulement les variantes comme "mytable.*"
+			$is_joker3 = $is_asterisk && in_array($prev_char_no_space, ['(']); // on capture ici seulement les "count(*)" (ou autre fonction)
+
+			if ($is_dot) {
+				$debug = 1;
+			}
 			if ($is_asterisk) {
+				$debug = 1;
+			}
+			if ($is_joker) {
+				$debug = 1;
+			}
+			if ($is_joker2) {
+				$debug = 1;
+			}
+			if ($is_joker3) {
 				$debug = 1;
 			}
 			//echo "debug character at position $pos : $char<hr >";
@@ -128,26 +145,33 @@ class SqlFragmentMain extends SqlFragment
 				}
 			}
 
-
-			//if ($is_asterisk && ! $this->current_word && ! $this->current_string && ! $this->current_comment) {
+			/*
 			if ($is_joker2 && ! $this->current_string && ! $this->current_comment) {
-				// on identifie s'il s'agit de l'operator * ou du regroupeur de champs (comme dans count(*) ou mytable.* )
+				// mytable.*
 
-				// Ce code ne detecte que les mytable.* (et non les "*", qui sont gérés comme des operators)
+				$this->addWord( new SqlTypeWord($this, $pos, 'joker_table') );
+				$this->current_word->endWord($pos);
+				
+				//SqlTypeNumeric::startNumeric($this, $pos);
+				//$this->current_numeric->endNumeric($pos);
 
-				if (in_array($prev_char, ['.', '('])) {
-					// TODO: gerer s'il y a des espaces entre "(" et "*"
+				//$is_operator = false;
+				continue;
+			}
+			*/
 
-                    //SqlTypeWord::startWord($this, $pos);
-                    $this->setCurrentWord( new SqlTypeWord($this, $pos) );
-					$this->current_word->endWord($pos);
-					
-					//SqlTypeNumeric::startNumeric($this, $pos);
-					//$this->current_numeric->endNumeric($pos);
 
-					//$is_operator = false;
-					continue;
-				}
+			if ($is_joker3 && ! $this->current_string && ! $this->current_comment) {
+				// count(*)  (ou autre fonction)
+
+				$this->addWord( new SqlTypeWord($this, $pos, 'joker_function') );
+				$this->current_word->endWord($pos);
+				
+				//SqlTypeNumeric::startNumeric($this, $pos);
+				//$this->current_numeric->endNumeric($pos);
+
+				//$is_operator = false;
+				continue;
 			}
 
 
@@ -230,7 +254,7 @@ class SqlFragmentMain extends SqlFragment
 				if ($comment_type) {
 					// debut d'un commentaire
 					//SqlTypeComment::startComment($this, $pos, $comment_type);
-					$this->setCurrentComment( new SqlTypeComment($this, $pos, $comment_type) );
+					$this->addComment( new SqlTypeComment($this, $pos, $comment_type) );
 					unset($comment_type);
 					continue;
 				}
@@ -258,7 +282,7 @@ class SqlFragmentMain extends SqlFragment
 					if ($string_type) {
 						// debut d'un string
 						//SqlTypeString::startString($this, $pos, $string_type);
-						$this->setCurrentString( new SqlTypeString($this, $pos, $string_type) );
+						$this->addString( new SqlTypeString($this, $pos, $string_type) );
 						unset($string_type);
 						continue;
 					}
@@ -283,7 +307,7 @@ class SqlFragmentMain extends SqlFragment
 				if ($parenthese_type) {
 					// debut d'une parenthese (de niveau 2+)
 					//SqlTypeParenthese::startParenthese($this, $pos);
-					$this->setCurrentParenthese( new SqlTypeParenthese($this, $pos) );
+					$this->addParenthese( new SqlTypeParenthese($this, $pos) );
 					unset($parenthese_type);
 					continue;
 				}
@@ -294,7 +318,7 @@ class SqlFragmentMain extends SqlFragment
 				if ($parenthese_type) {
 					// debut d'une parenthese (de niveau 1)
 					//SqlTypeParenthese::startParenthese($this, $pos);
-					$this->setCurrentParenthese( new SqlTypeParenthese($this, $pos) );
+					$this->addParenthese( new SqlTypeParenthese($this, $pos) );
 					unset($parenthese_type);
 					continue;
 				}
@@ -308,7 +332,7 @@ class SqlFragmentMain extends SqlFragment
 				// on n'est PAS dans un mot
 				if ($is_alpha_lower || $is_alpha_upper || $is_arobase || $is_underscore || $is_dollar) {
                     //SqlTypeWord::startWord($this, $pos);
-                    $this->setCurrentWord( new SqlTypeWord($this, $pos) );
+                    $this->addWord( new SqlTypeWord($this, $pos) );
 					continue;
 				}
 			}
@@ -319,7 +343,7 @@ class SqlFragmentMain extends SqlFragment
 				// on n'est PAS dans un numeric
 				if ($is_numeric) {
 					//SqlTypeNumeric::startNumeric($this, $pos);
-					$this->setCurrentNumeric( new SqlTypeNumeric($this, $pos) );
+					$this->addNumeric( new SqlTypeNumeric($this, $pos) );
 					continue;
 				}
 			}
@@ -334,7 +358,7 @@ class SqlFragmentMain extends SqlFragment
 						$this->current_word->append($char);
 					} else {
 						//SqlTypeSpace::startSpace($this, $pos);
-						$this->setCurrentSpace( new SqlTypeSpace($this, $pos) );
+						$this->addSpace( new SqlTypeSpace($this, $pos) );
 					}
 					continue;
 				}
@@ -346,7 +370,6 @@ class SqlFragmentMain extends SqlFragment
 				//SqlTypeComma::startEndComma($this, $pos);
 				$comma = new SqlTypeComma($this, $pos);
 				$comma->end($pos);
-				$this->addItem($comma);
 				//$this->addComma($comma);
 				continue;
 			}
@@ -357,9 +380,7 @@ class SqlFragmentMain extends SqlFragment
 				//SqlTypeJoker::startEndJoker($this, $pos);
 				$joker = new SqlTypeJoker($this, $pos);
 				$joker->end($pos);
-				$this->addItem($joker);
 				//$this->addJoker($joker);
-		
 				continue;
 			}
 
@@ -367,7 +388,7 @@ class SqlFragmentMain extends SqlFragment
 			// operator ?
 			if ($is_operator) {
 				//SqlTypeOperator::startOperator($this, $pos);
-				$this->setCurrentOperator( new SqlTypeOperator($this, $pos) );
+				$this->addOperator( new SqlTypeOperator($this, $pos) );
 				continue;
 			}
 
@@ -375,7 +396,7 @@ class SqlFragmentMain extends SqlFragment
 			// comparator ?
 			if ($is_comparator) {
 				//SqlTypeComparator::startComparator($this, $pos);
-				$this->setCurrentComparator( new SqlTypeComparator($this, $pos) );
+				$this->addComparator( new SqlTypeComparator($this, $pos) );
 				continue;
 			}
 
@@ -387,10 +408,15 @@ class SqlFragmentMain extends SqlFragment
 					throw new \Exception("excepted queries in object SqlFragment (" . get_class($this) . ")", 1);
 				}
 
-				$this->current_query = new SqlQuery;
+
+				$this->current_query = new SqlFragmentQuery($this);
 				$this->queries[] = $this->current_query;
+	
 				$prev_char_no_space = null;
 				$this->current_action = null;
+				$this->current_action = null;
+				$this->current_part = null;
+				$this->current_parenthese = null;
 				continue;
 			}
 
@@ -475,41 +501,49 @@ class SqlFragmentMain extends SqlFragment
 	public function addComment(SqlTypeComment $comment)
 	{
 		$this->comments[] = $comment;
+		$this->setCurrentComment($comment);
 	}
 
 	public function addString(SqlTypeString $string)
 	{
 		$this->strings[] = $string;
+		$this->setCurrentString($string);
 	}
 
 	public function addParenthese(SqlTypeParenthese $parenthese)
 	{
 		$this->parentheses[] = $parenthese;
+		$this->setCurrentParenthese($parenthese);
 	}
 
 	public function addWord(SqlTypeWord $word)
 	{
 		$this->words[] = $word;
+		$this->setCurrentWord($word);
 	}
 
 	public function addNumeric(SqlTypeNumeric $number)
 	{
 		$this->numerics[] = $number;
+		$this->setCurrentNumeric($number);
 	}
 
 	public function addSpace(SqlTypeSpace $space)
 	{
 		$this->spaces[] = $space;
+		$this->setCurrentSpace($space);
 	}
 
 	public function addOperator(SqlTypeOperator $operator)
 	{
 		$this->operators[] = $operator;
+		$this->setCurrentOperator($operator);
 	}
 
 	public function addComparator(SqlTypeComparator $comparator)
 	{
 		$this->comparators[] = $comparator;
+		$this->setCurrentComparator($comparator);
 	}
 
 	public function addQuery(SqlQuery $query)
@@ -526,12 +560,17 @@ class SqlFragmentMain extends SqlFragment
 	public function getCurrentParent()
 	{
 		if ($this->current_parenthese) {
-			return $this->current_parenthese;
+			$parenthese_fragments = $this->current_parenthese->getFragments();
+			if (empty($parenthese_fragments)) {
+				throw new \Exception("missing parenthese fragment", 1);
+			}
+			return $parenthese_fragments[0];
 		}
 		if ($this->current_part) {
 			return $this->current_part;
 		}
 		if ($this->current_query) {
+			//throw new \Exception("parent cannot be the query", 1);
 			return $this->current_query;
 		}
 		throw new \Exception("parent not found", 1);
@@ -608,26 +647,54 @@ class SqlFragmentMain extends SqlFragment
 
     /* SETTERS */
 
-	public function setCurrentAction(SqlAction $action)
+	public function setCurrentAction(SqlAction $action=null)
 	{
 		if (empty($this->current_query)) {
 			throw new \Exception("missing current query", 1);
 		}
 
-		if (!$this->current_query->getAction()) {
-			// set the principal action of the query (select, update, insert, delete, ...)
-			$this->current_query->setAction($action);
+        if ($action) {
+            if (!$this->current_query->getAction()) {
+                // set the principal action of the query (select, update, insert, delete, ...)
+				$this->current_query->setAction($action);
+				
+            } else {
+                // it is a second action (ex: insert into ... select ... from ...)
 
-		} else {
-			// it is a second action (ex: insert into ... select ... from ...)
+                $action = $this->current_query->getAction2();
+                if ($action) {
+                    throw new \Exception("2 actions already defined", 1);
+                }
 
-			$action = $this->current_query->getAction2();
-			if ($action) {
-				throw new \Exception("2 actions already defined", 1);
+                //throw new \Exception("debug me", 1);
 			}
 
-			throw new \Exception("debug me", 1);
+		} else {
+			// set $action = null
+
+			/*
+			if ($this->current_action) {
+				$this->current_action->endAction();
+			}
+			*/
+
+			if ($this->current_query) {
+				$action2 = $this->current_query->getAction2();
+				if ($action2) {
+					$action2->endAction();
+				}
+
+				$action = $this->current_query->getAction();
+				if ($action) {
+					$action->endAction();
+				}
+
+			} else {
+				throw new \Exception("unknown case", 1);
+			}
+
 		}
+
 
 		$this->current_action = $action;
 	}

@@ -15,6 +15,12 @@ class SqlPartValues extends SqlPart
         $tmp_params = $this->getParamsFromItems(false);
 
         $insert_keys = $this->getAction()->getInsertKeys();
+
+        if (empty($insert_keys)) {
+            $table_into = $this->getAction()->getParts()[1]->getTable();
+            $insert_keys = $table_into->getFieldsNames();
+        }
+
         
         $rows = [];
 
@@ -44,6 +50,7 @@ class SqlPartValues extends SqlPart
 
 
     /**
+     * 
      * Get the value of rows
      */ 
     public function getRows()

@@ -3,7 +3,7 @@
 namespace SqlParser\SqlType;
 
 use \SqlParser\SqlExecutor;
-use SqlParser\SqlFragment\SqlFragment;
+use SqlParser\SqlFragment\SqlFragmentMain;
 use \SqlParser\SqlParser;
 
 
@@ -13,22 +13,21 @@ class SqlTypeNumeric extends SqlType
 	public $number = '';
 
 
-	public static function startNumeric(SqlFragment $fragment, $pos)
+	public function __construct(SqlFragmentMain $fragment_main, $pos)
 	{
-		$fragment->logDebug(__METHOD__ . " @ $pos");
+        $fragment_main->logDebug(__CLASS__ . " @ $pos");
 
-		$current_numeric = new self;
-		$fragment->setCurrentNumeric($current_numeric);
+		parent::__construct($fragment_main, $pos);
 
-		$current_numeric->start($fragment, $pos);
+		//$fragment_main->addNumeric($this);
 	}
-
+	
 
 	public function endNumeric($pos)
 	{
-		$this->fragment->logDebug(__METHOD__ . " @ $pos");
+		$this->fragment_main->logDebug(__CLASS__ . " @ $pos");
 		
-		$current_numeric = $this->fragment->getCurrentNumeric();
+		$current_numeric = $this->fragment_main->getCurrentNumeric();
 		if (empty($current_numeric)) {
 			throw new \Exception("not in a numeric", 1);
 		}
@@ -40,10 +39,7 @@ class SqlTypeNumeric extends SqlType
 
 		$this->number = $this->outer_text;
 
-		$this->fragment->addItem($this);
-		$this->fragment->addNumeric($this);
-
-		$this->fragment->setCurrentNumeric(null);
+		$this->fragment_main->setCurrentNumeric(null);
 	}
 
 	

@@ -54,7 +54,7 @@ $database = [
 $sql = "
     select * from users order by id;
 
-    update users set age = 12, email = concat(name, '@', upper(name), '.com') where id in (1, 3);
+    update users set age = 12, email = concat(id, '@', upper(name), '.com') where id in (1, 3);
 
     select * from users where age < 40 order by id;
 ";

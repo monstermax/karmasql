@@ -3,6 +3,7 @@
 namespace SqlParser\SqlType;
 
 use \SqlParser\SqlFragment\SqlFragment;
+use \SqlParser\SqlFragment\SqlFragmentMain;
 
 
 class SqlTypeComment extends SqlType
@@ -12,11 +13,32 @@ class SqlTypeComment extends SqlType
 	public $comment_type;   //   /* or -- or #
 
 
-
-	public function toPhp($print_debug=false)
+	public function __construct(SqlFragmentMain $fragment_main, $pos, $comment_type)
 	{
-		return '';
-	}
+		$fragment_main->logDebug(__CLASS__ . " @ $pos");
+
+		parent::__construct($fragment_main, $pos);
+		
+		$this->comment_type = $comment_type;
+
+		if ($comment_type == 'slash') {
+			$this->enclosure_start = '/' . '*';
+			$this->enclosure_end = '*' . '/';
+
+		} else if ($comment_type == 'dash') {
+			$this->enclosure_start = '--';
+			$this->enclosure_end = null;
+
+		} else if ($comment_type == 'hash') {
+			$this->enclosure_start = '#';
+			$this->enclosure_end = null;
+
+		} else {
+			throw new \Exception("invalid comment_type " . $comment_type, 1);
+		}
+
+		//$fragment_main->addComment($this);
+    }
 
 
 	public static function isCommentStart(SqlFragment $fragment_main, $char, $next_char='')
@@ -47,35 +69,6 @@ class SqlTypeComment extends SqlType
 		}
 
 		return false;
-	}
-
-
-	public static function startComment(SqlFragment $fragment, $pos, $comment_type='slash')
-	{
-		$fragment->logDebug(__METHOD__ . " @ $pos");
-
-		$current_comment = new self;
-		$current_comment->comment_type = $comment_type;
-		$fragment->setCurrentComment($current_comment);
-		
-		$current_comment->start($fragment, $pos);
-
-		if ($comment_type == 'slash') {
-			$current_comment->enclosure_start = '/*';
-			$current_comment->enclosure_end = '*/';
-
-		} else if ($comment_type == 'dash') {
-			$current_comment->enclosure_start = '--';
-			$current_comment->enclosure_end = null;
-
-		} else if ($comment_type == 'hash') {
-			$current_comment->enclosure_start = '#';
-			$current_comment->enclosure_end = null;
-
-		} else {
-			throw new \Exception("invalid comment_type " . $comment_type, 1);
-		}
-
 	}
 
 
@@ -131,10 +124,12 @@ class SqlTypeComment extends SqlType
 
 		$this->end($pos);
 
-		$this->fragment->addItem($this);
-		$this->fragment->addComment($this);
+		$this->fragment_main->setCurrentComment(null);
+	}
 
-		$this->fragment->setCurrentComment(null);
+	public function toPhp($print_debug=false)
+	{
+		return '';
 	}
 
 }

@@ -21,5 +21,12 @@ use \SqlParser\SqlType\SqlTypeWord;
 
 class SqlFragmentParenthese extends SqlFragment
 {
+
+    public function __construct($parent, $sql='')
+    {
+        parent::__construct($parent, $sql);
+
+    }
+
     
 }

@@ -17,7 +17,7 @@ class SqlParser
 
 	protected $sql;
 	protected $database = null;
-	protected $main_fragment = null;
+	protected $fragment_main = null;
 	protected $parse_duration = null;
 
 
@@ -182,10 +182,10 @@ class SqlParser
 		$this->sql = $sql;
 		$this->database = & $database;
 		
-		$this->main_fragment = new SqlFragmentMain($this, $sql);
+		$this->fragment_main = new SqlFragmentMain($this, $sql);
 
-		$this->main_fragment->parseSQL();
-		$this->parse_duration = $this->main_fragment->getParseDuration();
+		$this->fragment_main->parseSQL();
+		$this->parse_duration = $this->fragment_main->getParseDuration();
 	}
 
 	
@@ -205,7 +205,7 @@ class SqlParser
 	{
 		$sqls = [];
 
-		foreach ($this->main_fragment->getQueries() as $query) {
+		foreach ($this->fragment_main->getQueries() as $query) {
 			$sqls[] = $query->rebuildSql(false, false);
 		}
 
@@ -219,20 +219,18 @@ class SqlParser
 	{
 		echo '<div>';
 
-		foreach ($this->main_fragment->getQueries() as $query_idx => $query) {
-			if (empty($query->principal_action)) {
+		foreach ($this->fragment_main->getQueries() as $query_idx => $query) {
+			if (empty($query->getAction())) {
 				continue;
 			}
 
-			if (true) {
-				if (empty($query->parse_duration)) {
-					$query->parseQuery();
-				}
+			if (empty($query->getParseDuration())) {
+				$query->parseQuery();
 			}
 
 			echo '<div class="jumbotron p-2">';
 
-			echo '<h5>QUERY #' . ($query_idx+1) . ' - ' . strtoupper($query->principal_action->getName()) . ' - REWRITTEN QUERY</h5>';
+			echo '<h5>QUERY #' . ($query_idx+1) . ' - ' . strtoupper($query->getAction()->getName()) . ' - REWRITTEN QUERY</h5>';
 			$query->rebuildSql(false, true);
 			
 			echo '</div>';
@@ -249,7 +247,7 @@ class SqlParser
 			throw new \Exception("invalid parsing. cannot execute", 1);
 		}
 
-		$results = $this->main_fragment->executeQueries();
+		$results = $this->fragment_main->executeQueries();
 
 		$this->results = $results;
 		
@@ -273,7 +271,7 @@ class SqlParser
 		echo '<div><small>SQL parsing duration: ' . round($this->parse_duration, 5) . ' second</small></div>';
 		echo '</div>';
 
-        foreach ($this->main_fragment->getQueries() as $query_idx => $query) {
+        foreach ($this->fragment_main->getQueries() as $query_idx => $query) {
             $this->showQueryResults($query, $query_idx);
         }
 	}

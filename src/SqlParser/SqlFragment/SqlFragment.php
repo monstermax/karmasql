@@ -27,7 +27,7 @@ class SqlFragment
 
 
     protected $parser;
-    protected $sql = '';
+    public $sql = '';
     
 
     public function __construct($parent, $sql='')

@@ -2,7 +2,7 @@
 
 namespace SqlParser\SqlType;
 
-use \SqlParser\SqlFragment\SqlFragment;
+use \SqlParser\SqlFragment\SqlFragmentMain;
 
 
 class SqlTypeJoker extends SqlType
@@ -10,6 +10,15 @@ class SqlTypeJoker extends SqlType
 	public $type = 'joker';
 
 
+	public function __construct(SqlFragmentMain $fragment_main, $pos)
+	{
+        $fragment_main->logDebug(__CLASS__ . " @ $pos");
+
+		parent::__construct($fragment_main, $pos);
+
+		//$fragment_main->addJoker($this);
+	}
+	
 
 	public function toSql($to_php=false, $print_debug=false)
 	{

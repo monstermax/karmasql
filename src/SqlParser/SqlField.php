@@ -52,6 +52,7 @@ class SqlField /* extends SqlExpr */
 
 		return $sql;
 	}
+	
 
 	public function toSql($to_php=false, $print_debug=false)
 	{
@@ -95,19 +96,13 @@ class SqlField /* extends SqlExpr */
 	}
 
 
-	/**
-	 * Get the value of table
-	 */ 
+
 	public function getTable()
 	{
 		return $this->table;
 	}
 
-	/**
-	 * Set the value of table
-	 *
-	 * @return  self
-	 */ 
+
 	public function setTable(SqlTable $table)
 	{
 		$this->table = $table;

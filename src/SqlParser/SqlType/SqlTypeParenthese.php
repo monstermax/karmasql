@@ -4,10 +4,13 @@ namespace SqlParser\SqlType;
 
 use \SqlParser\SqlDebugInfo_trait;
 use \SqlParser\SqlExecutor;
+use SqlParser\SqlFragment\SqlFragment;
 use SqlParser\SqlFragment\SqlFragmentMain;
+use SqlParser\SqlFragment\SqlFragmentParenthese;
 use \SqlParser\SqlFunction;
 use \SqlParser\SqlItems_trait;
 use \SqlParser\SqlParent_trait;
+use \SqlParser\SqlPart\SqlPart;
 use \SqlParser\SqlParser;
 
 
@@ -21,11 +24,12 @@ class SqlTypeParenthese extends SqlType
 	public $type = 'parenthese';
 
 	public $level;
-	//public $fragment; // @SqlFragmentParenthese
+	protected $fragments; // liste des @SqlFragment que contient la parenthese (à son 1er niveau)
 	
 	public $is_function;
 	public $function_name;
 	public $function_params;
+	public $function_type;
 
 	public $is_subquery;
 
@@ -35,17 +39,22 @@ class SqlTypeParenthese extends SqlType
 
 	public function __construct(SqlFragmentMain $fragment_main, $pos)
 	{
+		$fragment_main->logDebug(__CLASS__ . " @ $pos");
+
 		parent::__construct($fragment_main, $pos);
 
-		//$this->debug_skips = ['fragment', 'parser', 'parent', 'action', 'items'];
 		$this->debug_skips = ['fragment', 'parser', 'parent', 'action'];
+
+		$this->fragments = [
+			new SqlFragmentParenthese($this),
+		];
 
 		
 		$this->level = get_class($this->parent) == self::class ? $this->parent->level+1 : 1;
-		$fragment_main->setCurrentParenthese($this);
+		//$fragment_main->setCurrentParenthese($this);
 
 
-		// detection function
+		// detection function (regarding the word just before the parenthese)
 		$prev_sql = substr($fragment_main->getSql(), 0, $pos);
 		$prev_sql = trim(preg_replace('/\s+/', ' ', $prev_sql)); // TODO: attention s'il y a un commentaire entre le nom de la function et la parenthese, ca ne fonctionne plus
 		if ($prev_sql) {
@@ -60,13 +69,15 @@ class SqlTypeParenthese extends SqlType
 				// functionFoo(...)
 				$this->is_function = true;
 				$this->function_name = $last_word;
-
+				$this->function_type = 'sql';
+				
 			} else if (is_callable($last_word)) {
 				// the parenthese is the arguments of a php function
 				$this->is_function = true;
 				$this->function_name = $last_word;
+				$this->function_type = 'php';
 				
-				// TODO: indiquer au word precedent qu'il s'agit d'un word_type=function_php
+				// on indique au word precedent qu'il s'agit d'un word_type=function_php
 				$parent_items = $this->parent->getItems();
 				if ($parent_items) {
 					$last_word_item = $parent_items[count($parent_items)-1];
@@ -80,12 +91,17 @@ class SqlTypeParenthese extends SqlType
 				$debug = 1;
 			}
 		}
+
 	}
 
 
 
 	public static function isParentheseStart(SqlFragmentMain $fragment_main, $char)
 	{
+        if ($char !== '(') {
+			return false;
+		}
+		
 		if ($fragment_main->getCurrentComment()) {
 			// on est dans un commentaire
 			return false;
@@ -104,65 +120,12 @@ class SqlTypeParenthese extends SqlType
 	}
 
 
-	public static function startParenthese(SqlFragmentMain $fragment_main, $pos)
-	{
-		$fragment_main->logDebug(__METHOD__ . " @ $pos");
-
-		throw new \Exception("deprecated. replace me by a __construct", 1);
-
-		//$parent = $fragment_main->getCurrentParenthese() ? $fragment_main->getCurrentParenthese() : null;
-		//$level = $parent ? ($parent->level+1) : 1;
-
-		$current_parenthese = new self;
-
-		$current_parenthese->action = $fragment_main->getCurrentAction();
-		
-		$current_parenthese->start($fragment_main, $pos); // bien mettre ceci avant le setCurrentParenthese (sinon mauvaise detection du parent)
-		
-		$current_parenthese->level = get_class($current_parenthese->parent) == self::class ? $current_parenthese->parent->level+1 : 1;
-		$fragment_main->setCurrentParenthese($current_parenthese);
-
-
-		// detection function
-		$prev_sql = substr($fragment_main->getSql(), 0, $pos);
-		$prev_sql = trim(preg_replace('/\s+/', ' ', $prev_sql)); // TODO: attention s'il y a un commentaire entre le nom de la function et la parenthese, ca ne fonctionne plus
-		if ($prev_sql) {
-			$parts = explode(" ", $prev_sql);
-			$last_word = $parts[count($parts)-1];
-
-			if ($last_word == 'in') {
-				// in (...)
-				$current_parenthese->is_in_values = true;
-
-			} else if (array_key_exists($last_word, $fragment_main->getParser()->getSqlFunctions())) {
-				// functionFoo(...)
-				$current_parenthese->is_function = true;
-				$current_parenthese->function_name = $last_word;
-
-			} else if (is_callable($last_word)) {
-				// the parenthese is the arguments of a php function
-				$current_parenthese->is_function = true;
-				$current_parenthese->function_name = $last_word;
-				
-				// TODO: indiquer au word precedent qu'il s'agit d'un word_type=function_php
-				$parent_items = $current_parenthese->parent->getItems();
-				if ($parent_items) {
-					$last_word_item = $parent_items[count($parent_items)-1];
-					if ($last_word_item->type === 'word') {
-						$last_word_item->word_type = 'function_php';
-					}
-				}
-
-			} else {
-				// undefined parenthese type
-				$debug = 1;
-			}
-		}
-	}
-
-
 	public function isParentheseEnd($char)
 	{
+        if ($char !== ')') {
+			return false;
+		}
+
 		if (! $this->fragment_main->getCurrentParenthese()) {
 			// on n'est pas dans une parenthese
 			return false;
@@ -177,7 +140,6 @@ class SqlTypeParenthese extends SqlType
 			// on est dans une string
 			return false;
 		}
-
 
 		if ($char == ')') {
 			return 'parenthese';
@@ -203,7 +165,10 @@ class SqlTypeParenthese extends SqlType
 		$this->enclosure_start = '(';
 		$this->enclosure_end = ')';
 
-		$this->end($pos);
+		$this->end($pos, false);
+
+		$this->fragments[0]->setSql($this->inner_text);
+
 
 
 		// detection is_subquery
@@ -219,7 +184,7 @@ class SqlTypeParenthese extends SqlType
 			}
 
 		} else if ($this->is_function) {
-			// functionFoo(...)
+			// functionSqlOrPhp(...)
 			$this->function_params = $this->getParamsFromItems(true);
 		}
 
@@ -228,31 +193,44 @@ class SqlTypeParenthese extends SqlType
         }
 
 
-		// add item
-		if (! $this->parent) {
-			$this->fragment_main->addItem($this);
-
-		} else {
-			$this->parent->addItem($this);
-		}
-
-		// add parenthese
-		$this->fragment_main->addParenthese($this);
-
 		// set new parent
-		if ($this->parent && get_class($this->parent) == self::class) {
-			// parent is parenthese => level 2+
-			$this->fragment_main->setCurrentParenthese($this->parent);
+		if (!$this->parent) {
+			throw new \Exception("unknown case", 1);
+
+		} else if (get_class($this->parent) === SqlFragmentParenthese::class) {
+			// parent is SqlFragmentParenthese => level 2+
+			//$parent = $this->parent->getParent()->getParent();
+			$parent = $this->parent->getParent();
+			$this->fragment_main->setCurrentParenthese($parent);
+
+		} else if (is_a($this->parent, SqlPart::class)) {
+			// parent is SqlPart => level 1
+			//$this->fragment_main->setCurrentParenthese($this->parent);
+			$this->fragment_main->setCurrentParenthese(null);
 
 		} else {
-			// no parent (or SqlActionPart) => level 1
-			$this->fragment_main->setCurrentParenthese(null);
+			throw new \Exception("unknown case", 1);
 		}
+		
+
+        $this->addItemToParents(); // TODO: a revoir
+
 
 		if ($this->is_subquery) {
+			throw new \Exception("debug me", 1);
 			$this->fragment_main->setCurrentAction($this->action);
 		}
 	}
+
+
+	public function append($val)
+	{
+		parent::append($val);
+
+		//$current_fragment = $this->getCurrentFragment();
+		//$current_fragment->append($val);
+	}
+
 
 
 	public function toPhp($show_sql=false)
@@ -273,7 +251,7 @@ class SqlTypeParenthese extends SqlType
 
 
 		// ajout parenthese inner text
-		$sub_sql = $this->itemsToSql($to_php, $show_sql);
+		$sub_sql = $this->fragments[0]->itemsToSql($to_php, $show_sql);
         if ($show_sql) {
 			//echo $sub_sql;
         }
@@ -293,7 +271,7 @@ class SqlTypeParenthese extends SqlType
 
 	public function detectFields()
 	{
-		$items = $this->getItems(false, false);
+		$items = $this->fragments[0]->getItems(false, false);
 
 		foreach ($items as $item) {
 			if ($item->type == 'word') {
@@ -308,7 +286,7 @@ class SqlTypeParenthese extends SqlType
 
 	function getCalculatedValues(SqlExecutor $executor, $row_data)
 	{
-		$items = $this->getItems(false);
+		$items = $this->fragments[0]->getItems(false);
 		
 		foreach ($items as $item) {
 			if ($item->type === 'word' && $item->word_type === 'undefined') {
@@ -336,6 +314,32 @@ class SqlTypeParenthese extends SqlType
 		];
 
 		return $results;
+	}
+
+	
+	public function getCurrentFragment()
+	{
+		return isset($this->fragments[0]) ? $this->fragments[0] : null;
+	}
+	
+	public function getFragments()
+	{
+		return $this->fragments;
+	}
+
+
+	public function setFragments($fragments)
+	{
+		$this->fragments = $fragments;
+
+		return $this;
+	}
+
+	public function addFragment(SqlFragment $fragment)
+	{
+		$this->fragments[] = $fragment;
+
+		return $this;
 	}
 
 }

@@ -2,7 +2,7 @@
 
 namespace SqlParser\SqlType;
 
-use SqlParser\SqlFragment\SqlFragment;
+use SqlParser\SqlFragment\SqlFragmentMain;
 use \SqlParser\SqlParser;
 
 
@@ -13,22 +13,21 @@ class SqlTypeOperator extends SqlType
 	public $fields = null;
 
 
-	public static function startOperator(SqlFragment $fragment, $pos)
+	public function __construct(SqlFragmentMain $fragment_main, $pos)
 	{
-		$fragment->logDebug(__METHOD__ . " @ $pos");
-
-		$current_operator = new self;
-		$fragment->setCurrentOperator($current_operator);
-
-		$current_operator->start($fragment, $pos);
-	}
+        $fragment_main->logDebug(__CLASS__ . " @ $pos");
+        
+		parent::__construct($fragment_main, $pos);
+		
+		//$fragment_main->addOperator($this);
+    }
 
 
 	public function endOperator($pos)
 	{
-		$this->fragment->logDebug(__METHOD__ . " @ $pos");
+		$this->fragment_main->logDebug(__METHOD__ . " @ $pos");
 		
-		$current_operator = $this->fragment->getCurrentOperator();
+		$current_operator = $this->fragment_main->getCurrentOperator();
 
 		if (empty($current_operator)) {
 			throw new \Exception("not in an operator", 1);
@@ -42,10 +41,7 @@ class SqlTypeOperator extends SqlType
 
 		$this->operator = $this->outer_text;
 
-		$this->fragment->addItem($this);
-		$this->fragment->addOperator($this);
-
-		$this->fragment->setCurrentOperator(null);
+		$this->fragment_main->setCurrentOperator(null);
 	}
 
 	

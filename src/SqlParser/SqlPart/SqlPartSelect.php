@@ -63,10 +63,10 @@ class SqlPartSelect extends SqlPart
 
 							$param->fields[$field_name] = $field;
 						}
-						unset($field);
+						unset($field, $field_name);
 
 					}
-					unset($table_fields);
+					unset($table_fields_names);
 
 				}
 				unset($table);
@@ -76,8 +76,49 @@ class SqlPartSelect extends SqlPart
 
 				if ($param->word_type == 'variable_sql') {
 					$fields[ $param->var_name ] = $param;
-					
-				} else if ($param->word_type == 'field' && ! empty($param->fields)) {
+				
+				/*
+				} else if ($param->word_type == 'joker_table') {
+					// TODO: mytable.*
+
+					$table_name = ''; // TODO
+					$tables = $action->getTables();
+					$table = $tables[$table_name];
+
+
+                    $table_fields_names = $table->getFieldsNames();
+
+                    if ($table_fields_names) {
+                        // pour chaque champ de la table...
+                        foreach ($table_fields_names as $field_name) {
+                            $field = new SqlField($field_name, $table);
+                            $field->parent = $param;
+
+                            $fields[$field_name] = $field;
+
+                            $param->fields[$field_name] = $field;
+                        }
+                        unset($field, $field_name);
+                    }
+                    unset($table_fields_names);
+				*/
+
+				} else if ($param->word_type === 'field' && ! empty($param->fields)) {
+					// field
+					foreach ($param->fields as $field) {
+						$field_name = $field->getName();
+						$table = $field->getTable();
+
+						if (! $table) {
+							throw new \Exception("invalid table for field " . $field_name);
+						}
+
+						$param_expr = new SqlField($field_name, $table);
+						$param_expr->parent = $param; // TODO: a voir si on autorise un item word comme parent ?!
+						$fields[$field_name] = $param_expr;
+					}
+
+				} else if ($param->word_type === 'joker_table' && ! empty($param->fields)) {
 					// multiple fields * => on unpack les fields
 					foreach ($param->fields as $field) {
 						$field_name = $field->getName();
