@@ -85,6 +85,20 @@ class SqlFragmentQuery extends SqlFragment
 				}
 			}
 		}
+		
+		if ($this->action2) {
+			if ($print_debug) {
+				echo '<br />';
+			}
+			$sql .= ' ';
+			
+            $parts = $this->action2->getParts();
+            if ($parts) {
+                foreach ($parts as $part) {
+                    $sql .= $part->itemsToSql($to_php, $print_debug);
+                }
+            }
+		}
 
 		return $sql;
 	}

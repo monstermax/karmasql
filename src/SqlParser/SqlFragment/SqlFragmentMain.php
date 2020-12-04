@@ -661,12 +661,12 @@ class SqlFragmentMain extends SqlFragment
             } else {
                 // it is a second action (ex: insert into ... select ... from ...)
 
-                $action = $this->current_query->getAction2();
-                if ($action) {
+                $action2 = $this->current_query->getAction2();
+                if ($action2) {
                     throw new \Exception("2 actions already defined", 1);
                 }
 
-                //throw new \Exception("debug me", 1);
+                $this->current_query->setAction2($action);
 			}
 
 		} else {
@@ -684,9 +684,9 @@ class SqlFragmentMain extends SqlFragment
 					$action2->endAction();
 				}
 
-				$action = $this->current_query->getAction();
-				if ($action) {
-					$action->endAction();
+				$action1 = $this->current_query->getAction();
+				if ($action1) {
+					$action1->endAction();
 				}
 
 			} else {

@@ -101,18 +101,21 @@ class SqlTypeWord extends SqlType
 						// "select" after a "insert" action
 						// an action_part will be defined in the next code block
 
-						throw new \Exception("debug me. insert select", 1);
+						//throw new \Exception("debug me. insert select", 1);
 						
 						$this->word_type = 'action';
 						$action_name = $this->word;
 		
 						$query_action = SqlAction::startAction($this->fragment_main->getCurrentQuery(), $action_name);
 						$this->fragment_main->setCurrentAction($query_action);
-		
-						$this->setAction($query_action);
+						$this->action = $query_action;
 		
 						$action_part = SqlPart::startPart($query_action, $action_name);
 						$query_action->setCurrentPart($action_part);
+						$this->part = $action_part;
+
+						$this->parent = $action_part;
+
 			
 					} else {
 						throw new \Exception("principal action already defined");

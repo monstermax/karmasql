@@ -18,19 +18,11 @@ class SqlActionInsert extends SqlAction
 		//$insert_fields_names = array_map(function ($item) {return $item->word;}, $insert_keys);
 		$insert_fields_names = $table_into->getFieldsNames();
 
-
 		$insert_keys = $this->getInsertKeys();
 
-		$table_from = $this->getTableFrom(); // insert ... select
-		if ($table_from) {
-			$action_select = new SqlActionSelect($this->query, 'select');
-			$parts = array_slice($this->parts, 2);
-
-			// on change l'action de chaque part de la requete select (la nouvelle action est un SqlActionSelect et non plus un SqlActionInsert)
-			foreach ($parts as &$part) {
-				$part->setAction($action_select);
-			}
-			$action_select->parts = $parts;
+		$action_select = $this->query->getAction2();
+		if ($action_select) {
+			// insert into ... select
 			$action_select->parseParts();
 			$tmp_results = $action_select->executeAction($executor);
 
@@ -51,6 +43,7 @@ class SqlActionInsert extends SqlAction
 			}
 			
 		} else {
+			// insert into ... values
 			$insert_values = $this->getInsertValues();
 		}
 
@@ -146,44 +139,48 @@ class SqlActionInsert extends SqlAction
 
 
 		// insert ... select
+
+		$action_select = $this->query->getAction2();
 		
-		$froms = iterator_to_array($this->getPart('from'));
-		if ($froms) {
-			$froms[0]->parsePart();
-		}
-		/*
-		$wheres = iterator_to_array($this->getPart('where'));
-		if ($wheres) {
-			$wheres[0]->parsePart();
-		}
+        if ($action_select && false) {
+            $froms = iterator_to_array($action_select->getPart('from'));
+            if ($froms) {
+                $froms[0]->parsePart();
+            }
+            /*
+            $wheres = iterator_to_array($this->getPart('where'));
+            if ($wheres) {
+                $wheres[0]->parsePart();
+            }
 
-		$joins = iterator_to_array($this->getPart('join'));
-		if ($joins) {
-			foreach ($joins as $join) {
-				$join->parsePart();
-			}
-		}
+            $joins = iterator_to_array($this->getPart('join'));
+            if ($joins) {
+                foreach ($joins as $join) {
+                    $join->parsePart();
+                }
+            }
 
-		$selects = iterator_to_array($this->getPart('select'));
-		if ($selects) {
-			$selects[0]->parsePart();
-		}
+            $selects = iterator_to_array($this->getPart('select'));
+            if ($selects) {
+                $selects[0]->parsePart();
+            }
 
-		$groups = iterator_to_array($this->getPart('group by'));
-		if ($groups) {
-			$groups[0]->parsePart();
-		}
+            $groups = iterator_to_array($this->getPart('group by'));
+            if ($groups) {
+                $groups[0]->parsePart();
+            }
 
-		$orders = iterator_to_array($this->getPart('order by'));
-		if ($orders) {
-			$orders[0]->parsePart();
-		}
+            $orders = iterator_to_array($this->getPart('order by'));
+            if ($orders) {
+                $orders[0]->parsePart();
+            }
 
-		$limits = iterator_to_array($this->getPart('limit'));
-		if ($limits) {
-			$limits[0]->parsePart();
-		}
-		*/
+            $limits = iterator_to_array($this->getPart('limit'));
+            if ($limits) {
+                $limits[0]->parsePart();
+            }
+            */
+        }
 
 
 		$debug = 1;
