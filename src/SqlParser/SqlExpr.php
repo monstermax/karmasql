@@ -185,6 +185,9 @@ class SqlExpr
 				} else if ($item->type === 'numeric') {
 					// numeric
 
+				} else if ($item->type === 'operator') {
+					// operator
+
                 } else if ($item->type === 'word') {
                     if ($item->word_type == 'field') {
 						// field sql
@@ -197,6 +200,10 @@ class SqlExpr
 
 					} else if ($item->word_type == 'variable_php') {
 						// variable php
+						$debug = 1;
+
+					} else if ($item->word_type == 'variable_sql') {
+						// variable sql
 						$debug = 1;
 
 					} else {

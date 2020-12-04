@@ -277,6 +277,13 @@ class SqlTypeWord extends SqlType
 				throw new \Exception('unknown function ' . $func_name);
 			}
 			
+		} else if ($this->word_type == 'variable_sql') {
+			$var_name = $this->word;
+			$database = $this->fragment_main->getParent()->getDatabase();
+			$var = isset($database['_variables'][$var_name]) ? $database['_variables'][$var_name] : null;
+
+			$outer_text = $var;
+						
 		} else if ($this->word_type == 'function_php') {
 			if (! $this->fragment_main->allow_php_functions) {
 				throw new \Exception('PHP functions are not allowed');
@@ -297,6 +304,9 @@ class SqlTypeWord extends SqlType
 
 	public function toSql($to_php = false, $print_debug = false)
 	{
+		// TODO: a voir si getCalculatedValues ne fait pas double emploi avec toSql
+		// SqlTypeWord::toSql est appelé par SqlExpr::getCalculatedValues
+		
 		$sql = '';
 
         if ($print_debug) {
@@ -323,9 +333,14 @@ class SqlTypeWord extends SqlType
 		} else {
 			// word est un simple mot
 
-			if ($this->word_type === 'field' && $this->outer_text === '*') {
-				// word = *
-				$outer_text = 1;
+            if ($this->word_type === 'field' && $this->outer_text === '*') {
+                // word = *
+                $outer_text = 1;
+            } else if ($this->word_type === 'variable_sql') {
+				$database = $this->fragment_main->getParent()->getDatabase();
+				$var_name = $this->var_name;
+				$var = isset($database['_variables'][$var_name]) ? $database['_variables'][$var_name] : null;
+				$outer_text = $var;
 
 			} else {
 				// word normal
@@ -528,6 +543,8 @@ class SqlTypeWord extends SqlType
 
 	public function getCalculatedValues(SqlExecutor $executor, $row_data)
 	{
+		// TODO: a voir si getCalculatedValues ne fait pas double emploi avec toSql
+
         if ($this->word_type === 'field') {
 			// when field_name is calculated by the "order by"
 			$field_alias = $this->word;

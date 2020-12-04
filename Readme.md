@@ -108,6 +108,53 @@ group by sexe";
 <br/><br/>
 
 
+## Examples
+
+```
+select 42
+
+select * from users
+
+select * from users order by age, name desc
+
+select * from users where age < 40 order by id
+
+select sexe
+    , count(*) as nb_users
+    , group_concat(u.name) as names
+    , avg(age) as ages_avg
+    , sum(age) as ages_sum
+    , min(age) as age_min
+    , max(age) as age_max
+    , s.name as sexe_fr
+    , s_en.name as sexe_en
+from users as u
+inner join sexes s on s.code = u.sexe and s.langue = 'fr' 
+inner join sexes s_en on s_en.code = u.sexe and s_en.langue = 'en'
+group by sexe
+
+
+insert into users (id, name, age) values (7, 'luc', 29), (8, 'sophie', 49) ; select * from users order by id
+
+insert into users select id+100, name, concat('new_', email), age, sexe from users where sexe = 'f' ; select * from users;
+
+
+delete from users where sexe = 'm' and age <> 49 ; select * from users order by id
+
+update users set age = 12, email = concat(id, '@', upper(name), '.com') where id in (1, 3) ; select * from users where age < 40 order by id;
+
+set @var = 12+3; select (@var * 2) + 4 + (19-11);
+
+... and more
+
+```
+
+
+
+<br/><br/>
+<br/><br/>
+
+
 ## TODO next
 
 #### Features

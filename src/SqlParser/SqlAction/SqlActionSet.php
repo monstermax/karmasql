@@ -3,6 +3,7 @@
 namespace SqlParser\SqlAction;
 
 use \SqlParser\SqlExecutor;
+use \SqlParser\SqlExpr;
 
 
 class SqlActionSet extends SqlAction
@@ -33,7 +34,8 @@ class SqlActionSet extends SqlAction
 
         } else {
             // more than 1 item
-            $expr_set = new SqlExpr; // ou SqlCondition ?
+            $items_sql = ""; // TODO: 
+            $expr_set = new SqlExpr($items_sql); // ou SqlCondition ?
             //$expr_set->parent = $this;
             $expr_set->action = $this;
             $expr_set->parser = $this->parser;
@@ -52,9 +54,10 @@ class SqlActionSet extends SqlAction
         //$data[$this->curren]
         $debug = 1;
 
-        $database = $this->parser->getDatabase();
+        $database = $this->query->getParser()->getDatabase();
+
         $database['_variables'][$var_name] = $expr_set_value;
-        $this->parser->setDatabase($database);
+        $this->query->getParser()->setDatabase($database);
 
         // TODO: parser les subqueries
 
@@ -79,5 +82,15 @@ class SqlActionSet extends SqlAction
 
         $debug = 1;
     }
+
+
+	public function getTables($include_from=true, $include_joins=true)
+	{
+		$tables = [];
+		
+		return $tables;
+	}
+
+
 
 }
