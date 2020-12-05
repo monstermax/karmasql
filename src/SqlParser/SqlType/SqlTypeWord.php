@@ -563,9 +563,19 @@ class SqlTypeWord extends SqlType
         if ($this->word_type === 'field') {
 			// when field_name is calculated by the "order by"
 			$field_alias = $this->word;
-			return [
-				$field_alias => $executor->current_result[$field_alias],
-			];
+			if (isset($executor->current_result[$field_alias])) {
+				return [
+					$field_alias => $executor->current_result[$field_alias],
+				];
+
+			} else {
+				// TODO: le order field n'est pas dans les select fields => il faut evaluer alors le order field
+				throw new \Exception("debug me", 1);
+				//$select_fields = ??
+				//$fields_aliases = ??
+				//$values = $executor->calculateFields($row_data, $select_fields, $fields_aliases);
+				// TODO
+			}
 			
         } else if ($this->word_type === 'field_alias') {
 			// when field_name is calculated by the "order by"
