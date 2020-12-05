@@ -3,6 +3,8 @@
 namespace SqlParser\SqlFragment;
 
 
+// TODO a fusionner avec SqlPart
+
 class SqlFragmentPart extends SqlFragment
 {
 

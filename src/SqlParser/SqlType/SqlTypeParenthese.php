@@ -112,6 +112,12 @@ class SqlTypeParenthese extends SqlType
 			return false;
 		}
 
+        if ($fragment_main->getCurrentBracket()) {
+            // on est dans un bracket
+            return false;
+        }
+
+
 		if ($char == '(') {
 			return 'parenthese';
 		}

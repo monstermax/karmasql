@@ -134,7 +134,7 @@ class SqlPartSelect extends SqlPart
 					}
 
 				} else {
-					throw new \Exception("check this case");
+					throw new \Exception("check this case. unknown field ?");
 
 					// one field
 					$param_expr = new SqlExpr($param->outer_text);

@@ -11,7 +11,8 @@ use \SqlParser\SqlParent_trait;
 use \SqlParser\SqlDebugInfo_trait;
 
 
-// TODO: a renommer en SqlFragmentPart
+// TODO a fusionner avec (et renommer en) SqlFragmentPart
+
 
 class SqlPart extends SqlFragment
 {

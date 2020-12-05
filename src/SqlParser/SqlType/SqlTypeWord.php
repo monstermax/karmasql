@@ -19,6 +19,7 @@ class SqlTypeWord extends SqlType
 	public $type = 'word';
 	public $word_type = 'undefined'; // keyword or operator or field or ...?
 	public $word = '';
+	public $word_lower = '';
 
 	// for table fields names OR for joker
 	public $fields = null;
@@ -49,10 +50,12 @@ class SqlTypeWord extends SqlType
 
 		$this->end($pos, false);
 
-		$this->word = strtolower($this->outer_text);
+		//$this->word = strtolower($this->outer_text);
+		$this->word = $this->outer_text;
+		$this->word_lower = strtolower($this->outer_text);
 
 		$next_char = substr($this->fragment_main->getSql(), $pos+1, 1);
-		if (in_array($this->word, ['group', 'order', 'inner', 'outer', 'left', 'left', 'create', 'drop', 'rename', 'truncate']) && $next_char == ' ') {
+		if (in_array($this->word_lower, ['group', 'order', 'inner', 'outer', 'left', 'left', 'create', 'drop', 'rename', 'truncate']) && $next_char == ' ') {
 			// on ne veut pas creer un nouveau mot. on va concatener ce mot avec le prochain
 			return;
 		}
@@ -63,13 +66,13 @@ class SqlTypeWord extends SqlType
 
 		// SEARCH FOR ACTION
 		if ($this->word_type === 'undefined') {
-			if (array_key_exists($this->word, $this->fragment_main->getParser()->getSqlActions())) {
+			if (array_key_exists($this->word_lower, $this->fragment_main->getParser()->getSqlActions())) {
 				// determination de l'action de la requete (select, update, insert, ...)
 
 				if (! $query_action) {
 					// principal action detected
 					$this->word_type = 'action';
-					$action_name = $this->word;
+					$action_name = $this->word_lower;
 
 					$query_action = SqlAction::startAction($this->fragment_main->getCurrentQuery(), $action_name);
 					$this->fragment_main->setCurrentAction($query_action);
@@ -85,26 +88,26 @@ class SqlTypeWord extends SqlType
 				} else{
 					// principal action already defined
 
-					if ($query_action->getName() === 'select' && $this->word === 'desc') {
+					if ($query_action->getName() === 'select' && $this->word_lower === 'desc') {
 						// "desc" after a "select" action
 						$this->word_type = 'keyword';
 						
-					} else if ($query_action->getName() === 'update' && $this->word === 'set') {
+					} else if ($query_action->getName() === 'update' && $this->word_lower === 'set') {
 						// "set" after an "update" action
 						//$this->word_type = 'action_part';
 						
-						//$part_name = $this->word;
+						//$part_name = $this->word_lower;
 						//$action_part = SqlPart::startPart($current_action, $part_name);
 						//$current_action->setCurrentPart($action_part);
 
-					} else if ($query_action->getName() === 'insert' && $this->word === 'select') {
+					} else if ($query_action->getName() === 'insert' && $this->word_lower === 'select') {
 						// "select" after a "insert" action
 						// an action_part will be defined in the next code block
 
 						//throw new \Exception("debug me. insert select", 1);
 						
 						$this->word_type = 'action';
-						$action_name = $this->word;
+						$action_name = $this->word_lower;
 		
 						$query_action = SqlAction::startAction($this->fragment_main->getCurrentQuery(), $action_name);
 						$this->fragment_main->setCurrentAction($query_action);
@@ -129,10 +132,10 @@ class SqlTypeWord extends SqlType
 
 		// SEARCH FOR PART
 		if ($this->word_type === 'undefined') {
-			if ($this->query->getCurrentAction() && array_key_exists($this->word, $action_items)) {
+			if ($this->query->getCurrentAction() && array_key_exists($this->word_lower, $action_items)) {
 				// determination de la partie de la requete dans laquelle on est (select, from, where, group by, ...)
 				$this->word_type = 'action_part';
-				$part_name = $this->word;
+				$part_name = $this->word_lower;
 				$current_action = $this->query->getCurrentAction();
 		
 				if (in_array($part_name, ['inner join', 'left join', 'right join', 'left outer join', 'right outer join'])) {
@@ -157,7 +160,7 @@ class SqlTypeWord extends SqlType
 		
 		// SEARCH FOR KEYWORD
         if ($this->word_type === 'undefined') {
-			if (array_key_exists($this->word, $this->fragment_main->getParser()->getSqlKeywords())) {
+			if (array_key_exists($this->word_lower, $this->fragment_main->getParser()->getSqlKeywords())) {
 				// le mot correspond à un keyword sql
 				$this->word_type = 'keyword';
 				
@@ -166,7 +169,7 @@ class SqlTypeWord extends SqlType
 		
 		// SEARCH FOR FUNCTION
         if ($this->word_type === 'undefined') {
-			if (array_key_exists($this->word, $this->fragment_main->getParser()->getSqlFunctions())) {
+			if (array_key_exists($this->word_lower, $this->fragment_main->getParser()->getSqlFunctions())) {
 				// le mot correspond à un nom de fonction
 				$this->word_type = 'function_sql';
 				
@@ -259,6 +262,11 @@ class SqlTypeWord extends SqlType
 				$outer_text = implode(', ', $fields);
 			}
 
+		} else if ($this->word_type == 'order_by_field_alias') {
+			$field_alias = $outer_text;
+			$field_value = $this->query->getExecutor()->current_result[$field_alias];
+			$debug = 1;
+
 		} else if ($this->word_type == 'joker_function') {
 			$outer_text = '1';
 
@@ -285,14 +293,20 @@ class SqlTypeWord extends SqlType
 			$outer_text = $var;
 						
 		} else if ($this->word_type == 'function_php') {
-			if (! $this->fragment_main->allow_php_functions) {
+			if (! $this->fragment_main->getParser()->allow_php_functions) {
 				throw new \Exception('PHP functions are not allowed');
 			}
 			
 		} else if ($this->word_type == 'variable_php') {
-			if (! $this->fragment_main->allow_php_variables) {
+			if (! $this->fragment_main->getParser()->allow_php_variables) {
 				throw new \Exception('PHP variables are not allowed');
 			}
+
+		} else if ($this->word_lower == 'true') {
+			$outer_text = 1;
+
+		} else if ($this->word_lower == 'false') {
+			$outer_text = 0;
 
         } else {
 			throw new \Exception("unknown case", 1);
@@ -377,6 +391,7 @@ class SqlTypeWord extends SqlType
 		if (in_array($this->word_type, ['undefined', 'joker_undefined', 'field_undefined'])) {
 			// detection field
 			$word = $this->word;
+			//$word_lower = $this->word_lower;
 
 			$is_var = (substr($word, 0, 1) === '@');
 
@@ -551,6 +566,13 @@ class SqlTypeWord extends SqlType
 			return [
 				$field_alias => $executor->current_result[$field_alias],
 			];
+			
+        } else if ($this->word_type === 'field_alias') {
+			// when field_name is calculated by the "order by"
+			$field_alias = $this->word;
+            return [
+                $field_alias => $executor->current_result[$field_alias],
+            ];
 
         } else if ($this->word_type === 'joker_undefined') {
             return [

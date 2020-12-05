@@ -53,6 +53,12 @@ class SqlTypeComment extends SqlType
 			return false;
 		}
 
+        if ($fragment_main->getCurrentBracket()) {
+            // on est dans un bracket
+            return false;
+        }
+
+
 		if ($char . $next_char == '/*') {
 			// slash
 			return 'slash';
@@ -74,17 +80,23 @@ class SqlTypeComment extends SqlType
 
 	public function isCommentEnd($char, $next_char='')
 	{
-		$current_comment = $this->fragment->getCurrentComment();
+		$current_comment = $this->fragment_main->getCurrentComment();
 
 		if (! $current_comment) {
 			// on n'est PAS dans un commentaire
 			return false;
 		}
 
-		if ($this->fragment->getCurrentString()) {
+		if ($this->fragment_main->getCurrentString()) {
 			// on est dans une string
 			return false;
 		}
+
+        if ($this->fragment_main->getCurrentBracket()) {
+            // on est dans un bracket
+            return false;
+        }
+
 
 		if ($char . $next_char == '*/') {
 			return 'slash';
@@ -106,9 +118,9 @@ class SqlTypeComment extends SqlType
 
 	public function endComment($pos, $comment_type='slash')
 	{
-		$this->fragment->logDebug(__METHOD__ . " @ $pos");
+		$this->fragment_main->logDebug(__METHOD__ . " @ $pos");
 
-		$current_comment = $this->fragment->getCurrentComment();
+		$current_comment = $this->fragment_main->getCurrentComment();
 
 		if (empty($current_comment)) {
 			throw new \Exception("not in a comment", 1);

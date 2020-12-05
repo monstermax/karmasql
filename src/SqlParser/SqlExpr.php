@@ -17,6 +17,7 @@ class SqlExpr
 	//public $parent = null; // @SqlActionPart | SqlTypeParenthese
 	public $outer_text;
 	public $action; // @SqlAction
+	public $order_desc = false;
 	
 
 	public function __construct($outer_text=null)
@@ -141,7 +142,7 @@ class SqlExpr
 		$tables = $this->action->getTables();
 
 		if (count($items) == 1 && $items[0]->type === 'joker') {
-			// expr will return several fields (joker *)
+			// WORD / JOKER => expr will return several fields (joker *)
 
 			$item = $items[0];
 			$item_codes = $item->toSql(true);   // TODO: toSql à remplacer/renommer par toPhp
@@ -165,15 +166,22 @@ class SqlExpr
 			
 			$item_codes = [];
 			foreach ($items as $item) {
-				if ($item->type === 'word' && $item->word_type === 'keyword' && $item->word === 'as') {
+				$skip_code = false;
+
+				if ($item->type === 'word' && $item->word_type === 'keyword' && $item->word_lower === 'as') {
 					continue;
 				}
-				if ($item->type === 'word' && $item->word_type === 'keyword' && $item->word === 'desc') {
+				if ($item->type === 'word' && $item->word_type === 'keyword' && $item->word_lower === 'desc') {
+					// TODO: enregistrer que l'on veut trier ce field en sens inverse => normalement deja enregistré à ce niveau
 					continue;
 				}
 				if ($item->type === 'word' && $item->word_type === 'field_alias') {
 					continue;
 				}
+                if ($item->type === 'word' && $item->word_type === 'order_by_field_alias') {
+                    continue;
+				}
+
 
                 if ($item->type === 'parenthese') {
 					// parenthese
@@ -187,6 +195,10 @@ class SqlExpr
 
 				} else if ($item->type === 'operator') {
 					// operator
+
+				} else if ($item->type == 'bracket') {
+					// bracket (for PHP variables only)
+					$debug = 1;
 
                 } else if ($item->type === 'word') {
                     if ($item->word_type == 'field') {
@@ -206,6 +218,26 @@ class SqlExpr
 						// variable sql
 						$debug = 1;
 
+					} else if ($item->word_type == 'undefined') {
+						$is_alias = false;
+
+						$select_parts = $this->action->getParts('select');
+						if ($select_parts) {
+							$fields = $select_parts[0]->getFields();
+							foreach ($fields as $field) {
+								if ($field->getAlias() === $item->word) {
+									$item->word_type = 'order_by_field_alias';
+									$is_alias = true;
+									$skip_code = true;
+								}
+							}
+						}
+
+
+						if (! $is_alias) {
+							throw new \Exception("unknown case", 1);
+						}
+
 					} else {
 						$debug = $item->type;
 						throw new \Exception("unknown case", 1);
@@ -215,20 +247,25 @@ class SqlExpr
 					throw new \Exception("unknown case", 1);
 				}
 
-				$item_code = $item->toSql(true);   // TODO: toSql à remplacer/renommer par toPhp
-				$item_codes[] = $item_code;
-				
-				if (! is_string($item_code)) {
-					throw new \Exception("invalid return " . print_r($item_code), 1);
+				if (! $skip_code) {
+					$item_code = $item->toSql(true);   // TODO: toSql à remplacer/renommer par toPhp
+					$item_codes[] = $item_code;
+					
+					if (! is_string($item_code)) {
+						throw new \Exception("invalid return " . print_r($item_code), 1);
+					}
 				}
+				
 			}
-			$item_code = implode(' ', $item_codes);
-
-			$field_alias = $this->getAlias();
+			
 			
 			$result = null;
-			eval('$result = (' . $item_code . ');');
-
+			$item_code = implode(' ', $item_codes);
+			if ($item_code != '') {
+				eval('$result = (' . $item_code . ');');
+			}
+			
+			$field_alias = $this->getAlias();
 			$results = [
 				$field_alias => $result,
 			];

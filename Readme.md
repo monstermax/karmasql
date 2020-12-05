@@ -119,6 +119,14 @@ select * from users order by age, name desc
 
 select * from users where age < 40 order by id
 
+select count(*) from users  # the two next queries are equivalent
+
+select count(*) as nb from users group by 'xxxx'
+
+select count(*) as nb from users group by 1   # note: group by "1" and not by the first field of the select. to fix...
+
+select sexe, count(*) as nb from users where 1 = 1 group by sexe
+
 select sexe
     , count(*) as nb_users
     , group_concat(u.name) as names

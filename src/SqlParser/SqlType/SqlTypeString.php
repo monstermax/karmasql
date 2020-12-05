@@ -50,6 +50,12 @@ class SqlTypeString extends SqlType
 			return false;
 		}
 
+        if ($fragment_main->getCurrentBracket()) {
+            // on est dans un bracket
+            return false;
+        }
+
+
 		if ($char == '"') {
 			// "
 			return 'double_quote';
@@ -73,6 +79,11 @@ class SqlTypeString extends SqlType
 
 		if ($this->fragment_main->getCurrentComment()) {
 			// on est dans un commentaire
+			return false;
+		}
+
+		if ($this->fragment_main->getCurrentBracket()) {
+			// on est dans un bracket
 			return false;
 		}
 

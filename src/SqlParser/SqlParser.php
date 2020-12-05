@@ -9,8 +9,8 @@ use \SqlParser\SqlFragment\SqlFragmentQuery;
 class SqlParser
 {
 	// CONFIG VARIABLES
-	public $allow_php_functions = false;
-	public $allow_php_variables = false;
+	public $allow_php_functions = true;
+	public $allow_php_variables = true;
 
 
 	// SYSTEM VARIABLES
@@ -316,6 +316,12 @@ class SqlParser
                 foreach ($result as $field_name => $value) {
 					if (is_null($value)) {
 						$value = '<i>NULL</i>';
+					}
+					if (is_array($value)) {
+						$value = json_encode($value);
+
+					} else if (is_object($value)) {
+						$value = json_encode($value);
 					}
                     $html .= '			<td>' . $value  . '</td>';
                 }

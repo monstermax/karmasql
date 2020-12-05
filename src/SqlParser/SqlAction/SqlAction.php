@@ -37,6 +37,7 @@ class SqlAction extends SqlFragment
 	function execute()
 	{
 		$executor = new SqlExecutor;
+		$this->query->setExecutor($executor);
 		return $this->executeAction($executor);
     }
 	

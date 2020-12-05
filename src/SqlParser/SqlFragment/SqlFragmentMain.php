@@ -17,6 +17,7 @@ use \SqlParser\SqlType\SqlTypeOperator;
 use \SqlParser\SqlType\SqlTypeParenthese;
 use \SqlParser\SqlType\SqlTypeSpace;
 use \SqlParser\SqlType\SqlTypeString;
+use \SqlParser\SqlType\SqlTypeBracket;
 use \SqlParser\SqlType\SqlTypeWord;
 
 
@@ -33,6 +34,7 @@ class SqlFragmentMain extends SqlFragment
 	protected $operators = []; // list of @SqlFragmentOperator
 	protected $parentheses = []; // list of @SqlFragmentParenthese
 	protected $strings = []; // list of @SqlFragmentString
+	protected $brackets = []; // list of @SqlFragmentBracket
 	protected $words = []; // list of @SqlFragmentWord
     protected $queries = null; // list of @SqlFragmentQuery
 	
@@ -46,6 +48,7 @@ class SqlFragmentMain extends SqlFragment
 	protected $current_operator = null; // @SqlTypeOperator
 	protected $current_parenthese = null; // @SqlTypeParenthese
 	protected $current_string = null; // @SqlTypeString
+	protected $current_bracket = null; // @SqlTypeBracket
 	protected $current_word = null; // @SqlTypeWord
 	protected $current_space = null; // @SqlTypeSpace
     
@@ -97,6 +100,7 @@ class SqlFragmentMain extends SqlFragment
 			$is_asterisk = ($char === '*'); // TODO: creer une class SqlTypeJoker
 			$is_dot = ($char === '.');
 			$is_arobase = ($char === '@');
+			$is_brackets = in_array($char, ['[', ']']);
 			$is_semicolon = ($char === ';');
 			$is_dollar = ($char === '$');
 			$is_comma = ($char === ',');
@@ -162,7 +166,7 @@ class SqlFragmentMain extends SqlFragment
 			*/
 
 
-			if ($is_joker3 && ! $this->current_string && ! $this->current_comment) {
+			if ($is_joker3 && ! $this->current_string && ! $this->current_bracket && ! $this->current_comment) {
 				// count(*)  (ou autre fonction)
 
 				$this->addWord( new SqlTypeWord($this, $pos, 'joker_function') );
@@ -290,6 +294,33 @@ class SqlFragmentMain extends SqlFragment
 					unset($string_type);
 				}
 			}
+
+
+			// debut/fin de bracket (crochet) ?
+            if ($this->current_bracket) {
+                // on est dans un bracket
+                $bracket_type = $this->current_bracket->isBracketEnd($char, $next_char);
+                if ($bracket_type && $this->current_bracket->bracket_type == $bracket_type) {
+                    // fin du bracket
+                    $this->current_bracket->endBracket($pos, $bracket_type);
+                }
+                unset($bracket_type);
+                continue;
+
+            } else {
+                // on n'est PAS dans un bracket
+
+                if (! $this->current_word) {
+                    $bracket_type = SqlTypeBracket::isBracketStart($this, $char, $next_char);
+                    if ($bracket_type) {
+                        // debut d'un bracket
+                        $this->addBracket(new SqlTypeBracket($this, $pos, $bracket_type));
+                        unset($bracket_type);
+                        continue;
+                    }
+                    unset($bracket_type);
+                }
+            }
 
 
 			// debut/fin de parentheses ?
@@ -445,6 +476,10 @@ class SqlFragmentMain extends SqlFragment
 			$this->current_string->endString($pos);
 		}
 
+		if ($this->current_bracket) {
+			$this->current_bracket->endBracket($pos);
+		}
+
 		if ($this->current_numeric) {
 			$this->current_numeric->endNumeric($pos);
 		}
@@ -509,6 +544,12 @@ class SqlFragmentMain extends SqlFragment
 	{
 		$this->strings[] = $string;
 		$this->setCurrentString($string);
+	}
+
+	public function addBracket(SqlTypeBracket $bracket)
+	{
+		$this->brackets[] = $bracket;
+		$this->setCurrentBracket($bracket);
 	}
 
 	public function addParenthese(SqlTypeParenthese $parenthese)
@@ -592,6 +633,11 @@ class SqlFragmentMain extends SqlFragment
 	public function getCurrentString()
 	{
 		return $this->current_string;
+	}
+
+	public function getCurrentBracket()
+	{
+		return $this->current_bracket;
 	}
 
 	public function getCurrentParenthese()
@@ -715,6 +761,11 @@ class SqlFragmentMain extends SqlFragment
 	public function setCurrentString($string)
 	{
 		$this->current_string = $string;
+	}
+
+	public function setCurrentBracket($bracket)
+	{
+		$this->current_bracket = $bracket;
 	}
 
 	public function setCurrentParenthese($parenthese)

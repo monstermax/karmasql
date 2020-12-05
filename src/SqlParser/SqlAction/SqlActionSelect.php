@@ -58,6 +58,7 @@ class SqlActionSelect extends SqlAction
 
 		$results = []; // TODO: créer SqlResult ? et/ou SqlRecordset ?
 		$results_orders = [];
+		$has_group_results = null;
 
 		$current_row_idx = 0;
 		foreach ($rows as $row) {
@@ -128,10 +129,12 @@ class SqlActionSelect extends SqlAction
 			// 6a) group by
 			if (! $group_fields) {
 
-				// 7a) execute result
-				$tmp_result = $executor->calculateFields($row_data, $select_fields);
-				$has_group_results = !empty($executor->results_groups);
-				$executor->results_groups = null;
+				if (is_null($has_group_results)) {
+					// 7a) execute result
+					$tmp_result = $executor->calculateFields($row_data, $select_fields);
+					$has_group_results = !empty($executor->results_groups);
+					$executor->results_groups = null;
+				}
 
                 if ($has_group_results) {
                     // si il y a des results_groups
@@ -159,7 +162,7 @@ class SqlActionSelect extends SqlAction
 			$executor->current_result = $result;
 
 
-			// 8a) order by
+			// 8a) order by (store sort values)
 			if ($order_fields) {
 				$results_orders[$key] = $executor->calculateFields($row_data, $order_fields);
 			}
@@ -174,45 +177,53 @@ class SqlActionSelect extends SqlAction
 		$executor->current_result = null;
 
 
-		// 8b) order by
-		if ($order_fields) {
-			uksort($results, function ($a, $b) use ($results_orders) {
-				$result_order_a = $results_orders[$a];
-				$result_order_b = $results_orders[$b];
-
-				foreach ($result_order_a as $key => $field_a) {
-					$key_parts = explode(" ", $key);
-					$desc = count($key_parts) > 1 && $key_parts[count($key_parts)-1] == 'desc';
-					$field_b = $result_order_b[$key];
-
-					if ($field_b == $field_a) {
-
-					} else if ($desc) {
-						return ($field_a < $field_b) ? 1 : -1;
-
-					} else {
-						return ($field_a < $field_b) ? -1 : 1;
-					}
-				}
-				unset($key, $field_a, $field_b);
-
-				return 0;
-			});
-
-		}
-		
 		
 		// 6b) group by (retrieve results of eval functions)
 		if ($executor->results_groups) {
 			foreach ($results as $key => $result) {
 				foreach ($executor->results_groups as $field_alias => $field_result) {
 					$results[$key][$field_alias] = $field_result[$key]['result'];
+
+					if ($results_orders && isset($results_orders[$key][$field_alias])) {
+						$results_orders[$key][$field_alias] = $field_result[$key]['result'];
+					}
 				}
 				unset($field_alias, $field_result);
 			}
 			unset($key, $result);
 		}
 
+
+        // 8b) order by
+        if ($order_fields) {
+            uksort($results, function ($a, $b) use ($results_orders, $order_fields) {
+                $result_order_a = $results_orders[$a];
+                $result_order_b = $results_orders[$b];
+
+				$key_index = 0;
+                foreach ($result_order_a as $key => $field_a) {
+					$order_field = $order_fields[$key_index];
+					$is_desc = ($order_field->type === 'expr' && $order_field->order_desc);
+					//$key_parts = explode(" ", $key);
+					//$is_desc = $param->order_desc;
+                    //$is_desc = count($key_parts) > 1 && $key_parts[count($key_parts)-1] == 'desc';
+                    $field_b = $result_order_b[$key];
+
+                    if ($field_b == $field_a) {
+						// continue to the next order field
+                    } elseif ($is_desc) {
+                        return ($field_a < $field_b) ? 1 : -1;
+                    } else {
+                        return ($field_a < $field_b) ? -1 : 1;
+					}
+
+					$key_index++;
+                }
+                unset($key, $field_a, $field_b);
+
+                return 0;
+            });
+        }
 
 
 		// reset rows values

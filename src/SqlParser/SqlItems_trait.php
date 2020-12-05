@@ -225,7 +225,7 @@ trait SqlItems_trait
 						if ($item->word_type === 'action_part') {
 							echo "<br />";
 						}
-						$style .= "font-weight:bold;";
+						$style .= "font-weight:bold; text-transform:uppercase;";
 					}
 				}
 

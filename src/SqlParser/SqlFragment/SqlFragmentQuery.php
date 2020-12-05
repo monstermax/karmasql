@@ -2,7 +2,9 @@
 
 namespace SqlParser\SqlFragment;
 
-use \SqlParser\SqlPart\SqlPart;
+use \SqlParser\SqlExecutor;
+use \SqlParser\SqlAction\SqlAction;
+
 
 
 class SqlFragmentQuery extends SqlFragment
@@ -13,6 +15,7 @@ class SqlFragmentQuery extends SqlFragment
 	protected $action = null;
 	protected $action2 = null;	// used only for "insert ... select" which has 2 actions to execute (1 select then 1 insert)
 	protected $results = null;
+	protected $executor = null;
 
 
     public function __construct(SqlFragment $fragment_parent, $sql='')
@@ -91,7 +94,7 @@ class SqlFragmentQuery extends SqlFragment
 				echo '<br />';
 			}
 			$sql .= ' ';
-			
+
             $parts = $this->action2->getParts();
             if ($parts) {
                 foreach ($parts as $part) {
@@ -117,19 +120,12 @@ class SqlFragmentQuery extends SqlFragment
 	}
 
 
-	/**
-	 * Get the value of action
-	 */ 
 	public function getAction()
 	{
 		return $this->action;
 	}
 
-	/**
-	 * Set the value of action
-	 *
-	 * @return  self
-	 */ 
+
 	public function setAction($action)
 	{
 		$this->action = $action;
@@ -138,21 +134,13 @@ class SqlFragmentQuery extends SqlFragment
 	}
 
 
-	/**
-	 * Get the value of action2
-	 */ 
 	public function getAction2()
 	{
 		return $this->action2;
 	}
 
 
-	/**
-	 * Set the value of action2
-	 *
-	 * @return  self
-	 */ 
-	public function setAction2($action2)
+	public function setAction2(SqlAction $action2)
 	{
 		$this->action2 = $action2;
 
@@ -165,13 +153,23 @@ class SqlFragmentQuery extends SqlFragment
 	}
 
 
-
-	/**
-	 * Get the value of results
-	 */ 
 	public function getResults()
 	{
 		return $this->results;
 		//return $this->getAction()->getResults();
 	}
+
+
+	public function getExecutor()
+	{
+		return $this->executor;
+	}
+
+	public function setExecutor(SqlExecutor $executor)
+	{
+		$this->executor = $executor;
+
+		return $this;
+	}
+
 }

@@ -23,7 +23,6 @@ class SqlTypeSpace extends SqlType
 
 	public function endSpace($pos)
 	{
-
 		$this->fragment_main->logDebug(__METHOD__ . " @ $pos");
 		
 		$current_space = $this->fragment_main->getCurrentSpace();

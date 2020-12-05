@@ -45,8 +45,35 @@ class SqlPartOrderBy extends SqlPart
 				
             } else if ($is_word) {
 				// order by word
+
+				$is_alias = false;
+
+                if ($param->word_type === 'field') {
+					// ok
+					
+                } else if ($param->word_type == 'undefined') {
+
+					// is select field alias ?
+					foreach ($select_fields as $select_field) {
+						if ($select_field->getAlias() === $param->word) {
+							$is_alias = true;
+							break;
+						}
+					}
+
+				} else {
+					throw new \Exception("unknown case", 1);
+				}
+
 				$fields[] = $param;
-				$param->word_type = 'field';
+
+				if ($is_alias) {
+					$param->word_type = 'field_alias';
+
+				} else {
+					$param->word_type = 'field';
+				}
+
 
             } else if ($is_expr) {
 				// order by expr
@@ -72,6 +99,12 @@ class SqlPartOrderBy extends SqlPart
 
 
 					$fields[] = $select_fields[$number-1];
+
+				} else if ($param_items && $param_items[ count($param_items)-1 ]->type === 'word' && $param_items[ count($param_items)-1 ]->word_lower === 'desc') {
+					// order by DESC
+					$debug = 1;
+					$param->order_desc = true;
+
 				}
 
 				$fields[] = $param;
