@@ -17,6 +17,8 @@ class SqlPartOrderBy extends SqlPart
 
 	public function parsePart()
 	{
+		// called by SqlActionSelect::parseParts
+
 		$fields = []; // note: devrait s'appeler $fields_and_expressions
 
 		$tmp_params = $this->getParamsFromItems(false);
@@ -49,7 +51,7 @@ class SqlPartOrderBy extends SqlPart
 				$is_alias = false;
 
                 if ($param->word_type === 'field') {
-					// ok
+					// field
 					
                 } else if ($param->word_type == 'undefined') {
 
@@ -57,6 +59,8 @@ class SqlPartOrderBy extends SqlPart
 					foreach ($select_fields as $select_field) {
 						if ($select_field->getAlias() === $param->word) {
 							$is_alias = true;
+							$param->word_type = 'order_field_alias';
+							$param->detectSelectFieldsAlias();
 							break;
 						}
 					}
@@ -65,15 +69,15 @@ class SqlPartOrderBy extends SqlPart
 					throw new \Exception("unknown case", 1);
 				}
 
-				$fields[] = $param;
+				if (! $param->fields) {
+					$param->detectFields();
 
-				if ($is_alias) {
-					$param->word_type = 'field_alias';
-
-				} else {
-					$param->word_type = 'field';
+					if (! $param->fields) {
+						throw new \Exception("missing field(s)", 1);
+					}
 				}
 
+				$fields[] = $param;
 
             } else if ($is_expr) {
 				// order by expr
@@ -95,8 +99,6 @@ class SqlPartOrderBy extends SqlPart
 					} else {
 						throw new \Exception("unknown case");
 					}
-	
-
 
 					$fields[] = $select_fields[$number-1];
 
@@ -105,12 +107,18 @@ class SqlPartOrderBy extends SqlPart
 					$debug = 1;
 					$param->order_desc = true;
 
+					if ($param_items && $param_items[0]->type === 'word' && $param_items[0]->word_type === 'undefined') {
+						$param_items[0]->detectFields();
+					}
+
+					
 				}
 
 				$fields[] = $param;
 				
 				// parse l'expression
 				$param->detectFields();
+				//$param->detectAlias();
 
 			} else {
 				throw new \Exception("non implemented case");

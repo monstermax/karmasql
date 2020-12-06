@@ -11,6 +11,8 @@ class SqlActionInsert extends SqlAction
 
 	public function executeAction(SqlExecutor $executor)
 	{
+		// called by SqlAction::execute()
+
 		$table_into = $this->getIntoTable();
 		$table_name = $table_into->getName();
 		$table_into_data = $table_into->getData();
@@ -121,6 +123,8 @@ class SqlActionInsert extends SqlAction
 
 	public function parseParts()
 	{
+		// called by SqlFragmentQuery::parseQuery()
+
 		$inserts = iterator_to_array($this->getPart('insert'));
 		if ($inserts) {
 			$inserts[0]->parsePart();

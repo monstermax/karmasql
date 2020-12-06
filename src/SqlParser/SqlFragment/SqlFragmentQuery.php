@@ -30,6 +30,9 @@ class SqlFragmentQuery extends SqlFragment
 
 	public function parseQuery()
 	{
+		// called by SqlParser::ShowParsedSql()
+		// called by SqlFragmentQuery::executeQuery()
+
 		$ts_start = microtime(true);
 
 		$this->action->parseParts();
@@ -47,18 +50,17 @@ class SqlFragmentQuery extends SqlFragment
 	
 	public function executeQuery()
 	{
+		// called by SqlFragmentMain::executeQueries()
+
 		if (is_null($this->parse_duration)) {
             if (! $this->action) {
-				return;
+				$this->execute_duration = 0;
+				$this->results = [];
+				return [];
                 //throw new \Exception("query not parsed or do not contain any action", 1);
 			}
-			
-			$this->action->parseParts();
-			
-			if ($this->action2) {
-				throw new \Exception("debug me", 1);
-				$this->action2->parseParts();
-			}
+
+			$this->parseQuery();
 		}
 
 		$ts_start = microtime(true);
@@ -73,6 +75,8 @@ class SqlFragmentQuery extends SqlFragment
 
 	public function rebuildSql($to_php=false, $print_debug=false)
 	{
+		// called by SqlParser::showParsedSql
+
 		if (empty($this->action)) {
 			return '';
 			//throw new \Exception("missing action. query must be parsed first", 1);

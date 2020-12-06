@@ -46,6 +46,10 @@ class SqlTypeComparator extends SqlType
 
 	public function toPhp($print_debug=false)
 	{
+		// called by SqlType::toSql()  (et avant par SqlExpr::validateCondition)
+
+		//throw new \Exception("used by ?", 1);
+
 		$comparator = $this->comparator;
 		if ($comparator == '=') {
 			$comparator = '==';

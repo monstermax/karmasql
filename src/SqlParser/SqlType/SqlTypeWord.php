@@ -40,7 +40,8 @@ class SqlTypeWord extends SqlType
     }
 
 
-	public function endWord($pos) {
+	public function endWord($pos)
+	{
 		$this->fragment_main->logDebug(__METHOD__ . " @ $pos");
 
 		$current_word = $this->fragment_main->getCurrentWord();
@@ -241,7 +242,12 @@ class SqlTypeWord extends SqlType
 
 
 
-	public function toPhp() {
+	public function toPhp()
+	{
+		// called by SqlTypeWord::toSql()
+
+		//throw new \Exception("used by ?", 1);
+
 		$outer_text = $this->outer_text;
 
 		if ($this->word_type == 'field') {
@@ -262,7 +268,7 @@ class SqlTypeWord extends SqlType
 				$outer_text = implode(', ', $fields);
 			}
 
-		} else if ($this->word_type == 'order_by_field_alias') {
+		} else if ($this->word_type == 'order_field_alias') {
 			$field_alias = $outer_text;
 			$field_value = $this->query->getExecutor()->current_result[$field_alias];
 			$debug = 1;
@@ -320,6 +326,11 @@ class SqlTypeWord extends SqlType
 	{
 		// TODO: a voir si getCalculatedValues ne fait pas double emploi avec toSql
 		// SqlTypeWord::toSql est appelé par SqlExpr::getCalculatedValues
+
+		// called by SqlExpr::validateCondition
+		// called by SqlExpr::itemsToSql
+		// called by SqlPart::itemsToSql
+		// called by SqlFragment::itemsToSql
 		
 		$sql = '';
 
@@ -385,8 +396,9 @@ class SqlTypeWord extends SqlType
 	public function detectFields()
 	{
 		// called by SqlActionPartSelect::parsePart
-
-		// $table = $fragment->getTableFrom();
+		// called by SqlTypeWord::getCalculatedValues
+		// called by SqlExpr::detectFields
+		// called by SqlParenthese::detectFields
 
 		if (in_array($this->word_type, ['undefined', 'joker_undefined', 'field_undefined'])) {
 			// detection field
@@ -555,33 +567,125 @@ class SqlTypeWord extends SqlType
 		}
 	}
 
+	public function detectSelectFieldsAlias()
+	{
+		// for order by
+
+		// called by SqlPartOrderBy::parsePart()
+
+		$debug = 1;
+		
+		if (! $this->fields) {
+			$field_alias = $this->word;
+			$select_fields = $this->action->getFieldsSelect();
+
+			if (isset($select_fields[$field_alias])) {
+				$field = $select_fields[$field_alias];
+				$this->fields = [
+					$field_alias => $field,
+				];
+			}
+
+
+		}
+	}
+
 
 	public function getCalculatedValues(SqlExecutor $executor, $row_data)
 	{
 		// TODO: a voir si getCalculatedValues ne fait pas double emploi avec toSql
 
+		// called by SqlExecutor::calculateFields
+
         if ($this->word_type === 'field') {
-			// when field_name is calculated by the "order by"
+            // when field_name is calculated by the "order by"
 			$field_alias = $this->word;
-			if (isset($executor->current_result[$field_alias])) {
-				return [
+			
+            if (isset($executor->current_result[$field_alias])) {
+				// field_alias is present in the results (then in select_fields)
+                return [
 					$field_alias => $executor->current_result[$field_alias],
 				];
+				
+            } else {
+				// field_alias is NOT present in the results (then NOT in select_fields)
+                if (!$this->fields) {
+					$this->word_type = 'field_undefined';
+					
+					throw new \Exception("detectFields must be done before execute", 1);
+                    $this->detectFields();
+				}
+				
+				if (!$this->fields) {
+					throw new \Exception("unknown case", 1);
+				}
 
-			} else {
-				// TODO: le order field n'est pas dans les select fields => il faut evaluer alors le order field
-				throw new \Exception("debug me", 1);
-				//$select_fields = ??
-				//$fields_aliases = ??
-				//$values = $executor->calculateFields($row_data, $select_fields, $fields_aliases);
-				// TODO
+                if (count($this->fields) !== 1) {
+                    throw new \Exception("unknown case", 1);
+                }
+
+				//$field = $this->fields[0];
+				$field = $this->fields[$field_alias];
+
+				$field_name = $field->getName();
+				if ($field_alias !== $field->getAlias()) {
+					throw new \Exception("unknown case", 1);
+				}
+
+				$field_table = $field->getTable();
+				//$table_name = $field_table->getName();
+				$table_alias = $field_table->getAlias();
+
+				$field_value = isset($row_data[$table_alias][$field_alias]) ? $row_data[$table_alias][$field_alias] : null;
+
+				return [
+					$field_alias => $field_value,
+				];
+
 			}
 			
-        } else if ($this->word_type === 'field_alias') {
+        } else if ($this->word_type === 'field_undefined') {
+			// when field is calculated by the "order by"
+			// TODO: le order field n'est pas dans les select fields => il faut evaluer alors le order field
+			$action_select = $this->getAction();
+			
+			if (empty($this->fields)) {
+				throw new \Exception("detectFields must be done before execute", 1);
+
+				$this->detectFields();
+
+				if (empty($this->fields)) {
+					throw new \Exception("unknown case", 1);
+				}
+			}
+			
+			if (count($this->fields) !== 1) {
+				throw new \Exception("unknown case", 1);
+			}
+
+			$field = $this->fields[0];
+
+			$field_name = $field->getName();
+			$field_alias = $field->getAlias();
+
+			$table = $field->getTable();
+			$table_alias = $table->getAlias();
+			$table_name = $table->getName();
+
+			$field_value = isset($row_data[$table_alias][$field_alias]) ? $row_data[$table_alias][$field_alias] : null;
+			
+            return [
+                $field_alias => $field_value,
+            ];
+
+
+			
+        } else if ($this->word_type === 'order_field_alias') {
 			// when field_name is calculated by the "order by"
 			$field_alias = $this->word;
+			$field_result = $executor->current_result[$field_alias];
             return [
-                $field_alias => $executor->current_result[$field_alias],
+                $field_alias => $field_result,
             ];
 
         } else if ($this->word_type === 'joker_undefined') {

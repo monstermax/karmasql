@@ -517,6 +517,8 @@ class SqlFragmentMain extends SqlFragment
 
 	public function executeQueries()
 	{
+		// called by SqlParser::execute()
+		
 		if (is_null($this->queries)) {
 			throw new \Exception("main fragment not parsed", 1);
 		}

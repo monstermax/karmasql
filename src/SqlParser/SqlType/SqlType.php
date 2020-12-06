@@ -138,7 +138,7 @@ class SqlType implements \JsonSerializable
 		if (! $this->action) {
             if ($this->type === 'space') {
 				// skip space error
-				
+
             } else if ($this->type === 'word') {
 				// pour le SqlTypeWord, la verification (de presence d'une action) est faite par lui-meme (car pour le 1er mot de la requete, on n'a pas encore d'action definie)
 	
@@ -230,12 +230,19 @@ class SqlType implements \JsonSerializable
 
 	public function toPhp()
 	{
+		// called by SqlType::toSql()  (et avant par SqlExpr::validateCondition)
+
+		//throw new \Exception("used by ?", 1);
 		return $this->outer_text;
 	}
 
 
 	public function toSql($to_php=false, $print_debug=false)
 	{
+		// called by SqlExpr::validateCondition()
+
+		//throw new \Exception("used by ?", 1);
+
 		$sql = "";
 
         if ($to_php) {

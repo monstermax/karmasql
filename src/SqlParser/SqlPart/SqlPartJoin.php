@@ -17,6 +17,9 @@ class SqlPartJoin extends SqlPart
 
 	public function parsePart()
 	{
+        // called by SqlActionSelect::parseParts()
+        // called by SqlActionJoin::parseParts()
+
         $tmp_params = $this->getParamsFromItems(false);
         
         // TODO: detecter "on" ou "using"

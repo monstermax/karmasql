@@ -18,6 +18,8 @@ class SqlPartFrom extends SqlPart
 
 	public function parsePart()
 	{
+		// called by SqlActionSelect::parseParts()
+
 		$params = $this->getParamsFromItems(false);
 
 		$tables = [];

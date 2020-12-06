@@ -52,6 +52,10 @@ trait SqlItems_trait
 
 	public function getParamsFromItems($with_spaces=true, $with_comments=false)
 	{
+		// called by SqlPartFrom::parsePart()
+		// called by SqlPartSelect::parsePart()
+		// called by SqlPartOrderBy::parsePart()
+
 		$items_container = $this;
 
 		if (get_class($this) === SqlTypeParenthese::class) {
@@ -169,6 +173,9 @@ trait SqlItems_trait
 
 	public function itemsToSql($to_php=false, $print_debug=false)
 	{
+		// called by SqlFragmentQuery::rebuildSql
+		// called by SqlExpr::toSql
+		
 		$colors = [
 			'string' => 'darkgray',
 			'comment' => 'lightgray',

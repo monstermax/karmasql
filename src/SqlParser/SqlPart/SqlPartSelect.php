@@ -21,6 +21,8 @@ class SqlPartSelect extends SqlPart
 
 	public function parsePart()
 	{
+		// called by SqlActionSelect::parseParts()
+
 		$fields = []; // note: devrait s'appeler $fields_and_expressions
 
 		$tmp_params = $this->getParamsFromItems(false);
@@ -35,12 +37,13 @@ class SqlPartSelect extends SqlPart
 			$is_joker = (get_class($param) === SqlTypeJoker::class && $param->outer_text == '*');
 
             if ($is_expr) {
-                $alias = $param->getAlias();
+                // parse l'expression
+                $param->detectAlias();
+                $param->detectFields();
+
+				$alias = $param->getAlias();
 				$fields[$alias] = $param;
 				
-				// parse l'expression
-				$param->detectAlias();
-				$param->detectFields();
 								
             } else if ($is_asterisk || $is_joker) {
 				// select *

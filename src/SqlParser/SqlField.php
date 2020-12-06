@@ -26,6 +26,10 @@ class SqlField /* extends SqlExpr */
 
 	public function getCalculatedValues(SqlExecutor $executor, $row_data)
 	{
+		// called by SqlExecutor::calculateFields()
+
+		//throw new \Exception("called by ?", 1);
+
 		$table_alias = $this->getTable()->getAlias();
 
 		return [
@@ -36,6 +40,10 @@ class SqlField /* extends SqlExpr */
 
 	public function toPhp()
 	{
+		// called by SqlField::toSql()
+
+		//throw new \Exception("called by ?", 1);
+
 		$field_name = $this->getName();
 		//$field_alias = $this->getAlias();
 
@@ -56,6 +64,8 @@ class SqlField /* extends SqlExpr */
 
 	public function toSql($to_php=false, $print_debug=false)
 	{
+		// called by SqlTypeWord::toSql
+
 		if ($to_php) {
 			$sql = $this->toPhp();
 

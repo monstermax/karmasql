@@ -45,6 +45,10 @@ class SqlTypeNumeric extends SqlType
 	
 	public function toSql($to_php=false, $print_debug=false)
 	{
+		// called by SqlFragment::itemsToSql()
+
+		//throw new \Exception("used by ?", 1);
+
 		$sql = "";
 
         if ($to_php) {
@@ -74,6 +78,10 @@ class SqlTypeNumeric extends SqlType
 
 	public function getCalculatedValues(SqlExecutor $executor, $row_data)
 	{
+		// called by SqlExecutor::calculateFields()
+
+		//throw new \Exception("used by ?", 1);
+
 		$alias = $this->number;
 
 		return [

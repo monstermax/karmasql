@@ -57,6 +57,8 @@ class SqlTable
 	 */ 
 	public function addFieldName($field_name)
 	{
+		// called by SqlPartFrom::parsePart()
+
 		$this->fields_names[] = $field_name;
 
 		return $this;

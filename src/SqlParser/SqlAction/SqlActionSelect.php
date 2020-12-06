@@ -3,6 +3,7 @@
 namespace SqlParser\SqlAction;
 
 use \SqlParser\SqlExecutor;
+use SqlParser\SqlFragment\SqlFragmentQuery;
 use \SqlParser\SqlResult;
 
 
@@ -11,6 +12,8 @@ class SqlActionSelect extends SqlAction
 
 	protected function executeAction(SqlExecutor $executor)
 	{
+		// called by SqlAction->execute()
+
 		$select_fields = $this->getFieldsSelect();
 		$group_fields = $this->getFieldsGroupBy();
 		$order_fields = $this->getFieldsOrderBy();
@@ -180,12 +183,22 @@ class SqlActionSelect extends SqlAction
 		
 		// 6b) group by (retrieve results of eval functions)
 		if ($executor->results_groups) {
+			// pour chaque ligne de resultat...
 			foreach ($results as $key => $result) {
+
+				// reaffectation du resultat pour chaque field => TODO: remplacer le foreach par un array_merge
 				foreach ($executor->results_groups as $field_alias => $field_result) {
+
+					// reaffectation du resultat pour le field
 					$results[$key][$field_alias] = $field_result[$key]['result'];
 
-					if ($results_orders && isset($results_orders[$key][$field_alias])) {
-						$results_orders[$key][$field_alias] = $field_result[$key]['result'];
+					// reaffectation du resultat de tri pour le order by
+					if ($results_orders) {
+						if (! empty($results_orders[$key]) && array_key_exists($field_alias, $results_orders[$key])) {
+							// l'alias (d'un field qui est le resultat d'une fontion de groupe) est present dans le order by
+							$order_result = $field_result[$key]['result'];
+							$results_orders[$key][$field_alias] = $order_result;
+						}
 					}
 				}
 				unset($field_alias, $field_result);
@@ -204,10 +217,8 @@ class SqlActionSelect extends SqlAction
                 foreach ($result_order_a as $key => $field_a) {
 					$order_field = $order_fields[$key_index];
 					$is_desc = ($order_field->type === 'expr' && $order_field->order_desc);
-					//$key_parts = explode(" ", $key);
-					//$is_desc = $param->order_desc;
-                    //$is_desc = count($key_parts) > 1 && $key_parts[count($key_parts)-1] == 'desc';
-                    $field_b = $result_order_b[$key];
+					$field_b = $result_order_b[$key];
+					
 
                     if ($field_b == $field_a) {
 						// continue to the next order field
@@ -223,7 +234,10 @@ class SqlActionSelect extends SqlAction
 
                 return 0;
             });
-        }
+		}
+		
+
+		// TODO: faire le limit apres le order by
 
 
 		// reset rows values
@@ -237,6 +251,8 @@ class SqlActionSelect extends SqlAction
 
 	public function parseParts()
 	{
+		// called by SqlFragmentQuery::parseQuery()
+
 		$froms = iterator_to_array($this->getPart('from'));
 		if ($froms) {
 			$froms[0]->parsePart();

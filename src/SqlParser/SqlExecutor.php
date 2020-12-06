@@ -16,6 +16,8 @@ class SqlExecutor
 
 	public function validateConditions($row_data, $conditions_where)
 	{
+		// called by SqlActionSelect::executeAction
+		
 		// TODO => valider (ou non) les conditions du where pour la $row donnée
 
 		if ($conditions_where) {
@@ -34,6 +36,9 @@ class SqlExecutor
 
 	public function calculateFields($row_data, $select_fields, $fields_aliases=null)
 	{
+		// called by SqlActionSelect::executeAction
+		// called by SqlActionInsert::executeAction
+		
 		$values = [];
 		// TODO => calculer les fields pour la $row donnée
 

@@ -105,6 +105,8 @@ class SqlTypeBracket extends SqlType
 
 	public function getCalculatedValues(SqlExecutor $executor, $row_data)
 	{
+        throw new \Exception("used by ?", 1);
+
 		//$alias = $this->pos_start . '-bracket';
 		$alias = $this->inner_text;
 

@@ -22,6 +22,10 @@ class SqlTypeJoker extends SqlType
 
 	public function toSql($to_php=false, $print_debug=false)
 	{
+		// called by SqlPart::itemsToSql()
+
+		//throw new \Exception("used by ?", 1);
+
 		if ($to_php) {
 			//return $this->toPhp($print_debug);
 		}

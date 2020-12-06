@@ -169,7 +169,7 @@ class SqlFunction
 
 		$this->executor->results_groups[$alias][$row_key]['result'] += $expr;
 
-		return 'GROUP';
+		return $expr;
 	}
 
 
@@ -193,7 +193,7 @@ class SqlFunction
 		$this->executor->results_groups[$alias][$row_key]['nb'] += 1;
 		$this->executor->results_groups[$alias][$row_key]['result'] = $this->executor->results_groups[$alias][$row_key]['total'] / $this->executor->results_groups[$alias][$row_key]['nb'];
 
-		return 'GROUP';
+		return $expr;
 	}
 
 
@@ -215,7 +215,7 @@ class SqlFunction
 			$this->executor->results_groups[$alias][$row_key]['result'] += 1;
 		}
 
-		return 'GROUP';
+		return $expr;
 	}
 
 
@@ -239,7 +239,7 @@ class SqlFunction
 			$this->executor->results_groups[$alias][$row_key]['result'] = min($expr, $this->executor->results_groups[$alias][$row_key]['result']);
 		}
 
-		return 'GROUP';
+		return $expr;
 	}
 
 
@@ -263,7 +263,7 @@ class SqlFunction
 			$this->executor->results_groups[$alias][$row_key]['result'] = max($expr, $this->executor->results_groups[$alias][$row_key]['result']);
 		}
 
-		return 'GROUP';
+		return $expr;
 	}
 
 
@@ -285,10 +285,16 @@ class SqlFunction
 		$delimiter = ",";
 
 		$this->executor->results_groups[$alias][$row_key]['data'][] = $expr;
-		$this->executor->results_groups[$alias][$row_key]['result'] = implode($delimiter, $this->executor->results_groups[$alias][$row_key]['data']);
+
+		$data = $this->executor->results_groups[$alias][$row_key]['data'];
+		
+		// TODO: sort $data by $order_by
+		//$order_by = $this->executor->getOrderFields();
+
+		$this->executor->results_groups[$alias][$row_key]['result'] = implode($delimiter, $data);
 
 
-		return 'GROUP';
+		return $expr;
 	}
 
 

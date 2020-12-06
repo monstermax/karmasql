@@ -38,11 +38,16 @@ class SqlTypeSpace extends SqlType
 
 	public function toPhp($print_debug=false)
 	{
+		throw new \Exception("used by ?", 1);
+
 		return ' ';
 	}
+	
 
 	public function toSql($to_php=false, $print_debug=false)
 	{
+		// called by SqlPart::itemsToSql
+
 		if ($print_debug) {
 			echo " ";
 		}

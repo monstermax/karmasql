@@ -217,6 +217,8 @@ class SqlParser
 
 	public function showParsedSql()
 	{
+		// called by main
+
 		echo '<div>';
 
 		foreach ($this->fragment_main->getQueries() as $query_idx => $query) {
@@ -243,6 +245,8 @@ class SqlParser
 
 	public function execute()
 	{
+		// called by main
+
 		if (is_null($this->parse_duration)) {
 			throw new \Exception("invalid parsing. cannot execute", 1);
 		}
@@ -257,6 +261,9 @@ class SqlParser
 
 	public function showInputSql()
 	{
+		// called by main
+
+
 		echo '<div class="jumbotron p-3">';
 		echo '<h5>Input SQL</h5>';
 		echo '<pre>' . ($this->sql) . '</pre>';
@@ -266,6 +273,9 @@ class SqlParser
 
 	public function showResults()
 	{
+		// called by main
+
+
 		echo '<div class="jumbotron p-3">';
 		echo '<h5>SQL parsing</h5>';
 		echo '<div><small>SQL parsing duration: ' . round($this->parse_duration, 5) . ' second</small></div>';
@@ -279,6 +289,9 @@ class SqlParser
 
 	public function showQueryResults(SqlFragmentQuery $query, $query_idx=0)
 	{
+		// called by main
+
+
 		if (empty($query->getAction())) {
 			return;
 		}
@@ -346,6 +359,8 @@ class SqlParser
 	
 	public function showDatabase()
 	{
+		// called by main
+		
 		//echo '<hr /><pre>DATABASE: ' . print_r($this->database, true) . '</pre>';
 
 		foreach ($this->database as $table_name => $table) {
@@ -356,6 +371,9 @@ class SqlParser
 	
 	public function showDatabaseTable(array $data_table, $table_name=null)
 	{
+		// called by main
+		// called by SqlParser::showDatabase()
+
 		//echo '<hr /><pre>DATABASE - TABLE `' . $table_name . '` : ' . PHP_EOL . print_r($table, true) . '</pre>';
 
 		if ($table_name == '_variables') {

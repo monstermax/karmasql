@@ -29,8 +29,10 @@ class SqlExpr
 		//throw new \Exception("replace SqlExr by SqlFragment*", 1);
 	}
 
-	public function getExpr($with_spaces=false, $with_comments=false)
+	public function getExpr($with_desc=false, $with_spaces=false, $with_comments=false)
 	{
+		// DEPRECATED. WAS called by SqlExpr::getAlias()
+
 		$sql = '';
 
 		$items = $this->getItems(true);
@@ -40,6 +42,9 @@ class SqlExpr
 				continue;
 			}
 			if (! $with_spaces && $item->type == 'space') {
+				continue;
+			}
+			if (! $with_desc && $item->type == 'word' && $item->type === 'desc') {
 				continue;
 			}
 
@@ -52,11 +57,22 @@ class SqlExpr
 
 	public function getAlias()
 	{
+		// called by SqlPartSelect::parsePart()
+		// called by SqlExpr::getCalculatedValues()
+		// called by SqlFunction::count()
+
 		$alias = $this->alias;
 
 		if (empty($alias)) {
-			$alias = trim($this->getExpr(true));
-			$alias = substr($alias, 0, 64);
+			$this->detectAlias();
+			$alias = $this->alias;
+
+			if (empty($alias)) {
+				//throw new \Exception("debug me", 1);
+
+				$alias = trim($this->getExpr(false, true));
+				$alias = substr($alias, 0, 64);
+			}
 		}
 
 		return $alias;
@@ -65,6 +81,9 @@ class SqlExpr
 
 	public function detectFields()
 	{
+		// called by SqlPartSelect::parsePart()
+		// called by SqlPartJoin::ParsePart()
+
 		$items = $this->getItems(false);
 
 		foreach ($items as $item) {
@@ -73,6 +92,9 @@ class SqlExpr
 
 			} else if ($item->type == 'parenthese') {
 				$item->detectFields();
+				
+			} else if ($item->type == 'expr') {
+				throw new \Exception("non implemented case", 1);
 
 			} else {
 				//throw new \Exception("non implemented case");
@@ -82,6 +104,8 @@ class SqlExpr
 
 	public function detectAlias()
 	{
+		// called by SqlPartSelect::parsePart()
+
 		if (get_class($this->parent) === SqlExpr::class) {
 			// TODO: gerer mieux (avant de remplacer les SqlExpr par autre des fragments)
 			// note: le SqlExpr a un parent null
@@ -93,6 +117,10 @@ class SqlExpr
 			}
 		}
 
+		if ($this->alias) {
+			return;
+		}
+
 		$items = $this->getItems(false);
 		$items_reverse = array_reverse($items);
 
@@ -101,6 +129,18 @@ class SqlExpr
 
 			if ($last_item->type === 'word') {
 				// le dernier item est un word
+
+                if ($last_item->word === 'desc') {
+					// for order by
+					// skip "desc" keyword
+					array_shift($items_reverse);
+					$last_item = $items_reverse[0];
+
+                    $last_item->word_type = 'order_field_alias';
+					$this->alias = $last_item->word;
+					return;
+				}
+
 				$before_last_item = isset($items_reverse[1]) ? $items_reverse[1] : null;
 
 				if ($before_last_item && $before_last_item->type === 'word' && $before_last_item->word_type == 'keyword' && $before_last_item->word == 'as') {
@@ -132,6 +172,8 @@ class SqlExpr
 
 	public function getCalculatedValues(SqlExecutor $executor, $row_data)
 	{
+		// caled by SqlExecutor::calculateFields
+
 		$items = $this->getItems(false);
 		$functions_repository = new SqlFunction($executor); // used by eval
 
@@ -178,14 +220,14 @@ class SqlExpr
 				if ($item->type === 'word' && $item->word_type === 'field_alias') {
 					continue;
 				}
-                if ($item->type === 'word' && $item->word_type === 'order_by_field_alias') {
+                if ($item->type === 'word' && $item->word_type === 'order_field_alias') {
                     continue;
 				}
 
 
                 if ($item->type === 'parenthese') {
 					// parenthese
-					$item->detectFields(); // TODO: a deplacer en amont
+					//$item->detectFields(); // TODO: a deplacer en amont
 
 				} else if ($item->type === 'joker') {
 					// joker
@@ -226,9 +268,12 @@ class SqlExpr
 							$fields = $select_parts[0]->getFields();
 							foreach ($fields as $field) {
 								if ($field->getAlias() === $item->word) {
-									$item->word_type = 'order_by_field_alias';
+									$item->word_type = 'order_field_alias';
 									$is_alias = true;
 									$skip_code = true;
+									$item_code = $executor->current_result[$item->word];
+									$item_codes[] = $item_code;
+
 								}
 							}
 						}
@@ -278,6 +323,8 @@ class SqlExpr
 
 	public function validateCondition(SqlExecutor $executor, $row_data)
 	{
+		// called by SqlActionSelect::executeAction
+
 		$items = $this->getItems(false);
 
 		$result = '';
@@ -330,6 +377,8 @@ class SqlExpr
 
 	public function toSql($to_php=false, $show_sql=false)
 	{
+		// called by SqlTypeWord::toSql()
+
 		$sql = '';
 
 		if ($show_sql) {

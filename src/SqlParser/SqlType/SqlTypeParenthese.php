@@ -241,12 +241,18 @@ class SqlTypeParenthese extends SqlType
 
 	public function toPhp($show_sql=false)
 	{
+		throw new \Exception("used by ?", 1);
+
 		return $this->toSql(true, $show_sql);
 	}
 
 
 	public function toSql($to_php=false, $show_sql=false)
 	{
+		// called by SqlExpr::itemsToSql()
+		// called by SqlPart::itemsToSql()
+		// called by SqlExpr::getCalculatedValues()
+
 		$sql = '';
 
 		// ajout '('
@@ -277,6 +283,9 @@ class SqlTypeParenthese extends SqlType
 
 	public function detectFields()
 	{
+		// called by SqlExpr::detectFields()
+		// called by SqlExpr::getCalculatedValues()
+
 		$items = $this->fragments[0]->getItems(false, false);
 
 		foreach ($items as $item) {
@@ -292,6 +301,8 @@ class SqlTypeParenthese extends SqlType
 
 	function getCalculatedValues(SqlExecutor $executor, $row_data)
 	{
+		throw new \Exception("used by ?", 1);
+
 		$items = $this->fragments[0]->getItems(false);
 		
 		foreach ($items as $item) {

@@ -45,13 +45,23 @@ class SqlTypeOperator extends SqlType
 	}
 
 	
-	public function toPhp() {
+	public function toPhp()
+	{
+		// called by SqlTypeOperator::toSql()
+
+		//throw new \Exception("used by ?", 1);
+
 		$outer_text = $this->outer_text;
 		return $outer_text;
 	}
+
 	
 	public function toSql($to_php=false, $print_debug=false)
 	{
+		// called by SqlPart::itemsToSql()
+
+		//throw new \Exception("used by ?", 1);
+
 		$sql = '';
 
 		if (empty($this->fields)) {

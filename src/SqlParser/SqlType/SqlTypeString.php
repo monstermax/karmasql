@@ -127,7 +127,10 @@ class SqlTypeString extends SqlType
 
 	public function getCalculatedValues(SqlExecutor $executor, $row_data)
 	{
-		//$alias = $this->pos_start . '-string';
+		// called by SqlExecutor::calculateFields()
+
+		//throw new \Exception("used by ?", 1);
+
 		$alias = $this->inner_text;
 
 		return [

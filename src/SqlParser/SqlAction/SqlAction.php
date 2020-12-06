@@ -36,6 +36,8 @@ class SqlAction extends SqlFragment
 
 	function execute()
 	{
+		// called by sqlfragmentQuery::excecuteQuery
+
 		$executor = new SqlExecutor;
 		$this->query->setExecutor($executor);
 		return $this->executeAction($executor);
@@ -249,12 +251,16 @@ class SqlAction extends SqlFragment
 
 	public function getParts()
 	{
+		// called by SqlFragmentQuery::rebuildSql
+
 		return $this->parts;
 	}
 
 
 	public function getPart($part_name)
 	{
+		// called by SqlAction*::parseParts
+
 		// GENERATOR
 		foreach ($this->parts as $part) {
 			if ($part->getName() == $part_name) {

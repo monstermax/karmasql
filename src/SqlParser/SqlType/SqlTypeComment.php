@@ -139,8 +139,11 @@ class SqlTypeComment extends SqlType
 		$this->fragment_main->setCurrentComment(null);
 	}
 
+	
 	public function toPhp($print_debug=false)
 	{
+		throw new \Exception("used by ?", 1);
+
 		return '';
 	}
 
